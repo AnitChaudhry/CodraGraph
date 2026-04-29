@@ -1,7 +1,7 @@
 // codragraph-sdk — one-import surface for the CodraGraph platform.
 //
 // Usage:
-//   import { harness, graph, compress, swarm, graphstore, recipes } from "codragraph-sdk";
+//   import { harness, graph, compress, swarm, graphstore, recipes } from "@codragraph/sdk";
 //
 //   const frontier = await harness.search({ ... });
 //   const ctx       = await graph.context({ name: "validateUser" });
@@ -9,8 +9,8 @@
 //   const cached    = await recipes.findReusableRecipes({ store, snapshotId, taskFamily });
 //
 // Or import sub-namespaces directly:
-//   import { search, ALL_SEEDS } from "codragraph-sdk/harness";
-//   import { FsCAS, diffSnapshots } from "codragraph-sdk/graphstore";
+//   import { search, ALL_SEEDS } from "@codragraph/sdk/harness";
+//   import { FsCAS, diffSnapshots } from "@codragraph/sdk/graphstore";
 
 export * as harness from './harness.js';
 export * as graph from './graph.js';
@@ -35,4 +35,4 @@ export type {
   GraphContextResult,
   GraphImpactInput,
   GraphImpactResult,
-} from 'codragraph-harness/types';
+} from '@codragraph/harness/types';

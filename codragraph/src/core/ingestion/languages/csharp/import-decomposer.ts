@@ -15,7 +15,7 @@
  *   using global::System.IO;                → namespace (global:: alias stripped)
  */
 
-import type { Capture, CaptureMatch } from 'codragraph-shared';
+import type { Capture, CaptureMatch } from '@codragraph/shared';
 import { nodeToCapture, syntheticCapture, type SyntaxNode } from '../../utils/ast-helpers.js';
 
 type ImportKind = 'namespace' | 'alias' | 'static';

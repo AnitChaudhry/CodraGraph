@@ -1,4 +1,4 @@
-import type { GraphNode, GraphRelationship, NodeLabel } from 'codragraph-shared';
+import type { GraphNode, GraphRelationship, NodeLabel } from '@codragraph/shared';
 import { KnowledgeGraph } from '../graph/types.js';
 import Parser from 'tree-sitter';
 import { loadParser, loadLanguage, isLanguageAvailable } from '../tree-sitter/parser-loader.js';
@@ -8,7 +8,7 @@ import type { SymbolTableReader, SymbolTableWriter, ExtractedHeritage } from './
 // SymbolTableReader is used for the FieldExtractorContext stub; the
 // parsing functions themselves need Writer because they call .add().
 import { ASTCache } from './ast-cache.js';
-import { getLanguageFromFilename, SupportedLanguages } from 'codragraph-shared';
+import { getLanguageFromFilename, SupportedLanguages } from '@codragraph/shared';
 import { extractVueScript, isVueSetupTopLevel } from './vue-sfc-extractor.js';
 import { yieldToEventLoop } from './utils/event-loop.js';
 import { isVerboseIngestionEnabled } from './utils/verbose.js';
@@ -32,7 +32,7 @@ import {
   buildCollisionGroups,
 } from './utils/method-props.js';
 import type { LanguageProvider } from './language-provider.js';
-import type { ParsedFile } from 'codragraph-shared';
+import type { ParsedFile } from '@codragraph/shared';
 import { WorkerPool } from './workers/worker-pool.js';
 import type {
   ParseWorkerResult,

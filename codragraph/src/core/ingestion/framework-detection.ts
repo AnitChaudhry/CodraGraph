@@ -10,7 +10,7 @@
  * (no bonus, no penalty) - same behavior as before this feature.
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 
 // ============================================================================
 // TYPES

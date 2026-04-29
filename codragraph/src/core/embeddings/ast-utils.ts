@@ -4,7 +4,7 @@
  * used by both chunker.ts and structural-extractor.ts.
  */
 
-import { getLanguageFromFilename } from 'codragraph-shared';
+import { getLanguageFromFilename } from '@codragraph/shared';
 import {
   createParserForLanguage,
   isLanguageAvailable,

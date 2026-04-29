@@ -36,7 +36,7 @@
  * lives in `shadow-harness.ts` (#923), not here.
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 
 /**
  * Languages whose RFC #909 Ring 3 scope-resolution migration is complete.

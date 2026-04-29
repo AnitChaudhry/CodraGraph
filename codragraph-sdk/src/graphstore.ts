@@ -1,6 +1,6 @@
 // Graphstore namespace — Phase 4 Dolt-like versioned graph storage.
 //
-// Re-exports the public surface of `codragraph-graphstore` so SDK users
+// Re-exports the public surface of `@codragraph/graphstore` so SDK users
 // don't need a second install. See codragraph-graphstore/RFC.md for the
 // full design.
 
@@ -83,4 +83,4 @@ export {
   type GcOptions,
   type GcResult,
   type CollectReachableOptions,
-} from 'codragraph-graphstore';
+} from '@codragraph/graphstore';

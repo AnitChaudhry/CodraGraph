@@ -2,11 +2,11 @@
  * CLI-specific graph types.
  *
  * Shared types (NodeLabel, GraphNode, etc.) should be imported
- * directly from 'codragraph-shared' at call sites.
+ * directly from '@codragraph/shared' at call sites.
  *
  * This file only defines the CLI's KnowledgeGraph with mutation methods.
  */
-import type { GraphNode, GraphRelationship, RelationshipType } from 'codragraph-shared';
+import type { GraphNode, GraphRelationship, RelationshipType } from '@codragraph/shared';
 
 // CLI-specific: full KnowledgeGraph with mutation methods for incremental updates
 export interface KnowledgeGraph {

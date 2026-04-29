@@ -6,7 +6,12 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { makeScopeId, clearScopeIdInternPool, type Range, type ScopeKind } from 'codragraph-shared';
+import {
+  makeScopeId,
+  clearScopeIdInternPool,
+  type Range,
+  type ScopeKind,
+} from '@codragraph/shared';
 
 const r = (startLine: number, startCol: number, endLine: number, endCol: number): Range => ({
   startLine,

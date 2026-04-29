@@ -1,6 +1,6 @@
 // codragraph/src/core/ingestion/field-extractors/configs/typescript-javascript.ts
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { FieldExtractionConfig } from '../generic.js';
 import { hasKeyword, findVisibility, typeFromAnnotation } from './helpers.js';
 import type { FieldVisibility } from '../../field-types.js';

@@ -28,7 +28,7 @@ import {
   type SnapshotManifest,
   type GraphDiff,
   type SemanticDiff,
-} from 'codragraph-graphstore';
+} from '@codragraph/graphstore';
 import { GRAPHSTORE_SUBDIR } from '../../core/graphstore/index.js';
 
 interface GraphstoreCtx {
@@ -344,7 +344,7 @@ export const handleGraphstoreMerge = async (params: GraphstoreMergeParams) => {
         cas: ctx.cas,
         snapshot: result.snapshotId,
         parents: [ours, theirs],
-        author: { name: 'codragraph', email: 'noreply@codragraph.local' },
+        author: { name: '@codragraph/cli', email: 'noreply@codragraph.local' },
         message,
       });
       await setHead({ root: ctx.root, branch, commit: commit.commitId });

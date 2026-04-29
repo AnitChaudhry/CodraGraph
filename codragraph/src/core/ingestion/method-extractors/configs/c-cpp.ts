@@ -1,7 +1,7 @@
 // codragraph/src/core/ingestion/method-extractors/configs/c-cpp.ts
 // Verified against tree-sitter-cpp ^0.23.4
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type {
   MethodExtractionConfig,
   ParameterInfo,

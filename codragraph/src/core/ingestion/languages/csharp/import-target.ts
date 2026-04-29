@@ -18,7 +18,7 @@
  * `linkStatus: 'unresolved'`.
  */
 
-import type { ParsedImport, WorkspaceIndex } from 'codragraph-shared';
+import type { ParsedImport, WorkspaceIndex } from '@codragraph/shared';
 
 export interface CsharpResolveContext {
   readonly fromFile: string;

@@ -6,8 +6,8 @@
  * canonical shape.
  */
 
-import type { ParsedFile } from 'codragraph-shared';
-import { SupportedLanguages } from 'codragraph-shared';
+import type { ParsedFile } from '@codragraph/shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import { buildMro, defaultLinearize } from '../../scope-resolution/passes/mro.js';
 import { populateClassOwnedMembers } from '../../scope-resolution/scope/walkers.js';
 import type { ScopeResolver } from '../../scope-resolution/contract/scope-resolver.js';

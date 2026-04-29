@@ -10,7 +10,7 @@ import type { HarnessResult, TaskInput } from '../../types.js';
 const EXEMPLARS = [
   {
     q: 'Where is the parse phase defined?',
-    a: 'codragraph/src/core/ingestion/pipeline-phases/parse.ts (delegates heavy work to parse-impl.ts).',
+    a: '@codragraph/cli/src/core/ingestion/pipeline-phases/parse.ts (delegates heavy work to parse-impl.ts).',
   },
   {
     q: 'What does the impact MCP tool return?',

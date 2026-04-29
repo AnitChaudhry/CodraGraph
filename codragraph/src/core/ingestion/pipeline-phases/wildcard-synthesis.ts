@@ -15,8 +15,8 @@
 
 import type { KnowledgeGraph } from '../../graph/types.js';
 import type { createResolutionContext } from '../model/resolution-context.js';
-import { getLanguageFromFilename } from 'codragraph-shared';
-import type { SupportedLanguages } from 'codragraph-shared';
+import { getLanguageFromFilename } from '@codragraph/shared';
+import type { SupportedLanguages } from '@codragraph/shared';
 import { providers, getProviderForFile } from '../languages/index.js';
 import type { LanguageProvider, ImportSemantics } from '../language-provider.js';
 

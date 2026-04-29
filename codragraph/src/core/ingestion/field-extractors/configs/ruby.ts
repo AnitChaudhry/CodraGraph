@@ -1,6 +1,6 @@
 // codragraph/src/core/ingestion/field-extractors/configs/ruby.ts
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { FieldExtractionConfig } from '../generic.js';
 import type { SyntaxNode } from '../../utils/ast-helpers.js';
 

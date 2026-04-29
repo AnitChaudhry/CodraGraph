@@ -1,7 +1,7 @@
 // codragraph/src/core/ingestion/method-extractors/configs/php.ts
 // Verified against tree-sitter-php 0.23.12
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type {
   MethodExtractionConfig,
   ParameterInfo,

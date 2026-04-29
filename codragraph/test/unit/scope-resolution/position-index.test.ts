@@ -14,7 +14,7 @@ import {
   type Scope,
   type ScopeId,
   type ScopeKind,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 
 // ─── Test helpers ───────────────────────────────────────────────────────────
 

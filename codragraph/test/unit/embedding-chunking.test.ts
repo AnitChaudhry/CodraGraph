@@ -22,7 +22,7 @@ const { getLanguageFromFilename } = vi.hoisted(() => ({
   getLanguageFromFilename: vi.fn().mockReturnValue('typescript'),
 }));
 
-vi.mock('codragraph-shared', () => ({
+vi.mock('@codragraph/shared', () => ({
   getLanguageFromFilename,
 }));
 

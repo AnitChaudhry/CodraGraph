@@ -9,7 +9,7 @@ import { createTypeRegistry } from '../../../src/core/ingestion/model/type-regis
 import { createMethodRegistry } from '../../../src/core/ingestion/model/method-registry.js';
 import { createFieldRegistry } from '../../../src/core/ingestion/model/field-registry.js';
 import { ALL_NODE_LABELS } from '../../../src/core/ingestion/model/index.js';
-import type { SymbolDefinition } from 'codragraph-shared';
+import type { SymbolDefinition } from '@codragraph/shared';
 import { makeDef as makeBaseDef } from './helpers.js';
 
 // ---------------------------------------------------------------------------

@@ -27,13 +27,13 @@ interface SetupResult {
 }
 
 /**
- * Resolve the absolute path to the `codragraph` binary if it's installed
+ * Resolve the absolute path to the `@codragraph/cli` binary if it's installed
  * globally (or via npm -g / yarn global). Returns null when not found.
  */
 function resolveCodragraphBin(): string | null {
   try {
     const cmd = process.platform === 'win32' ? 'where' : 'which';
-    const resolved = execFileSync(cmd, ['codragraph'], {
+    const resolved = execFileSync(cmd, ['@codragraph/cli'], {
       encoding: 'utf-8',
       timeout: 5000,
       stdio: ['ignore', 'pipe', 'ignore'],
@@ -49,7 +49,7 @@ function resolveCodragraphBin(): string | null {
 /**
  * The MCP server entry for all editors.
  *
- * Prefers the globally-installed `codragraph` binary (starts in ~1 s) over
+ * Prefers the globally-installed `@codragraph/cli` binary (starts in ~1 s) over
  * `npx -y codragraph@latest` (cold-cache install of native deps can take
  * >60 s, exceeding Claude Code's 30 s MCP connection timeout).
  *
@@ -267,7 +267,7 @@ async function installClaudeCodeHooks(result: SetupResult): Promise<void> {
   const pluginHooksPath = path.join(__dirname, '..', '..', 'hooks', 'claude');
 
   // Copy unified hook script to ~/.claude/hooks/codragraph/
-  const destHooksDir = path.join(claudeDir, 'hooks', 'codragraph');
+  const destHooksDir = path.join(claudeDir, 'hooks', '@codragraph/cli');
 
   try {
     await fs.mkdir(destHooksDir, { recursive: true });
@@ -346,7 +346,7 @@ async function setupOpenCode(result: SetupResult): Promise<void> {
 
   const configPath = path.join(opencodeDir, 'opencode.json');
   try {
-    const ok = await mergeJsoncFile(configPath, ['mcp', 'codragraph'], getOpenCodeMcpEntry());
+    const ok = await mergeJsoncFile(configPath, ['mcp', '@codragraph/cli'], getOpenCodeMcpEntry());
     if (ok) {
       result.configured.push('OpenCode');
     } else {
@@ -400,9 +400,13 @@ async function setupCodex(result: SetupResult): Promise<void> {
 
   try {
     const entry = getMcpEntry();
-    await execFileAsync('codex', ['mcp', 'add', 'codragraph', '--', entry.command, ...entry.args], {
-      shell: process.platform === 'win32',
-    });
+    await execFileAsync(
+      'codex',
+      ['mcp', 'add', '@codragraph/cli', '--', entry.command, ...entry.args],
+      {
+        shell: process.platform === 'win32',
+      },
+    );
     result.configured.push('Codex');
     return;
   } catch {

@@ -16,7 +16,7 @@ import {
   type Resolution,
   type ShadowCallsite,
   type SymbolDefinition,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 import {
   createShadowHarness,
   type PersistedShadowReport,

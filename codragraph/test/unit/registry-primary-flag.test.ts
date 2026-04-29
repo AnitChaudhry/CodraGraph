@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import {
   envVarNameFor,
   isRegistryPrimary,

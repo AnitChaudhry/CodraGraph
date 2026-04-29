@@ -1,4 +1,4 @@
-import type { NodeLabel, SupportedLanguages } from 'codragraph-shared';
+import type { NodeLabel, SupportedLanguages } from '@codragraph/shared';
 import type { SyntaxNode } from './utils/ast-helpers.js';
 
 export type ClassLikeNodeLabel = Extract<

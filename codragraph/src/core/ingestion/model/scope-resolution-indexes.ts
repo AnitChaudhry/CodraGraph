@@ -52,7 +52,7 @@ import type {
   ReferenceSite,
   ScopeId,
   ScopeTree,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 
 export interface ScopeResolutionIndexes {
   readonly scopeTree: ScopeTree;

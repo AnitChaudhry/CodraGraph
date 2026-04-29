@@ -1,10 +1,10 @@
 /**
  * `SymbolDefinition` — the canonical shape of an indexed symbol record.
  *
- * Historically defined in `codragraph/src/core/ingestion/model/symbol-table.ts`;
- * moved into `codragraph-shared` as part of RFC #909 Ring 1 (#910) so the
+ * Historically defined in `@codragraph/cli/src/core/ingestion/model/symbol-table.ts`;
+ * moved into `@codragraph/shared` as part of RFC #909 Ring 1 (#910) so the
  * scope-resolution types that reference it can live in the shared package
- * alongside their consumers (`codragraph/` and `codragraph-web/`).
+ * alongside their consumers (`@codragraph/cli/` and `codragraph-web/`).
  *
  * Shape is unchanged from the prior local definition.
  */

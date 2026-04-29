@@ -1,4 +1,4 @@
-import type { GraphNode, GraphRelationship, RelationshipType } from 'codragraph-shared';
+import type { GraphNode, GraphRelationship, RelationshipType } from '@codragraph/shared';
 import { KnowledgeGraph } from './types.js';
 
 /** Fresh empty iterator per call — `[].values()` returns a new

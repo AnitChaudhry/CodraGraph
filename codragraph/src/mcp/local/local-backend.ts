@@ -680,7 +680,7 @@ export class LocalBackend {
       case 'harness_swarm_run': {
         // Same lazy-import dance as harness_run (see comments below) — keeps
         // codragraph-harness optional and avoids a circular build-time dep.
-        const harnessModuleId: string = 'codragraph-harness/mcp/handler';
+        const harnessModuleId: string = '@codragraph/harness/mcp/handler';
         const dynImport = (id: string): Promise<unknown> => import(/* @vite-ignore */ id);
         let handler: ((p: unknown) => Promise<unknown>) | undefined;
         try {
@@ -690,13 +690,13 @@ export class LocalBackend {
           handler = mod.handleHarnessSwarmRun;
         } catch (err: unknown) {
           throw new Error(
-            'harness_swarm_run requires the `codragraph-harness` package. ' +
+            'harness_swarm_run requires the `@codragraph/harness` package. ' +
               `Underlying error: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
         if (!handler) {
           throw new Error(
-            'codragraph-harness/dist/mcp/handler.js does not export handleHarnessSwarmRun',
+            '@codragraph/harness/dist/mcp/handler.js does not export handleHarnessSwarmRun',
           );
         }
         return handler(params);
@@ -772,7 +772,7 @@ export class LocalBackend {
       case 'harness_recipes_lookup': {
         // Phase 4 × Phase 3 moat tools — same lazy-import dance as the
         // other harness handlers so codragraph-harness stays optional.
-        const harnessModuleId: string = 'codragraph-harness/mcp/handler';
+        const harnessModuleId: string = '@codragraph/harness/mcp/handler';
         const dynImport = (id: string): Promise<unknown> => import(/* @vite-ignore */ id);
         let mod: {
           handleHarnessRecipesList?: (p: unknown) => Promise<unknown>;
@@ -792,7 +792,7 @@ export class LocalBackend {
             : mod.handleHarnessRecipesLookup;
         if (!handler) {
           throw new Error(
-            `codragraph-harness/dist/mcp/handler.js does not export the handler for ${method}`,
+            `@codragraph/harness/dist/mcp/handler.js does not export the handler for ${method}`,
           );
         }
         return handler(params);
@@ -805,7 +805,7 @@ export class LocalBackend {
         // not try to resolve the path at compile time — the harness package's
         // .d.ts files do not exist while codragraph itself is being built
         // for the first time during workspace install.
-        const harnessModuleId: string = 'codragraph-harness/mcp/handler';
+        const harnessModuleId: string = '@codragraph/harness/mcp/handler';
         const dynImport = (id: string): Promise<unknown> => import(/* @vite-ignore */ id);
         let handler: ((p: unknown) => Promise<unknown>) | undefined;
         try {
@@ -815,14 +815,14 @@ export class LocalBackend {
           handler = mod.handleHarnessRun;
         } catch (err: unknown) {
           throw new Error(
-            'harness_run requires the `codragraph-harness` package. ' +
+            'harness_run requires the `@codragraph/harness` package. ' +
               `Install it (npm i codragraph-harness) and retry. ` +
               `Underlying error: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
         if (!handler) {
           throw new Error(
-            'codragraph-harness/dist/mcp/handler.js does not export handleHarnessRun',
+            '@codragraph/harness/dist/mcp/handler.js does not export handleHarnessRun',
           );
         }
         return handler(params);

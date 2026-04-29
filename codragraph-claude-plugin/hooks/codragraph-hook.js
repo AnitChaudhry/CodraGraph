@@ -111,10 +111,10 @@ function extractPattern(toolName, toolInput) {
 function runCodraGraphCli(args, cwd, timeout) {
   const isWin = process.platform === 'win32';
 
-  // Detect whether 'codragraph' is on PATH (cheap check, no execution)
+  // Detect whether '@codragraph/cli' is on PATH (cheap check, no execution)
   let useDirectBinary = false;
   try {
-    const which = spawnSync(isWin ? 'where' : 'which', ['codragraph'], {
+    const which = spawnSync(isWin ? 'where' : 'which', ['@codragraph/cli'], {
       encoding: 'utf-8',
       timeout: 3000,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -125,7 +125,7 @@ function runCodraGraphCli(args, cwd, timeout) {
   }
 
   if (useDirectBinary) {
-    return spawnSync(isWin ? 'codragraph.cmd' : 'codragraph', args, {
+    return spawnSync(isWin ? 'codragraph.cmd' : '@codragraph/cli', args, {
       encoding: 'utf-8',
       timeout,
       cwd,
@@ -133,7 +133,7 @@ function runCodraGraphCli(args, cwd, timeout) {
     });
   }
   // npx fallback needs shell on Windows since npx is a .cmd script
-  return spawnSync(isWin ? 'npx.cmd' : 'npx', ['-y', 'codragraph', ...args], {
+  return spawnSync(isWin ? 'npx.cmd' : 'npx', ['-y', '@codragraph/cli', ...args], {
     encoding: 'utf-8',
     timeout: timeout + 5000,
     cwd,

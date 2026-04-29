@@ -16,7 +16,7 @@
  */
 
 import { createKnowledgeGraph } from '../graph/graph.js';
-import { type PipelineProgress } from 'codragraph-shared';
+import { type PipelineProgress } from '@codragraph/shared';
 import { PipelineResult } from '../../types/pipeline.js';
 import {
   runPipeline,

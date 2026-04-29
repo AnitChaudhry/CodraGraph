@@ -111,7 +111,7 @@ function resolveCliPath() {
   let cliPath = path.resolve(__dirname, '..', '..', 'dist', 'cli', 'index.js');
   if (!fs.existsSync(cliPath)) {
     try {
-      cliPath = require.resolve('codragraph/cli/index');
+      cliPath = require.resolve('@codragraph/cli/cli/index');
     } catch {
       cliPath = '';
     }
@@ -134,7 +134,7 @@ function runCodraGraphCli(cliPath, args, cwd, timeout) {
     });
   }
   // On Windows, invoke npx.cmd directly (no shell needed)
-  return spawnSync(isWin ? 'npx.cmd' : 'npx', ['-y', 'codragraph', ...args], {
+  return spawnSync(isWin ? 'npx.cmd' : 'npx', ['-y', '@codragraph/cli', ...args], {
     encoding: 'utf-8',
     timeout: timeout + 5000,
     cwd,

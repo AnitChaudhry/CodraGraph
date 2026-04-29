@@ -7,7 +7,7 @@
  * To add a language to the registry-primary path:
  *
  *   1. Implement `ScopeResolver` in
- *      `codragraph/src/core/ingestion/languages/<lang>/scope-resolver.ts`.
+ *      `@codragraph/cli/src/core/ingestion/languages/<lang>/scope-resolver.ts`.
  *      Nine required fields (language, languageProvider,
  *      importEdgeReason, resolveImportTarget, mergeBindings,
  *      arityCompatibility, buildMro, populateOwners, isSuperReceiver)
@@ -24,12 +24,12 @@
  *   2. Export a thin entry point:
  *      `runYourLangScopeResolution(input) = runScopeResolution(input, yourScopeResolver)`.
  *   3. Register the provider in
- *      `codragraph/src/core/ingestion/scope-resolution/pipeline/registry.ts`
+ *      `@codragraph/cli/src/core/ingestion/scope-resolution/pipeline/registry.ts`
  *      (the `SCOPE_RESOLVERS` map).
  *   4. Add `SupportedLanguages.YourLang` to `MIGRATED_LANGUAGES` in
  *      `registry-primary-flag.ts`.
  *   5. Verify the resolver integration test at
- *      `codragraph/test/integration/resolvers/<lang>.test.ts` passes
+ *      `@codragraph/cli/test/integration/resolvers/<lang>.test.ts` passes
  *      under both `REGISTRY_PRIMARY_<LANG>=0` (legacy) and `=1`
  *      (registry-primary). The CI parity gate enforces this.
  *
@@ -60,7 +60,7 @@
  *
  * ## Reference implementation
  *
- * `codragraph/src/core/ingestion/languages/python/scope-resolver.ts` —
+ * `@codragraph/cli/src/core/ingestion/languages/python/scope-resolver.ts` —
  * `pythonScopeResolver` is the canonical example. Read that file when
  * migrating a new language; this interface lists the fields that
  * implementation populates.
@@ -178,7 +178,7 @@
  *
  * ## Semantic-model source of truth
  *
- * `ParsedFile` (from `codragraph-shared/src/scope-resolution/parsed-file.ts`)
+ * `ParsedFile` (from `@codragraph/shared/src/scope-resolution/parsed-file.ts`)
  * is the single semantic model consumed by both the legacy DAG and the
  * scope-resolution pipeline. Scope-resolution passes MUST NOT build a
  * parallel parse representation; if a pass needs AST-level facts that
@@ -195,7 +195,7 @@
  *   - Edge vocabulary: `'import-resolved' | 'global' | 'local-call' |
  *     'same-file' | 'interface-dispatch' | 'read' | 'write'` — both
  *     paths emit the same reasons (see
- *     `codragraph/src/core/ingestion/call-processor.ts` for the legacy
+ *     `@codragraph/cli/src/core/ingestion/call-processor.ts` for the legacy
  *     emitter and `passes/receiver-bound-calls.ts` /
  *     `passes/free-call-fallback.ts` for the scope-resolution emitters).
  *   - Overload disambiguation: both paths use
@@ -217,7 +217,7 @@ import type {
   ScopeId,
   SupportedLanguages,
   SymbolDefinition,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 import type { KnowledgeGraph } from '../../../graph/types.js';
 import type { GraphNodeLookup } from '../graph-bridge/node-lookup.js';
 import { LanguageProvider } from '../../language-provider.js';

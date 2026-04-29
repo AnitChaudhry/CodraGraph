@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { buildModuleScopeIndex, type ModuleScopeEntry, type ScopeId } from 'codragraph-shared';
+import { buildModuleScopeIndex, type ModuleScopeEntry, type ScopeId } from '@codragraph/shared';
 
 const entry = (filePath: string, moduleScopeId: ScopeId): ModuleScopeEntry => ({
   filePath,

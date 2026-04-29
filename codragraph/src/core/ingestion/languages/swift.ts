@@ -10,8 +10,8 @@
  *   - implicitImportWirer: all files in the same SPM target see each other
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
-import type { NodeLabel } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
+import type { NodeLabel } from '@codragraph/shared';
 import { createClassExtractor } from '../class-extractors/generic.js';
 import { swiftClassConfig } from '../class-extractors/configs/swift.js';
 import { defineLanguage } from '../language-provider.js';

@@ -16,7 +16,7 @@
  * Pure given the input source text. No I/O, no globals consulted.
  */
 
-import type { Capture, CaptureMatch } from 'codragraph-shared';
+import type { Capture, CaptureMatch } from '@codragraph/shared';
 import { findNodeAtRange, nodeToCapture, syntheticCapture } from '../../utils/ast-helpers.js';
 import { splitUsingDirective } from './import-decomposer.js';
 import { computeCsharpArityMetadata } from './arity-metadata.js';

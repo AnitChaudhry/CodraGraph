@@ -19,7 +19,7 @@
  * as-is for TypeScript, Java, Kotlin, Ruby, etc.
  */
 
-import type { ParsedFile, ScopeId, SymbolDefinition, TypeRef } from 'codragraph-shared';
+import type { ParsedFile, ScopeId, SymbolDefinition, TypeRef } from '@codragraph/shared';
 import type { ScopeResolutionIndexes } from '../../model/scope-resolution-indexes.js';
 import type { SemanticModel } from '../../model/semantic-model.js';
 import type { WorkspaceResolutionIndex } from '../workspace-index.js';

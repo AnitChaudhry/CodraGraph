@@ -11,7 +11,7 @@
  * `ParsedImport` shape — see `interpret.ts`.
  */
 
-import type { Capture, CaptureMatch } from 'codragraph-shared';
+import type { Capture, CaptureMatch } from '@codragraph/shared';
 import {
   findChild,
   nodeToCapture,

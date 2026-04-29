@@ -23,7 +23,7 @@ import {
   getLanguageFromFilename,
   type NodeLabel,
   type SupportedLanguages,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 import { isVerboseIngestionEnabled } from './utils/verbose.js';
 import { yieldToEventLoop } from './utils/event-loop.js';
 import { getProvider } from './languages/index.js';

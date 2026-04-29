@@ -12,7 +12,7 @@
  * `self` / `cls`.
  */
 
-import type { Capture, CaptureMatch } from 'codragraph-shared';
+import type { Capture, CaptureMatch } from '@codragraph/shared';
 import { nodeToCapture, syntheticCapture, type SyntaxNode } from '../../utils/ast-helpers.js';
 
 const TYPE_DECL_NODE_TYPES = new Set([

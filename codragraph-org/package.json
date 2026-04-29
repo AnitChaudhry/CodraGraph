@@ -1,5 +1,5 @@
 {
-  "name": "codragraph-org",
+  "name": "@codragraph/org",
   "version": "0.1.0",
   "description": "Multi-tenant orgs, SSO, RBAC, and tamper-evident audit logging for the CodraGraph platform.",
   "author": {
@@ -9,7 +9,7 @@
   },
   "license": "Apache-2.0",
   "keywords": [
-    "codragraph",
+    "@codragraph/cli",
     "multi-tenant",
     "sso",
     "rbac",
@@ -63,8 +63,8 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "codragraph-graphstore": "*",
-    "codragraph-shared": "*"
+    "@codragraph/graphstore": "*",
+    "@codragraph/shared": "*"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

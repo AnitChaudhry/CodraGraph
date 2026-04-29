@@ -18,7 +18,7 @@
  *   (three O(1) index lookups with a narrow, type-specific result set).
  */
 
-import type { SymbolDefinition } from 'codragraph-shared';
+import type { SymbolDefinition } from '@codragraph/shared';
 import type { SymbolTableReader } from './symbol-table.js';
 import type { MutableSemanticModel } from './semantic-model.js';
 import { createSemanticModel } from './semantic-model.js';

@@ -1,7 +1,7 @@
 // codragraph/src/core/ingestion/field-extractors/typescript.ts
 
 import type { SyntaxNode } from '../utils/ast-helpers.js';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import { BaseFieldExtractor } from '../field-extractor.js';
 import type {
   FieldExtractorContext,

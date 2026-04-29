@@ -13,7 +13,7 @@ import type {
   ScopeId,
   ScopeTree,
   TypeRef,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 
 // ─── bindingScopeFor ──────────────────────────────────────────────────────
 

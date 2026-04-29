@@ -1,6 +1,6 @@
 // codragraph/src/core/ingestion/field-extractors/configs/dart.ts
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { FieldExtractionConfig } from '../generic.js';
 import { hasKeyword } from './helpers.js';
 import { extractSimpleTypeName } from '../../type-extractors/shared.js';

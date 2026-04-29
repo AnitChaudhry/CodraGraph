@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
-import { FsCAS } from 'codragraph-graphstore/dist/cas/fs-cas.js';
+import { FsCAS } from '@codragraph/graphstore/dist/cas/fs-cas.js';
 import { CasAuditLogger, orgScopedLogger } from '../src/audit/cas-log.js';
 import { auditEventIdOf, buildAuditEvent, verifyAuditEvent } from '../src/audit/event.js';
 import { makeOrgId, makeUserId } from '../src/types.js';

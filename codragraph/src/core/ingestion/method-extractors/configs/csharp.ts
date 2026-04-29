@@ -1,7 +1,7 @@
 // codragraph/src/core/ingestion/method-extractors/configs/csharp.ts
 // Verified against tree-sitter-c-sharp 0.23.1
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type {
   MethodExtractionConfig,
   MethodInfo,

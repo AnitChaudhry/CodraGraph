@@ -7,8 +7,8 @@
  *
  * Related types — `ShadowAgreement`, `ShadowCallsite`, `ShadowDiff` — are
  * defined alongside `diffResolutions` in `./diff.ts` and re-exported
- * through the top-level `codragraph-shared` barrel. Consumers import all
- * three from `codragraph-shared`, not from this module.
+ * through the top-level `@codragraph/shared` barrel. Consumers import all
+ * three from `@codragraph/shared`, not from this module.
  *
  * Part of RFC #909 Ring 2 SHARED — #918.
  */

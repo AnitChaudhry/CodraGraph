@@ -33,17 +33,17 @@ if (target === monorepo) {
 // get copied. Items can be files OR directories.
 const PUBLIC_INCLUDE = [
   // ── Packages ────────────────────────────────────────────────
-  'codragraph',
-  'codragraph-sdk',
-  'codragraph-graphstore',
-  'codragraph-harness',
-  'codragraph-compress',
-  'codragraph-shared',
+  '@codragraph/cli',
+  '@codragraph/sdk',
+  '@codragraph/graphstore',
+  '@codragraph/harness',
+  '@codragraph/compress',
+  '@codragraph/shared',
   'codragraph-web',
-  'codragraph-claude-plugin',
-  'codragraph-cursor-integration',
-  'codragraph-codex-integration',
-  'codragraph-org',
+  '@codragraph/claude-plugin',
+  '@codragraph/cursor',
+  '@codragraph/codex',
+  '@codragraph/org',
 
   // ── Repo-wide ───────────────────────────────────────────────
   'branding',

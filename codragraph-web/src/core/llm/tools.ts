@@ -13,7 +13,7 @@
 
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import { NODE_TABLES, REL_TYPES } from 'codragraph-shared';
+import { NODE_TABLES, REL_TYPES } from '@codragraph/shared';
 import type { EnrichedSearchResult, GrepResult } from '../../services/backend-client';
 
 const validLabel = (label: string): boolean => (NODE_TABLES as readonly string[]).includes(label);

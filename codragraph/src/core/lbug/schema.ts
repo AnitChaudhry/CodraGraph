@@ -10,10 +10,10 @@
  */
 
 // Import from shared package (single source of truth) — used in DDL templates below
-import { NODE_TABLES, REL_TABLE_NAME, REL_TYPES, EMBEDDING_TABLE_NAME } from 'codragraph-shared';
+import { NODE_TABLES, REL_TABLE_NAME, REL_TYPES, EMBEDDING_TABLE_NAME } from '@codragraph/shared';
 // Re-export so downstream consumers keep the same import path
 export { NODE_TABLES, REL_TABLE_NAME, REL_TYPES, EMBEDDING_TABLE_NAME };
-export type { NodeTableName, RelType } from 'codragraph-shared';
+export type { NodeTableName, RelType } from '@codragraph/shared';
 
 // ============================================================================
 // NODE TABLE SCHEMAS

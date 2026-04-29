@@ -1,4 +1,4 @@
-import type { PipelineProgress } from 'codragraph-shared';
+import type { PipelineProgress } from '@codragraph/shared';
 
 interface LoadingOverlayProps {
   progress: PipelineProgress;

@@ -55,7 +55,7 @@ import {
   type RegistryProviders,
   type Resolution,
   type ScopeId,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 import type { ScopeResolutionIndexes } from './model/scope-resolution-indexes.js';
 
 // ─── Public API ─────────────────────────────────────────────────────────────
@@ -224,6 +224,6 @@ function buildReference(site: ReferenceSite, top: Resolution): Reference {
 
 // Re-export the kind sets so consumers don't have to import them
 // separately when constructing custom resolution flows. The mappings
-// stay in `codragraph-shared` (single source of truth); this is a
+// stay in `@codragraph/shared` (single source of truth); this is a
 // convenience pass-through only.
 export { CLASS_KINDS, METHOD_KINDS, FIELD_KINDS };

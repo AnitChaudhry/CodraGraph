@@ -15,7 +15,7 @@
  * language-agnostic — no language needs to change it.
  */
 
-import type { Reference, ScopeId, SymbolDefinition } from 'codragraph-shared';
+import type { Reference, ScopeId, SymbolDefinition } from '@codragraph/shared';
 import type { KnowledgeGraph } from '../../../graph/types.js';
 import type { ScopeResolutionIndexes } from '../../model/scope-resolution-indexes.js';
 import type { GraphNodeLookup } from '../graph-bridge/node-lookup.js';

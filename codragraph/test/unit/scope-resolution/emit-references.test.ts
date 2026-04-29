@@ -22,7 +22,7 @@ import {
   type Scope,
   type ScopeId,
   type SymbolDefinition,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 import { createKnowledgeGraph } from '../../../src/core/graph/graph.js';
 import {
   emitReferencesToGraph,

@@ -16,7 +16,7 @@ import {
   type BindingRef,
   type SymbolDefinition,
   type ScopeId,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 
 // ─── Test helpers ───────────────────────────────────────────────────────────
 

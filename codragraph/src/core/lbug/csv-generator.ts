@@ -15,7 +15,7 @@
 import fs from 'fs/promises';
 import { createWriteStream, WriteStream } from 'fs';
 import path from 'path';
-import type { GraphNode } from 'codragraph-shared';
+import type { GraphNode } from '@codragraph/shared';
 import { KnowledgeGraph } from '../graph/types.js';
 import { NodeTableName } from './schema.js';
 

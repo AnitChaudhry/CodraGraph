@@ -9,7 +9,7 @@
  * awareness that Python's runtime depends on.
  */
 
-import type { CaptureMatch } from 'codragraph-shared';
+import type { CaptureMatch } from '@codragraph/shared';
 import { nodeToCapture, syntheticCapture, type SyntaxNode } from '../../utils/ast-helpers.js';
 
 /** Walk up to the enclosing `class_definition`, ignoring the immediate

@@ -13,7 +13,7 @@ import Rust from 'tree-sitter-rust';
 import PHP from 'tree-sitter-php';
 import Ruby from 'tree-sitter-ruby';
 import { createRequire } from 'node:module';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import { getProvider } from '../languages/index.js';
 import { getTreeSitterBufferSize, TREE_SITTER_MAX_BUFFER } from '../constants.js';
 import type { SymbolTableReader } from '../model/symbol-table.js';
@@ -40,7 +40,7 @@ let Kotlin: TreeSitterLanguage | null = null;
 try {
   Kotlin = _require('tree-sitter-kotlin');
 } catch {}
-import { getLanguageFromFilename } from 'codragraph-shared';
+import { getLanguageFromFilename } from '@codragraph/shared';
 import {
   FUNCTION_NODE_TYPES,
   getDefinitionNodeFromCaptures,
@@ -66,7 +66,7 @@ import {
   isVueSetupTopLevel,
 } from '../vue-sfc-extractor.js';
 import type { NamedBinding } from '../named-bindings/types.js';
-import type { NodeLabel } from 'codragraph-shared';
+import type { NodeLabel } from '@codragraph/shared';
 import type { FieldInfo, FieldExtractorContext } from '../field-types.js';
 import type { MethodInfo, MethodExtractorContext } from '../method-types.js';
 import type { VariableExtractorContext } from '../variable-types.js';
@@ -78,7 +78,7 @@ import {
   buildCollisionGroups,
 } from '../utils/method-props.js';
 import type { LanguageProvider } from '../language-provider.js';
-import type { ParsedFile } from 'codragraph-shared';
+import type { ParsedFile } from '@codragraph/shared';
 import { extractParsedFile } from '../scope-extractor-bridge.js';
 
 // ============================================================================

@@ -16,7 +16,7 @@ import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import { withTestLbugDB } from '../helpers/test-indexed-db.js';
-import { FsCAS, serializeSnapshot } from 'codragraph-graphstore';
+import { FsCAS, serializeSnapshot } from '@codragraph/graphstore';
 import { createLbugRowSource } from '../../src/core/graphstore/lbug-row-source.js';
 
 withTestLbugDB('graphstore-lbug', () => {

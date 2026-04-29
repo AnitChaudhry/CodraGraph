@@ -1,6 +1,6 @@
 // codragraph/src/core/ingestion/variable-extractors/configs/jvm.ts
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { VariableExtractionConfig } from '../../variable-types.js';
 import type { VariableVisibility } from '../../variable-types.js';
 import { hasModifier } from '../../field-extractors/configs/helpers.js';

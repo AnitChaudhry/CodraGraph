@@ -5,7 +5,7 @@ import {
   constTagForId,
 } from '../../src/core/ingestion/utils/method-props.js';
 import type { MethodInfo } from '../../src/core/ingestion/method-types.js';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 
 function makeMethodInfo(
   name: string,

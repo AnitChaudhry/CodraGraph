@@ -1,6 +1,6 @@
 // codragraph/src/core/ingestion/call-extractors/configs/jvm.ts
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { CallExtractionConfig, ExtractedCallSite } from '../../call-types.js';
 import type { SyntaxNode } from '../../utils/ast-helpers.js';
 

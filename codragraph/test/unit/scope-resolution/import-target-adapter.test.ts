@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import {
   buildImportTargetWorkspace,
   resolveImportTargetAcrossLanguages,

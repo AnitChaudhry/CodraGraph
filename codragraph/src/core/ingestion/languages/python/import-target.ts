@@ -10,7 +10,7 @@
  * `linkStatus: 'unresolved'`.
  */
 
-import type { ParsedImport, WorkspaceIndex } from 'codragraph-shared';
+import type { ParsedImport, WorkspaceIndex } from '@codragraph/shared';
 import { resolvePythonImportInternal } from '../../import-resolvers/python.js';
 
 export interface PythonResolveContext {

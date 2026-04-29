@@ -6,7 +6,7 @@
  * Interface names follow the I-prefix convention (e.g., IDisposable).
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import { createClassExtractor } from '../class-extractors/generic.js';
 import { csharpClassConfig } from '../class-extractors/configs/csharp.js';
 import { defineLanguage } from '../language-provider.js';

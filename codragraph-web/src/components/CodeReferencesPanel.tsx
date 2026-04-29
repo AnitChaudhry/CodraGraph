@@ -14,7 +14,7 @@ import {
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useAppState } from '../hooks/useAppState';
-import { type GraphNode, getSyntaxLanguageFromFilename } from 'codragraph-shared';
+import { type GraphNode, getSyntaxLanguageFromFilename } from '@codragraph/shared';
 import { NODE_COLORS } from '../lib/constants';
 import { readFile, type ReadFileResult } from '../services/backend-client';
 

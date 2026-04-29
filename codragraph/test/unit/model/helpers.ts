@@ -6,7 +6,7 @@
  * test file that uses it.
  */
 
-import type { SymbolDefinition } from 'codragraph-shared';
+import type { SymbolDefinition } from '@codragraph/shared';
 
 /**
  * Build a {@link SymbolDefinition} with sensible defaults. Every field

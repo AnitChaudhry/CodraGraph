@@ -12,7 +12,7 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs/promises';
 import { runPipelineFromRepo } from '../../src/core/ingestion/pipeline.js';
-import type { PipelineProgress } from 'codragraph-shared';
+import type { PipelineProgress } from '@codragraph/shared';
 import type { PipelineResult } from '../../src/types/pipeline.js';
 
 const MINI_REPO = path.resolve(__dirname, '..', 'fixtures', 'mini-repo');

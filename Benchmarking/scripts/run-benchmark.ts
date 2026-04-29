@@ -15,10 +15,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import yaml from 'yaml';
-import { makeInferenceProvider, type ProviderName } from 'codragraph-harness/inference/index';
-import { OpenAIInferenceProvider } from 'codragraph-harness/inference/openai';
-import { ClaudeInferenceProvider } from 'codragraph-harness/inference/claude';
-import type { InferenceProvider } from 'codragraph-harness/inference/interface';
+import { makeInferenceProvider, type ProviderName } from '@codragraph/harness/inference/index';
+import { OpenAIInferenceProvider } from '@codragraph/harness/inference/openai';
+import { ClaudeInferenceProvider } from '@codragraph/harness/inference/claude';
+import type { InferenceProvider } from '@codragraph/harness/inference/interface';
 import type {
   CellResult,
   ModelSpec,
@@ -256,7 +256,7 @@ async function runBenchmark(opts: RunOpts): Promise<void> {
 async function resolveWorkloadPath(workloadId: string): Promise<string> {
   const candidates = [
     path.join(HERE, '..', 'workloads', `${workloadId}.json`),
-    path.join(HERE, '..', '..', 'codragraph-harness', 'test', 'fixtures', 'qa-test-set.json'),
+    path.join(HERE, '..', '..', '@codragraph/harness', 'test', 'fixtures', 'qa-test-set.json'),
   ];
   for (const c of candidates) {
     try {

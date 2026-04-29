@@ -18,7 +18,7 @@
  * format that downstream consumers (queries, edges, MCP) expect.
  */
 
-import type { NodeLabel } from 'codragraph-shared';
+import type { NodeLabel } from '@codragraph/shared';
 import type { KnowledgeGraph } from '../../../graph/types.js';
 
 export type GraphNodeLookup = ReadonlyMap<string, string>;

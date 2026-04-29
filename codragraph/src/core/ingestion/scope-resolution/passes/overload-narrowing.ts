@@ -23,7 +23,7 @@
  *   5. Empty input returns empty output.
  */
 
-import type { SymbolDefinition } from 'codragraph-shared';
+import type { SymbolDefinition } from '@codragraph/shared';
 
 export function narrowOverloadCandidates(
   overloads: readonly SymbolDefinition[],

@@ -6,7 +6,7 @@
  * Also includes a separate index for Rust Impl blocks.
  */
 
-import type { SymbolDefinition } from 'codragraph-shared';
+import type { SymbolDefinition } from '@codragraph/shared';
 
 // ---------------------------------------------------------------------------
 // Public read-only interface

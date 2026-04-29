@@ -36,7 +36,7 @@ import {
   type GraphRow,
   type Snapshot,
   type SnapshotManifest,
-} from 'codragraph-graphstore';
+} from '@codragraph/graphstore';
 import { findRepo, loadMeta, saveMeta } from '../storage/repo-manager.js';
 import { GRAPHSTORE_SUBDIR } from '../core/graphstore/index.js';
 import { initLbug, closeLbug } from '../core/lbug/lbug-adapter.js';
@@ -634,7 +634,7 @@ export const mergeCommand = async (target: string, opts: { message?: string } = 
         cas: ctx.cas,
         snapshot: result.snapshotId,
         parents: [ours, theirs],
-        author: { name: 'codragraph', email: 'noreply@codragraph.local' },
+        author: { name: '@codragraph/cli', email: 'noreply@codragraph.local' },
         message,
       });
       await setHead({

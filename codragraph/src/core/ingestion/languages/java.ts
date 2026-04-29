@@ -7,7 +7,7 @@
  * interface implementation.
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import { createClassExtractor } from '../class-extractors/generic.js';
 import { javaClassConfig } from '../class-extractors/configs/jvm.js';
 import { defineLanguage } from '../language-provider.js';

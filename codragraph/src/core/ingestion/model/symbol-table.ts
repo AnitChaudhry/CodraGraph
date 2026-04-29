@@ -34,7 +34,7 @@
  * logic up the dependency chain instead.
  */
 
-import type { NodeLabel, SymbolDefinition } from 'codragraph-shared';
+import type { NodeLabel, SymbolDefinition } from '@codragraph/shared';
 
 /**
  * Class-like NodeLabels — used for qualifiedName fallback inside
@@ -113,10 +113,10 @@ export const CALL_TARGET_TYPES: ReadonlySet<NodeLabel> = new Set<NodeLabel>([
   'Constructor',
 ]);
 
-// `SymbolDefinition` moved to `codragraph-shared` as part of RFC #909 Ring 1
-// (see #910). It is imported at the top of this file from `codragraph-shared`
+// `SymbolDefinition` moved to `@codragraph/shared` as part of RFC #909 Ring 1
+// (see #910). It is imported at the top of this file from `@codragraph/shared`
 // and re-used unchanged throughout. Consumers should import
-// `SymbolDefinition` directly from `codragraph-shared`, not via this file.
+// `SymbolDefinition` directly from `@codragraph/shared`, not via this file.
 
 /**
  * Optional metadata accepted by {@link SymbolTable.add}. Kept as a separate

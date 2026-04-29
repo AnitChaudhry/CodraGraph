@@ -17,7 +17,7 @@ import type {
   SymbolDefinition,
   TypeRef,
   WorkspaceIndex,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 import {
   pythonArityCompatibility,
   pythonImportOwningScope,

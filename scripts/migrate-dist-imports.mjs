@@ -27,12 +27,12 @@ const SKIP_DIRS = new Set([
 const TARGET_EXTS = new Set(['.ts', '.tsx', '.mjs', '.js', '.cjs']);
 
 const PACKAGES = [
-  'codragraph',
-  'codragraph-harness',
-  'codragraph-graphstore',
-  'codragraph-compress',
-  'codragraph-sdk',
-  'codragraph-shared',
+  '@codragraph/cli',
+  '@codragraph/harness',
+  '@codragraph/graphstore',
+  '@codragraph/compress',
+  '@codragraph/sdk',
+  '@codragraph/shared',
 ];
 
 // One regex per package — captures the path inside `dist/` (excluding

@@ -86,7 +86,7 @@ export function createMCPServer(backend: LocalBackend): Server {
   const pkgVersion: string = require('../../package.json').version;
   const server = new Server(
     {
-      name: 'codragraph',
+      name: '@codragraph/cli',
       version: pkgVersion,
     },
     {

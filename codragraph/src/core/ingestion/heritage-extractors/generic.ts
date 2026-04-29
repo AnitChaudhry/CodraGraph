@@ -13,7 +13,7 @@
  * SupportedLanguages enum value — no per-language config file needed.
  */
 
-import type { SupportedLanguages } from 'codragraph-shared';
+import type { SupportedLanguages } from '@codragraph/shared';
 import type { CaptureMap } from '../language-provider.js';
 import type {
   HeritageExtractionConfig,

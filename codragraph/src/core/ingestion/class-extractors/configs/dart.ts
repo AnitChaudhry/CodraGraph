@@ -1,6 +1,6 @@
 // codragraph/src/core/ingestion/class-extractors/configs/dart.ts
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { ClassExtractionConfig } from '../../class-types.js';
 
 export const dartClassConfig: ClassExtractionConfig = {

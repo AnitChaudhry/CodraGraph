@@ -1,6 +1,6 @@
 // codragraph/src/core/ingestion/method-types.ts
 
-import type { SupportedLanguages } from 'codragraph-shared';
+import type { SupportedLanguages } from '@codragraph/shared';
 import type { FieldVisibility } from './field-types.js';
 import type { SyntaxNode } from './utils/ast-helpers.js';
 
@@ -60,7 +60,7 @@ export interface MethodExtractor {
    *  Return null to fall through to the generic extractor. */
   extractFunctionName?(
     node: SyntaxNode,
-  ): { funcName: string | null; label: import('codragraph-shared').NodeLabel } | null;
+  ): { funcName: string | null; label: import('@codragraph/shared').NodeLabel } | null;
 }
 
 export interface MethodExtractionConfig {
@@ -97,5 +97,5 @@ export interface MethodExtractionConfig {
    *  Passed through to the MethodExtractor by createMethodExtractor. */
   extractFunctionName?: (
     node: SyntaxNode,
-  ) => { funcName: string | null; label: import('codragraph-shared').NodeLabel } | null;
+  ) => { funcName: string | null; label: import('@codragraph/shared').NodeLabel } | null;
 }

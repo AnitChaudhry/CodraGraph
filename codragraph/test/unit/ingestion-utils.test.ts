@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { getLanguageFromFilename, SupportedLanguages } from 'codragraph-shared';
+import { getLanguageFromFilename, SupportedLanguages } from '@codragraph/shared';
 import { getProvider } from '../../src/core/ingestion/languages/index.js';
 import type { SyntaxNode } from '../../src/core/ingestion/utils/ast-helpers.js';
-import type { NodeLabel } from 'codragraph-shared';
+import type { NodeLabel } from '@codragraph/shared';
 import type { LanguageProvider } from '../../src/core/ingestion/language-provider.js';
 import {
   getTreeSitterBufferSize,

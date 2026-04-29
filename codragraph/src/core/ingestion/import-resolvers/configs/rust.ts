@@ -3,7 +3,7 @@
  * Rust module strategy (grouped imports, crate/super/self paths), then standard fallback.
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { ImportResolutionConfig, ImportResolverStrategy } from '../types.js';
 import { createStandardStrategy } from '../standard.js';
 import { resolveRustImportInternal } from '../rust.js';

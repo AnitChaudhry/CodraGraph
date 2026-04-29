@@ -12,7 +12,7 @@ import type {
 } from '../language-config.js';
 import type { SwiftPackageConfig } from '../language-config.js';
 import type { SuffixIndex } from './utils.js';
-import type { SupportedLanguages } from 'codragraph-shared';
+import type { SupportedLanguages } from '@codragraph/shared';
 
 /**
  * Result of resolving an import via language-specific dispatch.

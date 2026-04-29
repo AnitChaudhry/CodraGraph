@@ -13,7 +13,7 @@
  * purposes).
  */
 
-import type { BindingRef } from 'codragraph-shared';
+import type { BindingRef } from '@codragraph/shared';
 
 const TIER_LOCAL = 0;
 const TIER_IMPORT = 1;

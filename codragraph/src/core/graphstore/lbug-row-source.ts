@@ -1,5 +1,5 @@
 /**
- * Adapter exposing a live LadybugDB instance as a `codragraph-graphstore`
+ * Adapter exposing a live LadybugDB instance as a `@codragraph/graphstore`
  * `RowSource`. Used by the analyze pipeline (Phase 4) to snapshot the
  * loaded graph into the content-addressed store.
  *
@@ -9,8 +9,8 @@
  * misbehaves.
  */
 
-import type { GraphRow, RowSource } from 'codragraph-graphstore';
-import { NODE_TABLES, REL_TABLE_NAME, type NodeTableName } from 'codragraph-shared';
+import type { GraphRow, RowSource } from '@codragraph/graphstore';
+import { NODE_TABLES, REL_TABLE_NAME, type NodeTableName } from '@codragraph/shared';
 import { executeQuery } from '../lbug/lbug-adapter.js';
 
 export interface LbugRowSourceOptions {

@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { buildMethodDispatchIndex, type MethodDispatchInput, type DefId } from 'codragraph-shared';
+import { buildMethodDispatchIndex, type MethodDispatchInput, type DefId } from '@codragraph/shared';
 
 // ─── Test helpers ───────────────────────────────────────────────────────────
 

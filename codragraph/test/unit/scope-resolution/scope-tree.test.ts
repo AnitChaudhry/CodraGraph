@@ -22,7 +22,7 @@ import {
   type ScopeId,
   type ScopeKind,
   type SymbolDefinition,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 
 // ─── Test helpers ───────────────────────────────────────────────────────────
 

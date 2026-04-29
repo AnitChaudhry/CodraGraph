@@ -17,7 +17,7 @@
  * generalization plan.
  */
 
-import type { ParsedFile, Reference, ScopeId, SymbolDefinition } from 'codragraph-shared';
+import type { ParsedFile, Reference, ScopeId, SymbolDefinition } from '@codragraph/shared';
 import type { KnowledgeGraph } from '../../../graph/types.js';
 import type { ScopeResolutionIndexes } from '../../model/scope-resolution-indexes.js';
 import type { SemanticModel } from '../../model/semantic-model.js';

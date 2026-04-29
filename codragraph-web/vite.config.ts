@@ -24,7 +24,7 @@ const tryResolveHoisted = (specifier: string): string | null => {
 const aliases: Record<string, string> = {
   '@': path.resolve(__dirname, './src'),
   '@shared': path.resolve(__dirname, '../shared'),
-  'codragraph-shared': path.resolve(__dirname, '../codragraph-shared/src/index.ts'),
+  '@codragraph/shared': path.resolve(__dirname, '../codragraph-shared/src/index.ts'),
 };
 
 // `@langchain/anthropic` imports a SDK internal that newer SDK versions

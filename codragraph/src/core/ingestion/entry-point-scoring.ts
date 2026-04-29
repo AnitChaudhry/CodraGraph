@@ -11,7 +11,7 @@
  */
 
 import { detectFrameworkFromPath } from './framework-detection.js';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 
 // ============================================================================
 // NAME PATTERNS - All 13 supported languages

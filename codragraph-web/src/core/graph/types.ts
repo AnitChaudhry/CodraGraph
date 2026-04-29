@@ -2,11 +2,11 @@
  * Web-specific graph types.
  *
  * Shared types (NodeLabel, GraphNode, etc.) should be imported
- * directly from 'codragraph-shared' at call sites.
+ * directly from '@codragraph/shared' at call sites.
  *
  * This file only defines web-specific additions.
  */
-import type { GraphNode, GraphRelationship } from 'codragraph-shared';
+import type { GraphNode, GraphRelationship } from '@codragraph/shared';
 
 // Web-specific: in-memory graph container (simpler than CLI version)
 export interface KnowledgeGraph {

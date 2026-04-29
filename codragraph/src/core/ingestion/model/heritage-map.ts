@@ -14,7 +14,7 @@
  */
 
 import type { ResolutionContext } from './resolution-context.js';
-import { getLanguageFromFilename, type SupportedLanguages } from 'codragraph-shared';
+import { getLanguageFromFilename, type SupportedLanguages } from '@codragraph/shared';
 
 // ---------------------------------------------------------------------------
 // ExtractedHeritage — the shape produced by the parse worker / heritage

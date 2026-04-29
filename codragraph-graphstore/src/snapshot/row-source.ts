@@ -1,6 +1,6 @@
 /**
  * Abstract row I/O — keeps the graphstore package independent of
- * `@ladybugdb/core`. The actual lbug bindings are wired in `codragraph/`
+ * `@ladybugdb/core`. The actual lbug bindings are wired in `@codragraph/cli/`
  * via thin adapters that implement these interfaces, so swapping storage
  * engines later (Dolt itself? a remote graph service?) is a one-package
  * change rather than a cross-cutting refactor.

@@ -11,9 +11,9 @@
  */
 
 import type { SyntaxNode } from '../utils/ast-helpers.js';
-import type { NodeLabel } from 'codragraph-shared';
+import type { NodeLabel } from '@codragraph/shared';
 import { FUNCTION_NODE_TYPES } from '../utils/ast-helpers.js';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import { createClassExtractor } from '../class-extractors/generic.js';
 import { dartClassConfig } from '../class-extractors/configs/dart.js';
 import { defineLanguage } from '../language-provider.js';

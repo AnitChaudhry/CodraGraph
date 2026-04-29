@@ -181,7 +181,7 @@ describe('setupOpenCode — JSONC preservation', () => {
   "model": "test",
   "mcp": {
     "other": { "command": "keep" },
-    "codragraph": { "command": "old-codragraph", "args": ["old"] }
+    "@codragraph/cli": { "command": "old-codragraph", "args": ["old"] }
   }
 }`;
     await fs.writeFile(opencodeJsonPath(), jsonc, 'utf-8');
@@ -210,7 +210,7 @@ describe('setupOpenCode — JSONC preservation', () => {
 
     const raw = await fs.readFile(opencodeJsonPath(), 'utf-8');
     expect(raw).toBe(corrupt);
-    expect(raw).not.toContain('codragraph');
+    expect(raw).not.toContain('@codragraph/cli');
   });
 
   it('uses npx fallback format when codragraph binary is not on PATH', async () => {
@@ -245,7 +245,7 @@ describe('setupOpenCode — JSONC preservation', () => {
 
     const raw = await fs.readFile(opencodeJsonPath(), 'utf-8');
     expect(raw).toContain('\t"model"');
-    expect(raw).toContain('\t"codragraph"');
+    expect(raw).toContain('\t"@codragraph/cli"');
   });
 
   it('preserves 4-space indentation in existing file', async () => {
@@ -258,7 +258,7 @@ describe('setupOpenCode — JSONC preservation', () => {
     await setupCommand();
 
     const raw = await fs.readFile(opencodeJsonPath(), 'utf-8');
-    const mcpLine = raw.split('\n').find((l) => l.includes('"codragraph"'));
+    const mcpLine = raw.split('\n').find((l) => l.includes('"@codragraph/cli"'));
     expect(mcpLine).toMatch(/^    /);
   });
 

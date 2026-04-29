@@ -7,8 +7,8 @@
  * queries (TypeScript grammar has interface/type nodes), and language ID.
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
-import type { NodeLabel } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
+import type { NodeLabel } from '@codragraph/shared';
 import { defineLanguage } from '../language-provider.js';
 import { createClassExtractor } from '../class-extractors/generic.js';
 import {

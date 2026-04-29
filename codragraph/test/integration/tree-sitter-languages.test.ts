@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { loadParser, loadLanguage } from '../../src/core/tree-sitter/parser-loader.js';
-import { SupportedLanguages, getLanguageFromFilename } from 'codragraph-shared';
+import { SupportedLanguages, getLanguageFromFilename } from '@codragraph/shared';
 import { getProvider } from '../../src/core/ingestion/languages/index.js';
 import Parser from 'tree-sitter';
 

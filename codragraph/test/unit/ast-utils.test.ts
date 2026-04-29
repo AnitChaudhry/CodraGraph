@@ -15,7 +15,7 @@ vi.mock('../../src/core/tree-sitter/parser-loader.js', () => ({
   ),
 }));
 
-vi.mock('codragraph-shared', () => ({
+vi.mock('@codragraph/shared', () => ({
   getLanguageFromFilename,
 }));
 

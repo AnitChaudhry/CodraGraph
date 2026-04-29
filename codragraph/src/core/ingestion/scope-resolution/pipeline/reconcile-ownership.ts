@@ -41,7 +41,7 @@
  * follow-up plan.
  */
 
-import type { ParsedFile } from 'codragraph-shared';
+import type { ParsedFile } from '@codragraph/shared';
 import type { MutableSemanticModel, SemanticModel } from '../../model/semantic-model.js';
 import { simpleQualifiedName } from '../graph-bridge/ids.js';
 

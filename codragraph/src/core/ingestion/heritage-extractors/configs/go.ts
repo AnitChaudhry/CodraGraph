@@ -1,6 +1,6 @@
 // codragraph/src/core/ingestion/heritage-extractors/configs/go.ts
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { HeritageExtractionConfig } from '../../heritage-types.js';
 
 /**

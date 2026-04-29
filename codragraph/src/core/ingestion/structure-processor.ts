@@ -1,5 +1,5 @@
 import { generateId } from '../../lib/utils.js';
-import type { GraphNode, GraphRelationship } from 'codragraph-shared';
+import type { GraphNode, GraphRelationship } from '@codragraph/shared';
 import { KnowledgeGraph } from '../graph/types.js';
 
 export const processStructure = (graph: KnowledgeGraph, paths: string[]) => {

@@ -223,7 +223,7 @@ async function upsertCodraGraphSection(
  * Works natively with Claude Code, Cursor, and GitHub Copilot
  */
 async function installSkills(repoPath: string): Promise<string[]> {
-  const skillsDir = path.join(repoPath, '.claude', 'skills', 'codragraph');
+  const skillsDir = path.join(repoPath, '.claude', 'skills', '@codragraph/cli');
   const installedSkills: string[] = [];
 
   // Skill definitions bundled with the package

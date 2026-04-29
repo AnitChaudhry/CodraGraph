@@ -1,5 +1,5 @@
 {
-  "name": "codragraph-compress",
+  "name": "@codragraph/compress",
   "version": "0.1.0",
   "description": "Lossless semantic compression for LLM contexts — strip grammar, keep facts, save tokens.",
   "author": {
@@ -9,7 +9,7 @@
   },
   "license": "Apache-2.0",
   "keywords": [
-    "codragraph",
+    "@codragraph/cli",
     "compression",
     "token-savings",
     "llm",
@@ -45,8 +45,8 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "codragraph-harness": "*",
-    "codragraph-shared": "*"
+    "@codragraph/harness": "*",
+    "@codragraph/shared": "*"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

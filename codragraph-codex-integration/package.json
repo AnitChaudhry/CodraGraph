@@ -1,5 +1,5 @@
 {
-  "name": "codragraph-codex-integration",
+  "name": "@codragraph/codex",
   "version": "0.1.0",
   "description": "OpenAI Codex CLI integration for CodraGraph — graph-aware context for Codex commands via codex.config.json hooks.",
   "author": {
@@ -11,7 +11,7 @@
   "keywords": [
     "codex",
     "openai-codex",
-    "codragraph",
+    "@codragraph/cli",
     "code-intelligence",
     "knowledge-graph",
     "ai-agent"
@@ -25,7 +25,7 @@
     "node": ">=20.0.0"
   },
   "peerDependencies": {
-    "codragraph": ">=1.0.0"
+    "@codragraph/cli": ">=1.0.0"
   },
   "publishConfig": {
     "access": "public",

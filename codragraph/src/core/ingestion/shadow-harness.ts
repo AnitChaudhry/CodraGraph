@@ -14,7 +14,7 @@
  *     evidence-kind breakdown of divergences, grand-total overall row.
  *   - Optionally persists the report as JSON under
  *     `.codragraph/shadow-parity/` so the static dashboard at
- *     `codragraph/shadow-parity-dashboard/` can render it offline.
+ *     `@codragraph/cli/shadow-parity-dashboard/` can render it offline.
  *
  * ## What it does NOT do
  *
@@ -68,7 +68,7 @@ import {
   type ShadowDiff,
   type ShadowParityReport,
   type SupportedLanguages,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 
 // ─── Public API ────────────────────────────────────────────────────────────
 

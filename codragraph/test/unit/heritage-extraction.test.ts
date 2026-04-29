@@ -7,7 +7,7 @@ import type {
   HeritageExtractorContext,
 } from '../../src/core/ingestion/heritage-types.js';
 import type { CaptureMap } from '../../src/core/ingestion/language-provider.js';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import { getProvider } from '../../src/core/ingestion/languages/index.js';
 
 // ---------------------------------------------------------------------------

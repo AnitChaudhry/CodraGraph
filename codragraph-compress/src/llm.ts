@@ -8,7 +8,7 @@
 // Provider-agnostic: takes any InferenceProvider from codragraph-harness.
 // Embedding similarity is opt-in (off by default to avoid extra API calls).
 
-import type { InferenceProvider } from 'codragraph-harness';
+import type { InferenceProvider } from '@codragraph/harness';
 import type {
   Compressor,
   CompressOptions,

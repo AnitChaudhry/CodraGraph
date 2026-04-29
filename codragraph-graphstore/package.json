@@ -1,5 +1,5 @@
 {
-  "name": "codragraph-graphstore",
+  "name": "@codragraph/graphstore",
   "version": "0.1.0",
   "description": "Dolt-like content-addressed versioning for the CodraGraph knowledge graph — snapshots, branches, diffs, three-way merge.",
   "author": {
@@ -9,7 +9,7 @@
   },
   "license": "Apache-2.0",
   "keywords": [
-    "codragraph",
+    "@codragraph/cli",
     "knowledge-graph",
     "versioning",
     "content-addressed",
@@ -63,7 +63,7 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "codragraph-shared": "*"
+    "@codragraph/shared": "*"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

@@ -1,4 +1,4 @@
-import type { GraphNode, GraphRelationship } from 'codragraph-shared';
+import type { GraphNode, GraphRelationship } from '@codragraph/shared';
 import type { KnowledgeGraph } from './types';
 
 export const createKnowledgeGraph = (): KnowledgeGraph => {

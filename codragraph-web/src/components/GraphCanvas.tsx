@@ -18,7 +18,7 @@ import {
   SigmaNodeAttributes,
   SigmaEdgeAttributes,
 } from '../lib/graph-adapter';
-import type { GraphNode } from 'codragraph-shared';
+import type { GraphNode } from '@codragraph/shared';
 import { QueryFAB } from './QueryFAB';
 import Graph from 'graphology';
 

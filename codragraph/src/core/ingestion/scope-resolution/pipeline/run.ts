@@ -23,7 +23,7 @@
  * Plan: `docs/plans/2026-04-20-001-refactor-emit-pipeline-generalization-plan.md`.
  */
 
-import type { ParsedFile, RegistryProviders } from 'codragraph-shared';
+import type { ParsedFile, RegistryProviders } from '@codragraph/shared';
 import type { KnowledgeGraph } from '../../../graph/types.js';
 import type { MutableSemanticModel, SemanticModel } from '../../model/semantic-model.js';
 import { reconcileOwnership, validateOwnershipParity } from './reconcile-ownership.js';

@@ -38,13 +38,13 @@ describe('direct CLI tool commands', () => {
     await detectChangesCommand({
       scope: 'compare',
       baseRef: 'main',
-      repo: 'codragraph',
+      repo: '@codragraph/cli',
     });
 
     expect(callToolMock).toHaveBeenCalledWith('detect_changes', {
       scope: 'compare',
       base_ref: 'main',
-      repo: 'codragraph',
+      repo: '@codragraph/cli',
     });
     expect(writeSyncMock).toHaveBeenCalledWith(1, expect.stringContaining('Risk level: low'));
   });

@@ -1,7 +1,7 @@
 // codragraph/src/core/ingestion/method-extractors/configs/rust.ts
 // Verified against tree-sitter-rust 0.23.1
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type {
   MethodExtractionConfig,
   ParameterInfo,

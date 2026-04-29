@@ -17,7 +17,7 @@
  * migrate.
  */
 
-import type { NodeLabel, ScopeId, SymbolDefinition } from 'codragraph-shared';
+import type { NodeLabel, ScopeId, SymbolDefinition } from '@codragraph/shared';
 import type { ScopeResolutionIndexes } from '../../model/scope-resolution-indexes.js';
 import { generateId } from '../../../../lib/utils.js';
 import {

@@ -8,7 +8,7 @@
  * for its left-to-right multiple inheritance resolution order.
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import { createClassExtractor } from '../class-extractors/generic.js';
 import { cClassConfig, cppClassConfig } from '../class-extractors/configs/c-cpp.js';
 import { defineLanguage } from '../language-provider.js';
@@ -30,7 +30,7 @@ const FUNCTION_DECLARATION_TYPES = new Set([
   'function_item',
 ]);
 import type { SyntaxNode } from '../utils/ast-helpers.js';
-import type { NodeLabel } from 'codragraph-shared';
+import type { NodeLabel } from '@codragraph/shared';
 import type { LanguageProvider } from '../language-provider.js';
 import { createFieldExtractor } from '../field-extractors/generic.js';
 import {

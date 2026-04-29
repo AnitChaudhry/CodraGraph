@@ -745,7 +745,7 @@ async function getRecipesResource(
   const repo = await backend.resolveRepo(repoName);
   let result;
   try {
-    const harnessModuleId: string = 'codragraph-harness/mcp/handler';
+    const harnessModuleId: string = '@codragraph/harness/mcp/handler';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mod = (await import(/* @vite-ignore */ harnessModuleId)) as any;
     result = await mod.handleHarnessRecipesList({

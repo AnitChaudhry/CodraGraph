@@ -15,7 +15,7 @@
 
 import path from 'node:path';
 import { generateId } from '../../lib/utils.js';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { KnowledgeGraph } from '../graph/types.js';
 import {
   preprocessCobolSource,

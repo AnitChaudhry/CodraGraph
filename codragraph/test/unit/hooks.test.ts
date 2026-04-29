@@ -31,7 +31,7 @@ const PLUGIN_HOOK = path.resolve(
   '..',
   '..',
   '..',
-  'codragraph-claude-plugin',
+  '@codragraph/claude-plugin',
   'hooks',
   'codragraph-hook.js',
 );

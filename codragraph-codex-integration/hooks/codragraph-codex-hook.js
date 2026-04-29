@@ -31,7 +31,7 @@ const main = async () => {
 
   if (isPost) {
     // Post-edit: ask codragraph whether the index is now stale.
-    const result = spawnSync('codragraph', ['detect-changes', '--scope=unstaged'], {
+    const result = spawnSync('@codragraph/cli', ['detect-changes', '--scope=unstaged'], {
       cwd: payload.repoRoot ?? process.cwd(),
       encoding: 'utf-8',
       timeout: 8000,
@@ -51,7 +51,7 @@ const main = async () => {
     process.stdout.write(JSON.stringify({ context: '', blocked: false }));
     return;
   }
-  const result = spawnSync('codragraph', ['augment', String(target)], {
+  const result = spawnSync('@codragraph/cli', ['augment', String(target)], {
     cwd: payload.repoRoot ?? process.cwd(),
     encoding: 'utf-8',
     timeout: 8000,

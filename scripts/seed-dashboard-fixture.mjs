@@ -201,7 +201,7 @@ const sourceB = () => ({
 
 // ── Build commits ─────────────────────────────────────────────────────
 const cas = new FsCAS({ root: graphstoreRoot });
-const author = { name: 'codragraph', email: 'noreply@codragraph.local' };
+const author = { name: '@codragraph/cli', email: 'noreply@codragraph.local' };
 
 console.error('  · serializing snapshot A');
 const snapA = await serializeSnapshot({

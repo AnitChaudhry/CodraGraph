@@ -10,11 +10,11 @@
  * Processes help agents understand how features work through the codebase.
  */
 
-import type { GraphNode, NodeLabel } from 'codragraph-shared';
+import type { GraphNode, NodeLabel } from '@codragraph/shared';
 import { KnowledgeGraph } from '../graph/types.js';
 import { CommunityMembership } from './community-processor.js';
 import { calculateEntryPointScore, isTestFile } from './entry-point-scoring.js';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import { isDev } from './utils/env.js';
 
 // ============================================================================

@@ -39,7 +39,7 @@ import { compileAndLoadCandidate } from '../loader.js';
 
 const program = new Command();
 program
-  .name('codragraph-harness')
+  .name('@codragraph/harness')
   .description('Auto-tuned harnesses for AI agents — Meta-Harness search loop')
   .version('0.1.0');
 
@@ -252,7 +252,7 @@ async function runSearch(opts: SearchCliOptions): Promise<void> {
   // In-process graph client. We construct codragraph's LocalBackend directly
   // — same monorepo, no HTTP hop. Out-of-process / hosted scenarios use a
   // future MCP-over-HTTP client (Phase 2).
-  const { LocalBackend } = await import('codragraph/mcp/local/local-backend');
+  const { LocalBackend } = await import('@codragraph/cli/mcp/local/local-backend');
   const backend = new LocalBackend();
   const graph = new LocalGraphClient({ backend, defaultRepo: opts.repo });
 
@@ -400,7 +400,7 @@ async function runSwarmSearch(opts: SwarmCliOptions): Promise<void> {
   const criticInference = await makeInferenceProvider(opts.criticInference as ProviderName);
   const judge = opts.judge ? await makeInferenceProvider(opts.judge as ProviderName) : undefined;
 
-  const { LocalBackend } = await import('codragraph/mcp/local/local-backend');
+  const { LocalBackend } = await import('@codragraph/cli/mcp/local/local-backend');
   const backend = new LocalBackend();
   const graph = new LocalGraphClient({ backend, defaultRepo: opts.repo });
 

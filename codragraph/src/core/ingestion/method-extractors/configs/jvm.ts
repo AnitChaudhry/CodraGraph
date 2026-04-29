@@ -1,6 +1,6 @@
 // codragraph/src/core/ingestion/method-extractors/configs/jvm.ts
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type {
   MethodExtractionConfig,
   ParameterInfo,

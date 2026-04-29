@@ -1,5 +1,5 @@
 import type Parser from 'tree-sitter';
-import type { Capture, NodeLabel, Range } from 'codragraph-shared';
+import type { Capture, NodeLabel, Range } from '@codragraph/shared';
 import type { LanguageProvider } from '../language-provider.js';
 import { generateId } from '../../../lib/utils.js';
 

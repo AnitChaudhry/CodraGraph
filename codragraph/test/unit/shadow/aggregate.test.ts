@@ -13,7 +13,7 @@ import {
   type ResolutionEvidence,
   type ShadowAgreement,
   type ShadowDiff,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
 

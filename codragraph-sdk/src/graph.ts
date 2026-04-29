@@ -5,7 +5,10 @@
 // codragraph CLI subcommand or MCP server), expose a direct adapter in a
 // future phase.
 
-export { HttpGraphClient, type HttpGraphClientOptions } from 'codragraph-harness/graph/http-client';
+export {
+  HttpGraphClient,
+  type HttpGraphClientOptions,
+} from '@codragraph/harness/graph/http-client';
 
 export type {
   GraphClient,
@@ -15,4 +18,4 @@ export type {
   GraphContextResult,
   GraphImpactInput,
   GraphImpactResult,
-} from 'codragraph-harness/types';
+} from '@codragraph/harness/types';

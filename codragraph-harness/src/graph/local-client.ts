@@ -8,7 +8,7 @@
 // HttpGraphClient becomes the Phase 2 path for out-of-process / hosted
 // scenarios (uses MCP-over-HTTP via @modelcontextprotocol/sdk Client).
 
-import type { LocalBackend } from 'codragraph/mcp/local/local-backend';
+import type { LocalBackend } from '@codragraph/cli/mcp/local/local-backend';
 import type {
   GraphClient,
   GraphContextInput,

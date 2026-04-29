@@ -11,7 +11,7 @@
  * `@type-binding.name` + `@type-binding.type`.
  */
 
-import type { CaptureMatch, ParsedImport, ParsedTypeBinding, TypeRef } from 'codragraph-shared';
+import type { CaptureMatch, ParsedImport, ParsedTypeBinding, TypeRef } from '@codragraph/shared';
 
 // ─── interpretImport ──────────────────────────────────────────────────────
 

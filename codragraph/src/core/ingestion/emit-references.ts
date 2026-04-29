@@ -54,7 +54,7 @@ import type {
   Scope,
   ScopeId,
   SymbolDefinition,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 import type { KnowledgeGraph } from '../graph/types.js';
 import type { ScopeResolutionIndexes } from './model/scope-resolution-indexes.js';
 

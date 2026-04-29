@@ -4,15 +4,15 @@
 // responsible for: setting up the agent's tools, running the per-task loop,
 // invoking the judge, accumulating tokens/latency/cost.
 
-import { CodebaseQAEvaluator } from 'codragraph-harness/evaluator/impl';
-import { scoreAnswer } from 'codragraph-harness/evaluator/judge';
-import { LlmCompressor } from 'codragraph-compress/index';
-import { graphAware } from 'codragraph-harness/harness/seeds/index';
-import { LocalGraphClient } from 'codragraph-harness/graph/local-client';
-import { resolveBudget } from 'codragraph-harness/types';
-import type { InferenceProvider } from 'codragraph-harness/inference/interface';
-import type { Harness, HarnessContext } from 'codragraph-harness/harness/interface';
-import type { GraphClient } from 'codragraph-harness/types';
+import { CodebaseQAEvaluator } from '@codragraph/harness/evaluator/impl';
+import { scoreAnswer } from '@codragraph/harness/evaluator/judge';
+import { LlmCompressor } from '@codragraph/compress/index';
+import { graphAware } from '@codragraph/harness/harness/seeds/index';
+import { LocalGraphClient } from '@codragraph/harness/graph/local-client';
+import { resolveBudget } from '@codragraph/harness/types';
+import type { InferenceProvider } from '@codragraph/harness/inference/interface';
+import type { Harness, HarnessContext } from '@codragraph/harness/harness/interface';
+import type { GraphClient } from '@codragraph/harness/types';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { ModelSpec, TaskInput, TaskResult, TreatmentTag } from './types.js';
@@ -307,7 +307,7 @@ async function runGraphCompress(input: RunTreatmentInput): Promise<TaskResult[]>
 async function buildGraphClient(repoPath: string): Promise<GraphClient> {
   // Use codragraph's LocalBackend in-process. Requires the repo to have been
   // analyzed (`codragraph analyze`) before the bench runs.
-  const { LocalBackend } = await import('codragraph/mcp/local/local-backend');
+  const { LocalBackend } = await import('@codragraph/cli/mcp/local/local-backend');
   const backend = new LocalBackend();
   return new LocalGraphClient({ backend, defaultRepo: repoPath });
 }

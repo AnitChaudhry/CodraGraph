@@ -19,7 +19,7 @@ import {
   type JobProgress,
 } from '../services/backend-client';
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { GraphNode } from 'codragraph-shared';
+import { GraphNode } from '@codragraph/shared';
 import { EmbeddingStatus } from './EmbeddingStatus';
 import { RepoAnalyzer } from './RepoAnalyzer';
 

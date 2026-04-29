@@ -20,7 +20,7 @@ import {
   type ObjectId,
   type Snapshot,
   type SnapshotStats,
-} from 'codragraph-graphstore';
+} from '@codragraph/graphstore';
 import { createLbugRowSource } from './lbug-row-source.js';
 
 /** Subdirectory of `<repo>/.codragraph` that holds versioning artifacts. */
@@ -33,7 +33,7 @@ export interface RecordAnalysisSnapshotOptions {
   readonly indexedRepoCommit?: string;
   /**
    * Author for the implicit "analyze" commit. Defaults to a generic
-   * `codragraph` identity when callers don't have a real one to hand.
+   * `@codragraph/cli` identity when callers don't have a real one to hand.
    */
   readonly author?: { readonly name: string; readonly email: string };
   /** Override the commit message — defaults to a timestamped analyze marker. */
@@ -89,7 +89,7 @@ export const recordAnalysisSnapshot = async (
     snapshot: serialized.snapshotId,
     parents,
     author: opts.author ?? {
-      name: 'codragraph',
+      name: '@codragraph/cli',
       email: 'noreply@codragraph.local',
     },
     message: opts.message ?? `analyze ${new Date().toISOString()}`,
@@ -116,7 +116,7 @@ const resolveCurrentBranch = async (opts: { root: string }): Promise<string> => 
   // branch; the CLI/MCP layer will introduce explicit `branch` /
   // `checkout` commands later. If HEAD is unborn (first analyze ever)
   // we default to DEFAULT_BRANCH.
-  const { readHead } = await import('codragraph-graphstore');
+  const { readHead } = await import('@codragraph/graphstore');
   const head = await readHead(opts);
   if (head.kind === 'branch') return head.branch;
   return DEFAULT_BRANCH;

@@ -10,8 +10,8 @@
  *   - namedBindingExtractor: present (use X::{a, b} extracts named bindings)
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
-import type { NodeLabel } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
+import type { NodeLabel } from '@codragraph/shared';
 import { createClassExtractor } from '../class-extractors/generic.js';
 import { rustClassConfig } from '../class-extractors/configs/rust.js';
 import { defineLanguage } from '../language-provider.js';

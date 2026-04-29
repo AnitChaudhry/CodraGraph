@@ -31,7 +31,7 @@
  */
 
 import type { SyntaxNode } from 'tree-sitter';
-import type { BindingRef, ParsedFile, Scope, ScopeId, SymbolDefinition } from 'codragraph-shared';
+import type { BindingRef, ParsedFile, Scope, ScopeId, SymbolDefinition } from '@codragraph/shared';
 import type { ScopeResolutionIndexes } from '../../model/scope-resolution-indexes.js';
 import { getCsharpParser } from './query.js';
 
@@ -218,7 +218,7 @@ export function populateCsharpNamespaceSiblings(
     if (moduleScope === undefined) continue;
     const moduleTypeBindings = moduleScope.typeBindings as Map<
       string,
-      import('codragraph-shared').TypeRef
+      import('@codragraph/shared').TypeRef
     >;
 
     // Accessible namespaces = this file's own namespaces + every

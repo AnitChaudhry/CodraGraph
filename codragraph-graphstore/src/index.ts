@@ -1,7 +1,7 @@
 /**
- * Public surface of `codragraph-graphstore`.
+ * Public surface of `@codragraph/graphstore`.
  *
- * Subpath imports (`codragraph-graphstore/cas`, `/snapshot`, `/history`,
+ * Subpath imports (`@codragraph/graphstore/cas`, `/snapshot`, `/history`,
  * `/diff`) are also available for callers who only need a slice. The
  * default entry re-exports everything the CLI / MCP / dashboard need.
  */

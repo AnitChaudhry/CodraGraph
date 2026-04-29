@@ -11,7 +11,7 @@
 // files in the same source/ tree. Bundle lets a candidate be a self-contained
 // .js with no relative-import resolution surprises. We mark codragraph,
 // codragraph-shared, and codragraph-harness as external so harnesses can
-// `import type { Harness } from "codragraph-harness/harness"` without
+// `import type { Harness } from "@codragraph/harness/harness"` without
 // pulling the whole library into the bundle.
 
 import { build, type Plugin } from 'esbuild';
@@ -28,9 +28,9 @@ export interface LoaderOptions {
 }
 
 const DEFAULT_EXTERNAL = [
-  'codragraph',
-  'codragraph-shared',
-  'codragraph-harness',
+  '@codragraph/cli',
+  '@codragraph/shared',
+  '@codragraph/harness',
   '@anthropic-ai/sdk',
   'openai',
   '@modelcontextprotocol/sdk',

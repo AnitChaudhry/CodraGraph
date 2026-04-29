@@ -39,7 +39,7 @@
  * Build cost is O(totalScopes). Read-only after construction.
  */
 
-import type { ParsedFile, Scope, ScopeId } from 'codragraph-shared';
+import type { ParsedFile, Scope, ScopeId } from '@codragraph/shared';
 import { isClassLike } from './scope/walkers.js';
 
 export interface WorkspaceResolutionIndex {

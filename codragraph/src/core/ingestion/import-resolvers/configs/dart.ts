@@ -3,7 +3,7 @@
  * SDK/package strategy first, then relative import strategy (with ./ prepending).
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { ImportResolutionConfig, ImportResolverStrategy } from '../types.js';
 import { resolveStandard } from '../standard.js';
 

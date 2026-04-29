@@ -20,7 +20,7 @@
  * either don't trigger the call branch or skip this pass entirely.
  */
 
-import type { ScopeId, SymbolDefinition, TypeRef } from 'codragraph-shared';
+import type { ScopeId, SymbolDefinition, TypeRef } from '@codragraph/shared';
 import type { ScopeResolutionIndexes } from '../../model/scope-resolution-indexes.js';
 import type { WorkspaceResolutionIndex } from '../workspace-index.js';
 import {

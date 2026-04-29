@@ -3,7 +3,7 @@
  * JVM-specific wildcard/member strategy, then standard fallback.
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { ImportResolutionConfig, ImportResolverStrategy } from '../types.js';
 import { createStandardStrategy } from '../standard.js';
 import { resolveJvmWildcard, resolveJvmMemberImport, KOTLIN_EXTENSIONS } from '../jvm.js';

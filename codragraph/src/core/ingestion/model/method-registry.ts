@@ -7,7 +7,7 @@
  * (array values) and arity-based filtering.
  */
 
-import type { SymbolDefinition } from 'codragraph-shared';
+import type { SymbolDefinition } from '@codragraph/shared';
 
 // ---------------------------------------------------------------------------
 // Public read-only interface

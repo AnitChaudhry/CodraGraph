@@ -12,7 +12,7 @@ import {
   type ResolutionEvidence,
   type ShadowCallsite,
   type SymbolDefinition,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────
 

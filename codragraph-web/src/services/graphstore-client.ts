@@ -6,7 +6,7 @@
  * exploding.
  *
  * The shape mirrors the MCP tools' return values from
- * `codragraph/src/mcp/local/graphstore-handler.ts` so callers can swap
+ * `@codragraph/cli/src/mcp/local/graphstore-handler.ts` so callers can swap
  * between MCP-over-HTTP and the REST endpoints as the backend evolves.
  */
 

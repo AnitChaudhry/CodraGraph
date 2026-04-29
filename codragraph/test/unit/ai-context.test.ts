@@ -128,7 +128,7 @@ describe('generateAIContextFiles', () => {
     const result = await generateAIContextFiles(tmpDir, storagePath, 'TestProject', stats);
 
     // Should have installed skill files
-    const skillsDir = path.join(tmpDir, '.claude', 'skills', 'codragraph');
+    const skillsDir = path.join(tmpDir, '.claude', 'skills', '@codragraph/cli');
     try {
       const entries = await fs.readdir(skillsDir, { recursive: true });
       expect(entries.length).toBeGreaterThan(0);

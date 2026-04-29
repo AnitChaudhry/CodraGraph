@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { type ContentAddressedStore, putJson, getJson } from 'codragraph-graphstore/cas';
-import type { ObjectId } from 'codragraph-graphstore/types';
+import { type ContentAddressedStore, putJson, getJson } from '@codragraph/graphstore/cas';
+import type { ObjectId } from '@codragraph/graphstore/types';
 import type { OrgId } from '../types.js';
 import type { AuditEvent, AuditEventInput } from './event.js';
 import { buildAuditEvent } from './event.js';

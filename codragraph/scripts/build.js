@@ -8,7 +8,7 @@
  *     a populated dist/ here, step 3 fails to resolve types.
  *  3. Build codragraph (tsc)
  *  4. Copy codragraph-shared/dist → dist/_shared
- *  5. Rewrite bare 'codragraph-shared' specifiers → relative paths
+ *  5. Rewrite bare '@codragraph/shared' specifiers → relative paths
  */
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -17,6 +17,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
+// Workspace directory names (NOT package names — package names are
+// `@codragraph/shared` / `@codragraph/graphstore`, but the on-disk
+// dirs stay as `codragraph-shared` / `codragraph-graphstore`).
 const SHARED_ROOT = path.resolve(ROOT, '..', 'codragraph-shared');
 const GRAPHSTORE_ROOT = path.resolve(ROOT, '..', 'codragraph-graphstore');
 const DIST = path.join(ROOT, 'dist');
@@ -30,7 +33,7 @@ execSync('npx tsc', { cwd: SHARED_ROOT, stdio: 'inherit' });
 // codragraph depends on this for snapshot/branch/diff types. On a
 // fresh checkout (CI, npm ci) the graphstore dist is empty until we
 // build it here, so step 3 would otherwise fail to resolve
-// `codragraph-graphstore` imports. Skip gracefully if the workspace
+// `@codragraph/graphstore` imports. Skip gracefully if the workspace
 // is not present (e.g. someone pinned an older monorepo layout).
 if (fs.existsSync(GRAPHSTORE_ROOT)) {
   console.log('[build] compiling codragraph-graphstore…');
@@ -51,15 +54,15 @@ let rewritten = 0;
 
 function rewriteFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
-  if (!content.includes('codragraph-shared')) return;
+  if (!content.includes('@codragraph/shared')) return;
 
   const relDir = path.relative(path.dirname(filePath), SHARED_DEST);
   // Always use posix separators and point to the package index
   const relImport = relDir.split(path.sep).join('/') + '/index.js';
 
   const updated = content
-    .replace(/from\s+['"]codragraph-shared['"]/g, `from '${relImport}'`)
-    .replace(/import\(\s*['"]codragraph-shared['"]\s*\)/g, `import('${relImport}')`);
+    .replace(/from\s+['"]@codragraph\/shared['"]/g, `from '${relImport}'`)
+    .replace(/import\(\s*['"]@codragraph\/shared['"]\s*\)/g, `import('${relImport}')`);
 
   if (updated !== content) {
     fs.writeFileSync(filePath, updated);

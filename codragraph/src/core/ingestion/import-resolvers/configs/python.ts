@@ -3,7 +3,7 @@
  * PEP 328 relative + proximity-based strategy, then standard fallback.
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { ImportResolutionConfig, ImportResolverStrategy } from '../types.js';
 import { createStandardStrategy } from '../standard.js';
 import { resolvePythonImportInternal } from '../python.js';

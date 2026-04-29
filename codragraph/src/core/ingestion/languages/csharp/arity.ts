@@ -20,7 +20,7 @@
  * still considered when no compatible candidate exists), per RFC §4.
  */
 
-import type { Callsite, SymbolDefinition } from 'codragraph-shared';
+import type { Callsite, SymbolDefinition } from '@codragraph/shared';
 
 export function csharpArityCompatibility(
   def: SymbolDefinition,

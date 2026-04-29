@@ -6,7 +6,7 @@
  * and file operations go through this client.
  */
 
-import type { GraphNode, GraphRelationship } from 'codragraph-shared';
+import type { GraphNode, GraphRelationship } from '@codragraph/shared';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

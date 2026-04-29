@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { canonicalJsonStringify } from 'codragraph-graphstore/cas';
-import type { ObjectId } from 'codragraph-graphstore/types';
+import { canonicalJsonStringify } from '@codragraph/graphstore/cas';
+import type { ObjectId } from '@codragraph/graphstore/types';
 import type { OrgId, UserId } from '../types.js';
 
 /**

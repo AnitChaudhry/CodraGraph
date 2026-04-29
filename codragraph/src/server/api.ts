@@ -23,7 +23,7 @@ import {
   withLbugDb,
 } from '../core/lbug/lbug-adapter.js';
 import { isWriteQuery } from '../core/lbug/pool-adapter.js';
-import { NODE_TABLES, type GraphNode, type GraphRelationship } from 'codragraph-shared';
+import { NODE_TABLES, type GraphNode, type GraphRelationship } from '@codragraph/shared';
 import { searchFTSFromLbug } from '../core/search/bm25-index.js';
 import { hybridSearch } from '../core/search/hybrid-search.js';
 // Embedding imports are lazy (dynamic import) to avoid loading onnxruntime-node
@@ -807,7 +807,7 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
   const importRecipeHandler = async (
     handlerName: 'handleHarnessRecipesList' | 'handleHarnessRecipesLookup',
   ) => {
-    const moduleId: string = 'codragraph-harness/mcp/handler';
+    const moduleId: string = '@codragraph/harness/mcp/handler';
     try {
       const mod = (await import(/* @vite-ignore */ moduleId)) as Record<string, unknown>;
       const fn = mod[handlerName];

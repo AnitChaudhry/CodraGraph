@@ -6,10 +6,10 @@
  * on resolution-context.ts (circular dependency risk).
  */
 
-import type { SymbolDefinition } from 'codragraph-shared';
+import type { SymbolDefinition } from '@codragraph/shared';
 import type { SemanticModel } from './semantic-model.js';
 import type { HeritageMap } from './heritage-map.js';
-import type { MroStrategy } from 'codragraph-shared';
+import type { MroStrategy } from '@codragraph/shared';
 
 // ---------------------------------------------------------------------------
 // MRO primitives.

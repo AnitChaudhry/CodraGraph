@@ -32,7 +32,7 @@ import { getPhaseOutput } from '../../pipeline-phases/types.js';
 import type { StructureOutput } from '../../pipeline-phases/structure.js';
 import type { ParseOutput } from '../../pipeline-phases/parse.js';
 import { isRegistryPrimary } from '../../registry-primary-flag.js';
-import { SupportedLanguages, getLanguageFromFilename } from 'codragraph-shared';
+import { SupportedLanguages, getLanguageFromFilename } from '@codragraph/shared';
 import { readFileContents } from '../../filesystem-walker.js';
 import { runScopeResolution } from './run.js';
 import { SCOPE_RESOLVERS } from './registry.js';

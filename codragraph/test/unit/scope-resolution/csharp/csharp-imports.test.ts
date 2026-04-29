@@ -10,7 +10,7 @@ import { describe, it, expect } from 'vitest';
 import { emitCsharpScopeCaptures } from '../../../../src/core/ingestion/languages/csharp/captures.js';
 import { interpretCsharpImport } from '../../../../src/core/ingestion/languages/csharp/interpret.js';
 import { resolveCsharpImportTarget } from '../../../../src/core/ingestion/languages/csharp/import-target.js';
-import type { ParsedImport, WorkspaceIndex } from 'codragraph-shared';
+import type { ParsedImport, WorkspaceIndex } from '@codragraph/shared';
 
 function importsFor(src: string): ParsedImport[] {
   const matches = emitCsharpScopeCaptures(src, 'test.cs');

@@ -18,7 +18,7 @@
  * generalization plan.
  */
 
-import type { ParsedFile, ScopeId, TypeRef } from 'codragraph-shared';
+import type { ParsedFile, ScopeId, TypeRef } from '@codragraph/shared';
 import type { ScopeResolutionIndexes } from '../../model/scope-resolution-indexes.js';
 import type { WorkspaceResolutionIndex } from '../workspace-index.js';
 

@@ -8,7 +8,7 @@ import {
   useMemo,
   ReactNode,
 } from 'react';
-import type { GraphNode, NodeLabel, PipelineProgress } from 'codragraph-shared';
+import type { GraphNode, NodeLabel, PipelineProgress } from '@codragraph/shared';
 import type { KnowledgeGraph } from '../core/graph/types';
 import { createKnowledgeGraph } from '../core/graph/graph';
 import type {

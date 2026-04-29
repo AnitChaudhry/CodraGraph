@@ -1,6 +1,6 @@
 // codragraph/src/core/ingestion/heritage-extractors/configs/ruby.ts
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { HeritageExtractionConfig, HeritageInfo } from '../../heritage-types.js';
 import type { SyntaxNode } from '../../utils/ast-helpers.js';
 

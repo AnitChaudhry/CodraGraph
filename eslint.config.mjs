@@ -11,9 +11,9 @@ export default [
       '**/dist/**',
       '**/node_modules/**',
       '**/coverage/**',
-      'codragraph/vendor/**',
+      '@codragraph/cli/vendor/**',
       'codragraph-web/src/vendor/**',
-      'codragraph/test/fixtures/**',
+      '@codragraph/cli/test/fixtures/**',
       'codragraph-web/playwright-report/**',
       'codragraph-web/test-results/**',
       '**/*.d.ts',
@@ -60,7 +60,7 @@ export default [
 
   // CLI package — allow console.log (it's a CLI tool)
   {
-    files: ['codragraph/src/cli/**/*.ts', 'codragraph/src/server/**/*.ts'],
+    files: ['@codragraph/cli/src/cli/**/*.ts', '@codragraph/cli/src/server/**/*.ts'],
     rules: {
       'no-console': 'off',
     },

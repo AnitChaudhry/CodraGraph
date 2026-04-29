@@ -27,7 +27,7 @@ import type {
   ScopeTree,
   SymbolDefinition,
   TypeRef,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 
 function fakeScope(
   kind: Scope['kind'],

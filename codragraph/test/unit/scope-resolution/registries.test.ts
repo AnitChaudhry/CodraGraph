@@ -41,7 +41,7 @@ import {
   type ScopeKind,
   type SymbolDefinition,
   type TypeRef,
-} from 'codragraph-shared';
+} from '@codragraph/shared';
 
 // ─── Test helpers ───────────────────────────────────────────────────────────
 

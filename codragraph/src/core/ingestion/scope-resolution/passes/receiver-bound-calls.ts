@@ -32,7 +32,7 @@
  * resolved to a wrong target.
  */
 
-import type { ParsedFile, SymbolDefinition } from 'codragraph-shared';
+import type { ParsedFile, SymbolDefinition } from '@codragraph/shared';
 import type { KnowledgeGraph } from '../../../graph/types.js';
 import type { ScopeResolutionIndexes } from '../../model/scope-resolution-indexes.js';
 import type { SemanticModel } from '../../model/semantic-model.js';

@@ -73,8 +73,8 @@ import type {
   ScopeKind,
   SymbolDefinition,
   TypeRef,
-} from 'codragraph-shared';
-import { buildPositionIndex, buildScopeTree, makeScopeId } from 'codragraph-shared';
+} from '@codragraph/shared';
+import { buildPositionIndex, buildScopeTree, makeScopeId } from '@codragraph/shared';
 import type { LanguageProvider } from './language-provider.js';
 
 // ─── Narrow hook surface the extractor actually uses ───────────────────────

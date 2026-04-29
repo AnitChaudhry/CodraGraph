@@ -9,7 +9,7 @@
  * per-language pipeline phase file.
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { ScopeResolver } from '../contract/scope-resolver.js';
 import { pythonScopeResolver } from '../../languages/python/scope-resolver.js';
 import { csharpScopeResolver } from '../../languages/csharp/scope-resolver.js';

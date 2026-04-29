@@ -19,7 +19,7 @@
  * `parentsByDefId`) so C3 implementations have what they need.
  */
 
-import type { ParsedFile } from 'codragraph-shared';
+import type { ParsedFile } from '@codragraph/shared';
 import type { KnowledgeGraph } from '../../../graph/types.js';
 import type { GraphNodeLookup } from '../graph-bridge/node-lookup.js';
 import type { LinearizeStrategy } from '../contract/scope-resolver.js';

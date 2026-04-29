@@ -37,7 +37,7 @@ interface ResolvedCreds {
 const resolveCredsFromConfig = async (name: ProviderName): Promise<ResolvedCreds | null> => {
   try {
     // Lazy import so codragraph stays a soft runtime dep.
-    const moduleId: string = 'codragraph/storage/repo-manager';
+    const moduleId: string = '@codragraph/cli/storage/repo-manager';
     const mod = (await import(/* @vite-ignore */ moduleId)) as {
       loadCLIConfig?: () => Promise<unknown>;
       getProviderConfig?: (

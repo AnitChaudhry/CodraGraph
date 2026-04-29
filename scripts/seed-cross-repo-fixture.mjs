@@ -48,7 +48,7 @@ const seedRepo = async (repoName, sources) => {
   await fs.mkdir(storagePath, { recursive: true });
 
   const cas = new FsCAS({ root: graphstoreRoot });
-  const author = { name: 'codragraph', email: 'noreply@codragraph.local' };
+  const author = { name: '@codragraph/cli', email: 'noreply@codragraph.local' };
 
   let parents = [];
   let lastCommitId = null;

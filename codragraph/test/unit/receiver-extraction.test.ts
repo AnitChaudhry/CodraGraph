@@ -3,7 +3,7 @@ import Parser from 'tree-sitter';
 import TypeScript from 'tree-sitter-typescript';
 import type { SyntaxNode } from '../../src/core/ingestion/utils/ast-helpers.js';
 import { getProvider } from '../../src/core/ingestion/languages/index.js';
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 
 const HTTP_CLIENT_RECEIVERS = new Set([
   'axios',

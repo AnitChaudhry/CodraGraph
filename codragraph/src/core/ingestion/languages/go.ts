@@ -9,7 +9,7 @@
  *   - callRouter: present (Go method calls may need routing)
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import { createClassExtractor } from '../class-extractors/generic.js';
 import { goClassConfig } from '../class-extractors/configs/go.js';
 import { defineLanguage } from '../language-provider.js';

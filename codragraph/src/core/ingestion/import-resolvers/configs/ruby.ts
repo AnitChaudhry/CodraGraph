@@ -3,7 +3,7 @@
  * Require/require_relative suffix matching — no standard fallback.
  */
 
-import { SupportedLanguages } from 'codragraph-shared';
+import { SupportedLanguages } from '@codragraph/shared';
 import type { ImportResolutionConfig, ImportResolverStrategy } from '../types.js';
 import { suffixResolve } from '../utils.js';
 
