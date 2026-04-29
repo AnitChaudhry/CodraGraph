@@ -1,0 +1,57 @@
+name: Feature request
+description: Propose a new capability or behaviour change.
+title: "[feature] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We love feature requests. Two requests though:
+        - Tell us the **problem** before the **solution**. We may have
+          a better answer in mind.
+        - Check existing issues + the [INSTALL.md](../INSTALL.md) /
+          [README.md](../README.md) to make sure it's not already shipped.
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Target package
+      options:
+        - codragraph (CLI / MCP / server)
+        - codragraph-sdk
+        - codragraph-graphstore
+        - codragraph-harness
+        - codragraph-compress
+        - codragraph-web (dashboard)
+        - A plugin (claude / cursor / codex)
+        - Cross-cutting / not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can't you do today? Who is the user? What's the workflow?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Optional. What you have in mind, if anything specific.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: 'Workarounds you''ve tried, or other ways to solve it.'
+
+  - type: checkboxes
+    id: pre-flight
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I searched existing issues and didn't find a duplicate
+          required: true

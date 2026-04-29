@@ -1,0 +1,31 @@
+# CodraGraph code owners.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-security/customizing-your-repository/about-code-owners
+#
+# Owners listed here are auto-requested for review on PRs that touch
+# the matching files. The first matching pattern wins.
+
+# Default: every file falls back to the project owner.
+* @AnitChaudhry
+
+# Per-package owners (extend later as the contributor base grows).
+/codragraph/                       @AnitChaudhry
+/codragraph-sdk/                   @AnitChaudhry
+/codragraph-graphstore/            @AnitChaudhry
+/codragraph-harness/               @AnitChaudhry
+/codragraph-compress/              @AnitChaudhry
+/codragraph-shared/                @AnitChaudhry
+/codragraph-web/                   @AnitChaudhry
+/codragraph-claude-plugin/         @AnitChaudhry
+/codragraph-cursor-integration/    @AnitChaudhry
+/codragraph-codex-integration/     @AnitChaudhry
+
+# Repo-wide tooling owners.
+/.github/                          @AnitChaudhry
+/scripts/                          @AnitChaudhry
+/branding/                         @AnitChaudhry
+/LICENSE                           @AnitChaudhry
+/CODE_OF_CONDUCT.md                @AnitChaudhry
+/SECURITY.md                       @AnitChaudhry
+/README.md                         @AnitChaudhry
+/INSTALL.md                        @AnitChaudhry
+/CONTRIBUTING.md                   @AnitChaudhry
