@@ -1,15 +1,6 @@
 import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  ArrowRight,
-  Box,
-  GitMerge,
-  Layers,
-  Link2,
-  Network,
-  Server,
-  Workflow,
-} from 'lucide-react';
+import { ArrowRight, Box, GitMerge, Layers, Link2, Network, Server, Workflow } from 'lucide-react';
 import { useAppState } from '@/hooks/useAppState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -151,8 +142,8 @@ export const ProjectsSection = (): React.JSX.Element => {
         {currentRepo && groupsForCurrent.length > 0 && (
           <span className="text-xs text-text-muted">
             <span className="text-text-secondary">{currentRepo}</span> participates in{' '}
-            <span className="font-mono text-text-primary">{groupsForCurrent.length}</span>{' '}
-            group{groupsForCurrent.length === 1 ? '' : 's'}
+            <span className="font-mono text-text-primary">{groupsForCurrent.length}</span> group
+            {groupsForCurrent.length === 1 ? '' : 's'}
           </span>
         )}
       </div>
@@ -169,11 +160,7 @@ export const ProjectsSection = (): React.JSX.Element => {
                 availableRepos={availableRepos}
                 currentRepo={currentRepo}
               />
-              <ContractsPanel
-                contracts={contracts}
-                details={details}
-                currentRepo={currentRepo}
-              />
+              <ContractsPanel contracts={contracts} details={details} currentRepo={currentRepo} />
             </>
           )}
         </div>
@@ -186,11 +173,7 @@ export const ProjectsSection = (): React.JSX.Element => {
 // Group header
 // ──────────────────────────────────────────────────────────────────────
 
-const GroupHeader = ({
-  details,
-}: {
-  details: GroupDetails | null;
-}): React.JSX.Element => {
+const GroupHeader = ({ details }: { details: GroupDetails | null }): React.JSX.Element => {
   if (!details) {
     return <Skeleton className="h-16 w-full" />;
   }
@@ -262,9 +245,7 @@ const LinkedReposPanel = ({
                     </Badge>
                   )}
                 </div>
-                <p className="mt-0.5 truncate font-mono text-xs text-text-muted">
-                  {groupPath}
-                </p>
+                <p className="mt-0.5 truncate font-mono text-xs text-text-muted">{groupPath}</p>
               </div>
             </div>
             {meta?.stats && (
@@ -299,7 +280,7 @@ const RepoStat = ({
   value: number | undefined;
 }): React.JSX.Element => (
   <div>
-    <dt className="text-[10px] uppercase tracking-wider text-text-muted">{label}</dt>
+    <dt className="text-[10px] tracking-wider text-text-muted uppercase">{label}</dt>
     <dd className="text-text-primary">{value?.toLocaleString() ?? '—'}</dd>
   </div>
 );
@@ -317,7 +298,9 @@ const ContractsPanel = ({
   details: GroupDetails | null;
   currentRepo: string | null;
 }): React.JSX.Element => {
-  if (!contracts) return <Skeleton className="h-48 w-full" />;
+  // Hooks must run on every render — the conditional return below has
+  // to land AFTER the useMemo calls. The closures handle the null
+  // contracts case internally so behavior is unchanged.
 
   // Map group-path → registry-name so cross-link arrows can label by
   // the registered repo the user knows.
@@ -332,6 +315,7 @@ const ContractsPanel = ({
   // Group cross-links by contract type for the breakdown.
   const linksByType = useMemo(() => {
     const out = new Map<string, CrossLinkRow[]>();
+    if (!contracts) return out;
     for (const link of contracts.crossLinks) {
       const arr = out.get(link.type) ?? [];
       arr.push(link);
@@ -339,6 +323,8 @@ const ContractsPanel = ({
     }
     return out;
   }, [contracts]);
+
+  if (!contracts) return <Skeleton className="h-48 w-full" />;
 
   const providers = contracts.contracts.filter((c) => c.role === 'provider');
   const consumers = contracts.contracts.filter((c) => c.role === 'consumer');
@@ -430,7 +416,7 @@ const ContractsPanel = ({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border-subtle text-left text-xs uppercase tracking-wider text-text-muted">
+                <tr className="border-b border-border-subtle text-left text-xs tracking-wider text-text-muted uppercase">
                   <th className="px-2 py-1.5">Type</th>
                   <th className="px-2 py-1.5">Role</th>
                   <th className="px-2 py-1.5">Contract</th>
@@ -469,11 +455,11 @@ const CountTile = ({
 }): React.JSX.Element => (
   <Card>
     <CardContent className="p-4">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-text-secondary">
+      <div className="flex items-center gap-2 text-xs tracking-wider text-text-secondary uppercase">
         <Icon className="h-3.5 w-3.5 text-accent" />
         {label}
       </div>
-      <div className="mt-1 font-mono text-2xl font-semibold tabular-nums text-text-primary">
+      <div className="mt-1 font-mono text-2xl font-semibold text-text-primary tabular-nums">
         {value}
       </div>
       {hint && <p className="mt-1 text-[11px] text-text-muted">{hint}</p>}
@@ -506,10 +492,18 @@ const CrossLinkRowView = ({
       <span className="font-mono text-xs text-text-muted" title={link.to.symbolRef.filePath}>
         {link.to.symbolRef.name}
       </span>
-      <span className="ml-auto truncate font-mono text-[11px] text-text-secondary" title={link.contractId}>
+      <span
+        className="ml-auto truncate font-mono text-[11px] text-text-secondary"
+        title={link.contractId}
+      >
         {link.contractId}
       </span>
-      <Badge variant={link.matchType === 'manifest' || link.matchType === 'exact' ? 'success' : 'warning'} className="text-[10px]">
+      <Badge
+        variant={
+          link.matchType === 'manifest' || link.matchType === 'exact' ? 'success' : 'warning'
+        }
+        className="text-[10px]"
+      >
         {link.matchType}
       </Badge>
     </div>
@@ -535,11 +529,7 @@ const RepoChip = ({
   </span>
 );
 
-const ContractRowView = ({
-  contract,
-}: {
-  contract: ContractRow;
-}): React.JSX.Element => (
+const ContractRowView = ({ contract }: { contract: ContractRow }): React.JSX.Element => (
   <tr className="border-b border-border-subtle/40 hover:bg-elevated">
     <td className="px-2 py-1.5">
       <Badge variant="default" className="font-mono uppercase">
@@ -547,13 +537,19 @@ const ContractRowView = ({
       </Badge>
     </td>
     <td className="px-2 py-1.5">
-      <Badge variant={contract.role === 'provider' ? 'success' : 'secondary'} className="text-[10px] uppercase">
+      <Badge
+        variant={contract.role === 'provider' ? 'success' : 'secondary'}
+        className="text-[10px] uppercase"
+      >
         {contract.role}
       </Badge>
     </td>
     <td className="px-2 py-1.5 font-mono text-xs">{contract.contractId}</td>
     <td className="px-2 py-1.5 font-mono text-xs text-text-secondary">{contract.repo}</td>
-    <td className="px-2 py-1.5 font-mono text-xs text-text-primary" title={contract.symbolRef.filePath}>
+    <td
+      className="px-2 py-1.5 font-mono text-xs text-text-primary"
+      title={contract.symbolRef.filePath}
+    >
       {contract.symbolName}
     </td>
   </tr>
@@ -568,17 +564,14 @@ const NoGroupsHint = (): React.JSX.Element => (
     <CardContent className="p-8">
       <div className="flex flex-col items-center text-center">
         <Workflow className="h-10 w-10 text-text-muted" />
-        <h3 className="mt-3 text-base font-semibold text-text-primary">
-          No groups configured yet
-        </h3>
+        <h3 className="mt-3 text-base font-semibold text-text-primary">No groups configured yet</h3>
         <p className="mt-1 max-w-md text-sm text-text-secondary">
-          Groups bundle multiple registered repos so the dashboard can show how a
-          frontend / backend / shared-lib bundle relates. Each group declares
-          contracts (HTTP routes, gRPC services, topics, shared libs) and the
-          backend resolves cross-repo links between them.
+          Groups bundle multiple registered repos so the dashboard can show how a frontend / backend
+          / shared-lib bundle relates. Each group declares contracts (HTTP routes, gRPC services,
+          topics, shared libs) and the backend resolves cross-repo links between them.
         </p>
         <pre className="mt-4 max-w-full overflow-x-auto rounded-md border border-border-subtle bg-void px-4 py-3 text-left text-xs text-text-primary">
-{`codragraph group create my-platform
+          {`codragraph group create my-platform
 codragraph group add my-platform frontend my-frontend
 codragraph group add my-platform backend  my-backend
 codragraph group sync my-platform`}
@@ -597,9 +590,8 @@ const GroupsUnavailable = ({ reason }: { reason: string }): React.JSX.Element =>
           Group endpoints not wired
         </h3>
         <p className="mt-2 text-sm text-text-secondary">
-          The codragraph server hasn't exposed{' '}
-          <code className="font-mono">/api/groups</code>. The Projects view will
-          populate once the backend ships these routes.
+          The codragraph server hasn't exposed <code className="font-mono">/api/groups</code>. The
+          Projects view will populate once the backend ships these routes.
         </p>
         <p className="mt-2 font-mono text-[11px] text-text-muted">reason: {reason}</p>
       </CardContent>

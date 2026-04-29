@@ -88,12 +88,8 @@ const tryFetchJson = async <T>(url: string): Promise<GroupsCallResult<T>> => {
 export const fetchGroupsList = (): Promise<GroupsCallResult<GroupListResult>> =>
   tryFetchJson<GroupListResult>(`${getBackendUrl()}/api/groups`);
 
-export const fetchGroupDetails = (
-  name: string,
-): Promise<GroupsCallResult<GroupDetails>> =>
-  tryFetchJson<GroupDetails>(
-    `${getBackendUrl()}/api/groups/${encodeURIComponent(name)}`,
-  );
+export const fetchGroupDetails = (name: string): Promise<GroupsCallResult<GroupDetails>> =>
+  tryFetchJson<GroupDetails>(`${getBackendUrl()}/api/groups/${encodeURIComponent(name)}`);
 
 export const fetchGroupContracts = (
   name: string,
@@ -109,9 +105,7 @@ export const fetchGroupContracts = (
   );
 };
 
-export const fetchGroupsForRepo = (
-  repo: string,
-): Promise<GroupsCallResult<GroupsForRepoResult>> =>
+export const fetchGroupsForRepo = (repo: string): Promise<GroupsCallResult<GroupsForRepoResult>> =>
   tryFetchJson<GroupsForRepoResult>(
     `${getBackendUrl()}/api/groups/for-repo?repo=${encodeURIComponent(repo)}`,
   );

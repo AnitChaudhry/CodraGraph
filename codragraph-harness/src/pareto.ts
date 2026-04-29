@@ -4,7 +4,7 @@
 // frontier on each iteration so it can target gaps (e.g., "high accuracy
 // but high tokens" or "low tokens with mediocre accuracy").
 
-import type { Scores } from "./evaluator/score.js";
+import type { Scores } from './evaluator/score.js';
 
 /** A single point on the frontier. */
 export interface ParetoPoint {

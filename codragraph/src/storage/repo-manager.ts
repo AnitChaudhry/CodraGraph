@@ -874,10 +874,7 @@ const PROVIDER_ENV_VARS: Record<ProviderName, string> = {
  *   3. process.env[PROVIDER_ENV_VARS[name]] (BYO via env)
  * Returns `null` when nothing is configured for the provider.
  */
-export const getProviderConfig = (
-  config: CLIConfig,
-  name: ProviderName,
-): ProviderConfig | null => {
+export const getProviderConfig = (config: CLIConfig, name: ProviderName): ProviderConfig | null => {
   const explicit = config.providers?.[name];
   if (explicit?.apiKey || explicit?.baseUrl || explicit?.model) {
     return explicit;
@@ -889,8 +886,7 @@ export const getProviderConfig = (
     if (config.model !== undefined) promoted.model = config.model;
     if (config.baseUrl !== undefined) promoted.baseUrl = config.baseUrl;
     if (config.apiVersion !== undefined) promoted.apiVersion = config.apiVersion;
-    if (config.isReasoningModel !== undefined)
-      promoted.isReasoningModel = config.isReasoningModel;
+    if (config.isReasoningModel !== undefined) promoted.isReasoningModel = config.isReasoningModel;
     return promoted;
   }
   const envKey = process.env[PROVIDER_ENV_VARS[name]];

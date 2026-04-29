@@ -1,6 +1,6 @@
 // Aggregation: per-task results → run summary; multiple runs → cell aggregate.
 
-import type { ModelSpec, RunSummary, TaskResult, TreatmentTag } from "./types.js";
+import type { ModelSpec, RunSummary, TaskResult, TreatmentTag } from './types.js';
 
 export interface ComputeRunSummaryInput {
   runId: string;
@@ -22,8 +22,7 @@ export function computeRunSummary(input: ComputeRunSummaryInput): RunSummary {
   const latencySorted = tr.map((t) => t.latencyMs).sort((a, b) => a - b);
   const tokensSum = tokensSorted.reduce((s, x) => s + x, 0);
   const meanTokens = tr.length > 0 ? tokensSum / tr.length : 0;
-  const meanLatencyMs =
-    tr.length > 0 ? latencySorted.reduce((s, x) => s + x, 0) / tr.length : 0;
+  const meanLatencyMs = tr.length > 0 ? latencySorted.reduce((s, x) => s + x, 0) / tr.length : 0;
   const costUsdSum = tr.reduce((s, t) => s + t.costUsd, 0);
 
   return {

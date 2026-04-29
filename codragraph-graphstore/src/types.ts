@@ -16,7 +16,7 @@
  * new id from raw bytes; use {@link parseObjectId} to validate one read
  * from disk.
  */
-export type ObjectId = string & { readonly __brand: "codragraph-graphstore.ObjectId" };
+export type ObjectId = string & { readonly __brand: 'codragraph-graphstore.ObjectId' };
 
 /** Pattern an {@link ObjectId} string must match. */
 export const OBJECT_ID_PATTERN = /^sha256:[0-9a-f]{64}$/;
@@ -41,7 +41,7 @@ export type SchemaVersion = typeof SCHEMA_VERSION;
  */
 export interface Snapshot {
   readonly schemaVersion: SchemaVersion;
-  readonly type: "snapshot";
+  readonly type: 'snapshot';
   /** CAS id of the {@link SnapshotManifest} object. */
   readonly manifestId: ObjectId;
   /** ISO 8601 timestamp at which the snapshot was serialized. */
@@ -61,7 +61,7 @@ export interface Snapshot {
  */
 export interface SnapshotManifest {
   readonly schemaVersion: SchemaVersion;
-  readonly type: "snapshot-manifest";
+  readonly type: 'snapshot-manifest';
   /** Node tables keyed by table name (matches `NODE_TABLES` in codragraph-shared). */
   readonly nodeTables: Record<string, TableManifest>;
   /** Single relationships table — `CodeRelation` in the lbug schema. */
@@ -98,7 +98,7 @@ export interface CommitAuthor {
  */
 export interface Commit {
   readonly schemaVersion: SchemaVersion;
-  readonly type: "commit";
+  readonly type: 'commit';
   readonly snapshot: ObjectId;
   /**
    * Parent commit ids. Conventions:
@@ -132,7 +132,7 @@ export interface Branch {
 }
 
 /** Default branch name created on first analyze. Matches Git/Dolt convention. */
-export const DEFAULT_BRANCH = "main" as const;
+export const DEFAULT_BRANCH = 'main' as const;
 
 // ──────────────────────────────────────────────────────────────────────
 // Diff
@@ -181,9 +181,7 @@ export interface ModifiedSymbol {
  */
 export const makeObjectId = (hexDigest: string): ObjectId => {
   if (!/^[0-9a-f]{64}$/.test(hexDigest)) {
-    throw new Error(
-      `makeObjectId: expected 64 lowercase hex chars, got ${hexDigest.length} chars`,
-    );
+    throw new Error(`makeObjectId: expected 64 lowercase hex chars, got ${hexDigest.length} chars`);
   }
   return `sha256:${hexDigest}` as ObjectId;
 };

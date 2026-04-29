@@ -6,22 +6,22 @@ import {
   type SnapshotManifest,
   type TableManifest,
   parseObjectId,
-} from "../types.js";
-import { type ContentAddressedStore, getJson } from "../cas/interface.js";
-import { diffSnapshots, type DiffSnapshotsOptions } from "./structural.js";
+} from '../types.js';
+import { type ContentAddressedStore, getJson } from '../cas/interface.js';
+import { diffSnapshots, type DiffSnapshotsOptions } from './structural.js';
 
 /**
  * Tables whose rows represent symbols carrying an `isExported` boolean.
  * Drives the "added/removed APIs" classification.
  */
 const SYMBOL_TABLES_WITH_VISIBILITY: readonly string[] = [
-  "Function",
-  "Method",
-  "Class",
-  "Interface",
-  "Struct",
-  "Trait",
-  "TypeAlias",
+  'Function',
+  'Method',
+  'Class',
+  'Interface',
+  'Struct',
+  'Trait',
+  'TypeAlias',
 ];
 
 /**
@@ -30,11 +30,11 @@ const SYMBOL_TABLES_WITH_VISIBILITY: readonly string[] = [
  * category — a missing process usually means a behavioural regression
  * rather than just a structural rearrangement.
  */
-const PROCESS_TABLES: readonly string[] = ["Process"];
+const PROCESS_TABLES: readonly string[] = ['Process'];
 
 export interface SemanticDiff extends GraphDiff {
   /** Engine identity. `semantic-v1` means the classifier ran. */
-  readonly semanticVersion: "stub" | "semantic-v1";
+  readonly semanticVersion: 'stub' | 'semantic-v1';
 
   /** Newly exported (or newly present) symbols on the `to` side. */
   readonly addedAPIs: SymbolRef[];
@@ -72,12 +72,7 @@ export interface ClassifiedModification {
   readonly signatureChange?: SignatureChange;
 }
 
-export type SemanticChangeKind =
-  | "signature"
-  | "visibility"
-  | "body"
-  | "location"
-  | "metadata";
+export type SemanticChangeKind = 'signature' | 'visibility' | 'body' | 'location' | 'metadata';
 
 export interface SignatureChange {
   readonly nameChanged?: { from: string; to: string };
@@ -95,9 +90,7 @@ export interface SignatureChange {
  * carry an `isExported` flag plus the Process table. For other node
  * types the structural diff is already the answer.
  */
-export const diffSemantic = async (
-  opts: DiffSnapshotsOptions,
-): Promise<SemanticDiff> => {
+export const diffSemantic = async (opts: DiffSnapshotsOptions): Promise<SemanticDiff> => {
   const structural = await diffSnapshots(opts);
   const { cas } = opts;
 
@@ -169,7 +162,7 @@ export const diffSemantic = async (
 
   return {
     ...structural,
-    semanticVersion: "semantic-v1",
+    semanticVersion: 'semantic-v1',
     addedAPIs: sortRefs(addedAPIs),
     removedAPIs: sortRefs(removedAPIs),
     addedProcesses: sortRefs(addedProcesses),
@@ -190,9 +183,7 @@ const loadManifestFor = async (
   return getJson<SnapshotManifest>(cas, parseObjectId(snapshot.manifestId));
 };
 
-const invertTableIndex = (
-  tableManifest: TableManifest,
-): Map<ObjectId, string> => {
+const invertTableIndex = (tableManifest: TableManifest): Map<ObjectId, string> => {
   // Multiple ids could (in theory) hash to the same row — extremely rare
   // because the id field is part of the canonical content — but we still
   // pick the first to avoid silently dropping entries on collision.
@@ -213,13 +204,10 @@ const loadSymbolRef = async (
   return {
     table,
     id,
-    name: typeof row?.["name"] === "string" ? (row["name"] as string) : undefined,
-    filePath:
-      typeof row?.["filePath"] === "string" ? (row["filePath"] as string) : undefined,
+    name: typeof row?.['name'] === 'string' ? (row['name'] as string) : undefined,
+    filePath: typeof row?.['filePath'] === 'string' ? (row['filePath'] as string) : undefined,
     isExported:
-      typeof row?.["isExported"] === "boolean"
-        ? (row["isExported"] as boolean)
-        : undefined,
+      typeof row?.['isExported'] === 'boolean' ? (row['isExported'] as boolean) : undefined,
   };
 };
 
@@ -264,24 +252,19 @@ const classifyModification = async (
   // Only proceed with classification if both sides are loadable. If
   // either is missing the GC may have run; default to "metadata".
   if (!fromRow || !toRow) {
-    out.changes = ["metadata"];
-    if (toRow && typeof toRow["name"] === "string") out.name = toRow["name"] as string;
+    out.changes = ['metadata'];
+    if (toRow && typeof toRow['name'] === 'string') out.name = toRow['name'] as string;
     return out;
   }
 
-  if (typeof toRow["name"] === "string") out.name = toRow["name"] as string;
-  if (typeof toRow["filePath"] === "string")
-    out.filePath = toRow["filePath"] as string;
+  if (typeof toRow['name'] === 'string') out.name = toRow['name'] as string;
+  if (typeof toRow['filePath'] === 'string') out.filePath = toRow['filePath'] as string;
 
   // visibility
-  const fromExp = fromRow["isExported"];
-  const toExp = toRow["isExported"];
-  if (
-    typeof fromExp === "boolean" &&
-    typeof toExp === "boolean" &&
-    fromExp !== toExp
-  ) {
-    changes.add("visibility");
+  const fromExp = fromRow['isExported'];
+  const toExp = toRow['isExported'];
+  if (typeof fromExp === 'boolean' && typeof toExp === 'boolean' && fromExp !== toExp) {
+    changes.add('visibility');
     out.visibilityFlip = { from: fromExp, to: toExp };
   }
 
@@ -293,64 +276,64 @@ const classifyModification = async (
   } = {};
   let sawSignatureChange = false;
   if (
-    typeof fromRow["name"] === "string" &&
-    typeof toRow["name"] === "string" &&
-    fromRow["name"] !== toRow["name"]
+    typeof fromRow['name'] === 'string' &&
+    typeof toRow['name'] === 'string' &&
+    fromRow['name'] !== toRow['name']
   ) {
     sigChange.nameChanged = {
-      from: fromRow["name"] as string,
-      to: toRow["name"] as string,
+      from: fromRow['name'] as string,
+      to: toRow['name'] as string,
     };
     sawSignatureChange = true;
   }
   if (
-    typeof fromRow["parameterCount"] === "number" &&
-    typeof toRow["parameterCount"] === "number" &&
-    fromRow["parameterCount"] !== toRow["parameterCount"]
+    typeof fromRow['parameterCount'] === 'number' &&
+    typeof toRow['parameterCount'] === 'number' &&
+    fromRow['parameterCount'] !== toRow['parameterCount']
   ) {
     sigChange.parameterCountChanged = {
-      from: fromRow["parameterCount"] as number,
-      to: toRow["parameterCount"] as number,
+      from: fromRow['parameterCount'] as number,
+      to: toRow['parameterCount'] as number,
     };
     sawSignatureChange = true;
   }
   if (
-    typeof fromRow["returnType"] === "string" &&
-    typeof toRow["returnType"] === "string" &&
-    fromRow["returnType"] !== toRow["returnType"]
+    typeof fromRow['returnType'] === 'string' &&
+    typeof toRow['returnType'] === 'string' &&
+    fromRow['returnType'] !== toRow['returnType']
   ) {
     sigChange.returnTypeChanged = {
-      from: fromRow["returnType"] as string,
-      to: toRow["returnType"] as string,
+      from: fromRow['returnType'] as string,
+      to: toRow['returnType'] as string,
     };
     sawSignatureChange = true;
   }
   if (sawSignatureChange) {
-    changes.add("signature");
+    changes.add('signature');
     out.signatureChange = sigChange;
   }
 
   // body
   if (
-    typeof fromRow["content"] === "string" &&
-    typeof toRow["content"] === "string" &&
-    fromRow["content"] !== toRow["content"]
+    typeof fromRow['content'] === 'string' &&
+    typeof toRow['content'] === 'string' &&
+    fromRow['content'] !== toRow['content']
   ) {
-    changes.add("body");
+    changes.add('body');
   }
 
   // location
   if (
-    fromRow["filePath"] !== toRow["filePath"] ||
-    fromRow["startLine"] !== toRow["startLine"] ||
-    fromRow["endLine"] !== toRow["endLine"]
+    fromRow['filePath'] !== toRow['filePath'] ||
+    fromRow['startLine'] !== toRow['startLine'] ||
+    fromRow['endLine'] !== toRow['endLine']
   ) {
-    changes.add("location");
+    changes.add('location');
   }
 
   // If nothing else fired but the hash differs, the change is in some
   // metadata field we don't otherwise classify (description, etc.).
-  if (changes.size === 0) changes.add("metadata");
+  if (changes.size === 0) changes.add('metadata');
 
   out.changes = [...changes].sort();
   return out;

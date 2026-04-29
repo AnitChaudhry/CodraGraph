@@ -37,9 +37,7 @@ const VALID_PROVIDERS: ProviderName[] = [
 
 const validateProvider = (raw: string): ProviderName => {
   if (!VALID_PROVIDERS.includes(raw as ProviderName)) {
-    throw new Error(
-      `Unknown provider "${raw}". Valid: ${VALID_PROVIDERS.join(', ')}`,
-    );
+    throw new Error(`Unknown provider "${raw}". Valid: ${VALID_PROVIDERS.join(', ')}`);
   }
   return raw as ProviderName;
 };
@@ -53,7 +51,9 @@ const redactKey = (key: string | undefined): string => {
 export const configListCommand = async (): Promise<void> => {
   const entries = await listProviderConfigs();
   if (entries.length === 0) {
-    console.log(`(no providers configured — set one with: codragraph config set <provider> --api-key <KEY>)`);
+    console.log(
+      `(no providers configured — set one with: codragraph config set <provider> --api-key <KEY>)`,
+    );
     console.log(`config file: ${getGlobalConfigPath()}`);
     return;
   }
@@ -95,10 +95,7 @@ export interface ConfigSetOpts {
   reasoningModel?: boolean;
 }
 
-export const configSetCommand = async (
-  provider: string,
-  opts: ConfigSetOpts,
-): Promise<void> => {
+export const configSetCommand = async (provider: string, opts: ConfigSetOpts): Promise<void> => {
   const name = validateProvider(provider);
   const patch: Partial<ProviderConfig> = {};
   if (opts.apiKey !== undefined) patch.apiKey = opts.apiKey;

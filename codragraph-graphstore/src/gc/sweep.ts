@@ -1,12 +1,7 @@
-import {
-  type ObjectId,
-  type Snapshot,
-  type SnapshotManifest,
-  parseObjectId,
-} from "../types.js";
-import { type ContentAddressedStore, getJson } from "../cas/interface.js";
-import { walkCommits } from "../history/log.js";
-import { listBranches, readHead, type BranchRefsOptions } from "../history/branch.js";
+import { type ObjectId, type Snapshot, type SnapshotManifest, parseObjectId } from '../types.js';
+import { type ContentAddressedStore, getJson } from '../cas/interface.js';
+import { walkCommits } from '../history/log.js';
+import { listBranches, readHead } from '../history/branch.js';
 
 export interface CollectReachableOptions {
   readonly cas: ContentAddressedStore;
@@ -33,7 +28,7 @@ export const collectReachableObjects = async (
   const branches = await listBranches({ root: opts.graphstoreRoot });
   for (const b of branches) seeds.push(b.head);
   const head = await readHead({ root: opts.graphstoreRoot });
-  if (head.kind === "detached") seeds.push(head.commit);
+  if (head.kind === 'detached') seeds.push(head.commit);
 
   for (const seed of seeds) {
     for await (const entry of walkCommits({ cas: opts.cas, from: seed })) {
@@ -89,17 +84,15 @@ export const gc = async (opts: GcOptions): Promise<GcResult> => {
 
   const swept: ObjectId[] = [];
   let bytesFreed = 0;
-  const fs = await import("node:fs/promises");
+  const fs = await import('node:fs/promises');
 
   // FsCAS exposes pathFor; we type-erase here so any
   // ContentAddressedStore that adds a pathFor in the future also works.
   // `bind` so the extracted reference keeps `this` pointed at the store
   // (FsCAS.pathFor reads `this.objectsDir` internally).
-  const rawPathFor = (
-    opts.cas as unknown as { pathFor?: (id: ObjectId) => string }
-  ).pathFor;
+  const rawPathFor = (opts.cas as unknown as { pathFor?: (id: ObjectId) => string }).pathFor;
   const pathFor: ((id: ObjectId) => string) | null =
-    typeof rawPathFor === "function" ? rawPathFor.bind(opts.cas) : null;
+    typeof rawPathFor === 'function' ? rawPathFor.bind(opts.cas) : null;
 
   for await (const id of opts.cas.list()) {
     if (reachable.has(id)) continue;
@@ -130,10 +123,7 @@ export const gc = async (opts: GcOptions): Promise<GcResult> => {
   };
 };
 
-const safeGet = async <T>(
-  cas: ContentAddressedStore,
-  id: ObjectId,
-): Promise<T | null> => {
+const safeGet = async <T>(cas: ContentAddressedStore, id: ObjectId): Promise<T | null> => {
   try {
     return await getJson<T>(cas, id);
   } catch {

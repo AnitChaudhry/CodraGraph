@@ -2,7 +2,7 @@
   "name": "codragraph-web",
   "private": true,
   "version": "0.0.0",
-  "description": "CodraGraph browser UI \u2014 graph explorer and AI chat for the CodraGraph knowledge graph",
+  "description": "CodraGraph browser UI — graph explorer and AI chat for the CodraGraph knowledge graph",
   "author": {
     "name": "Anit Chaudhary",
     "email": "getintouch.anit@gmail.com",

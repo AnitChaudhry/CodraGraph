@@ -1,7 +1,7 @@
 {
   "name": "codragraph-sdk",
   "version": "0.1.0",
-  "description": "One-import surface for the CodraGraph platform \u2014 graph intelligence, dynamic harness, compression. Works with Claude Code, Codex, OpenCode, any inference.",
+  "description": "One-import surface for the CodraGraph platform — graph intelligence, dynamic harness, compression. Works with Claude Code, Codex, OpenCode, any inference.",
   "author": {
     "name": "Anit Chaudhary",
     "email": "getintouch.anit@gmail.com",

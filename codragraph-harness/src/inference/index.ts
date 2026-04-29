@@ -12,15 +12,15 @@
 // stand-alone harness use cases). When the codragraph file lookup
 // fails, we silently fall back to step 4.
 
-import { ClaudeInferenceProvider } from "./claude.js";
-import { OpenAIInferenceProvider } from "./openai.js";
-import { OpenCodeInferenceProvider } from "./opencode.js";
-import type { InferenceProvider } from "./interface.js";
+import { ClaudeInferenceProvider } from './claude.js';
+import { OpenAIInferenceProvider } from './openai.js';
+import { OpenCodeInferenceProvider } from './opencode.js';
+import type { InferenceProvider } from './interface.js';
 
 export { ClaudeInferenceProvider, OpenAIInferenceProvider, OpenCodeInferenceProvider };
-export * from "./interface.js";
+export * from './interface.js';
 
-export type ProviderName = "claude" | "openai" | "opencode";
+export type ProviderName = 'claude' | 'openai' | 'opencode';
 
 interface ResolvedCreds {
   apiKey?: string;
@@ -34,12 +34,10 @@ interface ResolvedCreds {
  * the config file doesn't have an entry for this provider. Best-effort —
  * never throws.
  */
-const resolveCredsFromConfig = async (
-  name: ProviderName,
-): Promise<ResolvedCreds | null> => {
+const resolveCredsFromConfig = async (name: ProviderName): Promise<ResolvedCreds | null> => {
   try {
     // Lazy import so codragraph stays a soft runtime dep.
-    const moduleId: string = "codragraph/storage/repo-manager";
+    const moduleId: string = 'codragraph/storage/repo-manager';
     const mod = (await import(/* @vite-ignore */ moduleId)) as {
       loadCLIConfig?: () => Promise<unknown>;
       getProviderConfig?: (
@@ -86,18 +84,18 @@ export async function makeInferenceProvider(
     model: options.model ?? fromConfig.model,
   };
   switch (name) {
-    case "claude":
+    case 'claude':
       return new ClaudeInferenceProvider({
         apiKey: merged.apiKey,
         ...(merged.model ? { model: merged.model } : {}),
       });
-    case "openai":
+    case 'openai':
       return new OpenAIInferenceProvider({
         apiKey: merged.apiKey,
         ...(merged.baseURL ? { baseURL: merged.baseURL } : {}),
         ...(merged.model ? { model: merged.model } : {}),
       });
-    case "opencode":
+    case 'opencode':
       return new OpenCodeInferenceProvider({
         apiKey: merged.apiKey,
         ...(merged.baseURL ? { baseURL: merged.baseURL } : {}),

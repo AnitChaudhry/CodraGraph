@@ -122,13 +122,15 @@ export const RecipeDetailSheet = ({
               <div className="space-y-5 px-6 py-4">
                 {/* Cross-link to graph version */}
                 <section className="rounded-md border border-border-subtle bg-deep p-3">
-                  <p className="mb-1.5 text-xs uppercase tracking-wider text-text-secondary">
+                  <p className="mb-1.5 text-xs tracking-wider text-text-secondary uppercase">
                     Learned at graph version
                   </p>
                   <div className="flex items-center gap-2 text-sm">
                     <GitCommit className="h-3.5 w-3.5 text-accent" />
                     <span className="font-mono text-text-primary">
-                      {commit ? commit.short : recipe.snapshotId.replace(/^sha256:/, '').slice(0, 12)}
+                      {commit
+                        ? commit.short
+                        : recipe.snapshotId.replace(/^sha256:/, '').slice(0, 12)}
                     </span>
                     {branch && (
                       <span className="text-text-muted">
@@ -145,7 +147,7 @@ export const RecipeDetailSheet = ({
 
                 {/* Pareto scores */}
                 <section>
-                  <p className="mb-2 text-xs uppercase tracking-wider text-text-secondary">
+                  <p className="mb-2 text-xs tracking-wider text-text-secondary uppercase">
                     Pareto scores ({recipe.searchedAt.slice(0, 10)})
                   </p>
                   <div className="grid grid-cols-3 gap-2">
@@ -164,16 +166,16 @@ export const RecipeDetailSheet = ({
                   <>
                     {full.harness.rationale && (
                       <section>
-                        <p className="mb-2 text-xs uppercase tracking-wider text-text-secondary">
+                        <p className="mb-2 text-xs tracking-wider text-text-secondary uppercase">
                           Rationale
                         </p>
-                        <pre className="overflow-x-auto whitespace-pre-wrap rounded-md border border-border-subtle bg-void p-3 text-xs text-text-primary">
+                        <pre className="overflow-x-auto rounded-md border border-border-subtle bg-void p-3 text-xs whitespace-pre-wrap text-text-primary">
                           {full.harness.rationale}
                         </pre>
                       </section>
                     )}
                     <section>
-                      <p className="mb-2 flex items-center gap-1.5 text-xs uppercase tracking-wider text-text-secondary">
+                      <p className="mb-2 flex items-center gap-1.5 text-xs tracking-wider text-text-secondary uppercase">
                         <FileText className="h-3 w-3" />
                         Harness body ({full.harness.files.length} file
                         {full.harness.files.length === 1 ? '' : 's'})
@@ -196,7 +198,7 @@ export const RecipeDetailSheet = ({
                     </section>
                     {full.provenance && (
                       <section>
-                        <p className="mb-2 text-xs uppercase tracking-wider text-text-secondary">
+                        <p className="mb-2 text-xs tracking-wider text-text-secondary uppercase">
                           Provenance
                         </p>
                         <pre className="overflow-x-auto rounded-md border border-border-subtle bg-void p-3 text-xs text-text-primary">
@@ -212,7 +214,7 @@ export const RecipeDetailSheet = ({
                 <Separator />
 
                 <section>
-                  <p className="mb-2 text-xs uppercase tracking-wider text-text-secondary">
+                  <p className="mb-2 text-xs tracking-wider text-text-secondary uppercase">
                     Snapshot fingerprint
                   </p>
                   <pre
@@ -241,7 +243,7 @@ const ScoreTile = ({
   variant?: 'default' | 'success';
 }): React.JSX.Element => (
   <div className="rounded-md border border-border-subtle bg-deep p-2">
-    <div className="text-[10px] uppercase tracking-wider text-text-muted">{label}</div>
+    <div className="text-[10px] tracking-wider text-text-muted uppercase">{label}</div>
     <Badge variant={variant} className="mt-1 font-mono">
       {value}
     </Badge>
@@ -252,10 +254,9 @@ const FullRecipeUnavailable = ({ recipeId }: { recipeId: string }): React.JSX.El
   <section className="rounded-md border border-dashed border-border-subtle bg-deep p-4">
     <p className="text-sm font-medium text-text-primary">Full body not available</p>
     <p className="mt-1 text-xs text-text-secondary">
-      The server hasn't yet exposed{' '}
-      <code className="font-mono">/api/recipes/by-id/&lt;id&gt;</code>. The summary
-      above is what the listing endpoint returns. Once the by-id route is
-      wired, the harness source files and provenance will populate here.
+      The server hasn't yet exposed <code className="font-mono">/api/recipes/by-id/&lt;id&gt;</code>
+      . The summary above is what the listing endpoint returns. Once the by-id route is wired, the
+      harness source files and provenance will populate here.
     </p>
     <p className="mt-2 font-mono text-[10px] text-text-muted">recipe id: {recipeId}</p>
   </section>

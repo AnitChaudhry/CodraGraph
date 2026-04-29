@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: "/"
+    directory: '/'
     schedule:
       interval: weekly
       day: monday
@@ -10,28 +10,28 @@ updates:
     groups:
       typescript:
         patterns:
-          - "typescript"
-          - "@types/*"
+          - 'typescript'
+          - '@types/*'
       vitest:
         patterns:
-          - "vitest"
-          - "@vitest/*"
+          - 'vitest'
+          - '@vitest/*'
       radix:
         patterns:
-          - "@radix-ui/*"
+          - '@radix-ui/*'
       langchain:
         patterns:
-          - "@langchain/*"
-          - "langchain"
+          - '@langchain/*'
+          - 'langchain'
     ignore:
       # Pin tree-sitter grammar packages — manual upgrades only (native
       # ABI compatibility is fragile). Upgrade as part of the
       # codragraph release cycle.
-      - dependency-name: "tree-sitter*"
-      - dependency-name: "@huggingface/transformers"
-      - dependency-name: "onnxruntime-node"
+      - dependency-name: 'tree-sitter*'
+      - dependency-name: '@huggingface/transformers'
+      - dependency-name: 'onnxruntime-node'
 
   - package-ecosystem: github-actions
-    directory: "/"
+    directory: '/'
     schedule:
       interval: monthly

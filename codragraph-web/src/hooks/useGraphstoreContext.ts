@@ -45,9 +45,7 @@ const EMPTY: GraphstoreContext = {
   unavailable: { graphstore: false, recipes: false },
 };
 
-export const useGraphstoreContext = (
-  repo: string | null,
-): GraphstoreContext => {
+export const useGraphstoreContext = (repo: string | null): GraphstoreContext => {
   const [state, setState] = useState<GraphstoreContext>({
     ...EMPTY,
     loading: !!repo,
@@ -67,12 +65,9 @@ export const useGraphstoreContext = (
       fetchRecipesList(repo, { limit: 500 }),
     ]).then(([logRes, branchesRes, recipesRes]) => {
       if (cancelled) return;
-      const commits =
-        logRes.available ? logRes.data.commits : [];
-      const branches =
-        branchesRes.available ? branchesRes.data.branches : [];
-      const recipes =
-        recipesRes.available ? recipesRes.data.recipes : [];
+      const commits = logRes.available ? logRes.data.commits : [];
+      const branches = branchesRes.available ? branchesRes.data.branches : [];
+      const recipes = recipesRes.available ? recipesRes.data.recipes : [];
 
       const commitBySnapshotId = new Map<string, GraphstoreCommit>();
       for (const c of commits) commitBySnapshotId.set(c.snapshot, c);

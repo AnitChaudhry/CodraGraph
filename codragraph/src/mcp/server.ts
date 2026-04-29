@@ -227,7 +227,11 @@ export function createMCPServer(backend: LocalBackend): Server {
           'Phase 4: review what changed in the knowledge graph between two commits or branches. Walks log, runs structural diff, drills into modified symbols, summarizes risk.',
         arguments: [
           { name: 'repo', description: 'Repository (omit if only one indexed)', required: false },
-          { name: 'from', description: 'Older branch/commit (defaults to HEAD~1)', required: false },
+          {
+            name: 'from',
+            description: 'Older branch/commit (defaults to HEAD~1)',
+            required: false,
+          },
           { name: 'to', description: 'Newer branch/commit (defaults to HEAD)', required: false },
         ],
       },
@@ -237,8 +241,16 @@ export function createMCPServer(backend: LocalBackend): Server {
           'Phase 4: trace a specific symbol through graph history — every commit where its row hash transitioned, with messages and timestamps.',
         arguments: [
           { name: 'repo', description: 'Repository (omit if only one indexed)', required: false },
-          { name: 'symbolId', description: 'Stable symbol id (PK in the lbug node table)', required: true },
-          { name: 'table', description: 'Optional table hint (Function, Class, Method, Interface)', required: false },
+          {
+            name: 'symbolId',
+            description: 'Stable symbol id (PK in the lbug node table)',
+            required: true,
+          },
+          {
+            name: 'table',
+            description: 'Optional table hint (Function, Class, Method, Interface)',
+            required: false,
+          },
         ],
       },
       {
@@ -254,11 +266,15 @@ export function createMCPServer(backend: LocalBackend): Server {
       {
         name: 'resolve_merge',
         description:
-          "Phase 4: walk through a graph merge — preview the structural delta, run the three-way merger in dry-run, surface conflicts, and recommend a resolution path (manual edit + commit, take-theirs, take-ours, or abort).",
+          'Phase 4: walk through a graph merge — preview the structural delta, run the three-way merger in dry-run, surface conflicts, and recommend a resolution path (manual edit + commit, take-theirs, take-ours, or abort).',
         arguments: [
           { name: 'repo', description: 'Repository (omit if only one indexed)', required: false },
           { name: 'source', description: 'Branch / commit to merge in', required: true },
-          { name: 'into', description: 'Target branch (defaults to current HEAD)', required: false },
+          {
+            name: 'into',
+            description: 'Target branch (defaults to current HEAD)',
+            required: false,
+          },
         ],
       },
       {
@@ -272,11 +288,19 @@ export function createMCPServer(backend: LocalBackend): Server {
       {
         name: 'recipe_aware_search',
         description:
-          "Phase 4 × Phase 3 moat: lookup cached recipes for a task family at the current snapshot before deciding whether to run the swarm. Reuse exact matches; surface stale candidates as seeds; only re-search when nothing applies.",
+          'Phase 4 × Phase 3 moat: lookup cached recipes for a task family at the current snapshot before deciding whether to run the swarm. Reuse exact matches; surface stale candidates as seeds; only re-search when nothing applies.',
         arguments: [
           { name: 'repo', description: 'Repository (omit if only one indexed)', required: false },
-          { name: 'task_family', description: 'Task family identifier (e.g. "codebase-qa")', required: true },
-          { name: 'task', description: 'Path to the task-set JSON file (used if a search is needed)', required: false },
+          {
+            name: 'task_family',
+            description: 'Task family identifier (e.g. "codebase-qa")',
+            required: true,
+          },
+          {
+            name: 'task',
+            description: 'Path to the task-set JSON file (used if a search is needed)',
+            required: false,
+          },
         ],
       },
     ],

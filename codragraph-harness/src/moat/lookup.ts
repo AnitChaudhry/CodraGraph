@@ -1,5 +1,5 @@
-import type { Recipe, RecipeMatch, RecipeStaleness } from "./types.js";
-import type { RecipeStore } from "./recipe-store.js";
+import type { Recipe, RecipeMatch, RecipeStaleness } from './types.js';
+import type { RecipeStore } from './recipe-store.js';
 
 /**
  * Optional graphstore handle — used to compute structural staleness when
@@ -8,10 +8,7 @@ import type { RecipeStore } from "./recipe-store.js";
  * package stays a leaf of the dependency graph.
  */
 export interface GraphstoreDiffer {
-  diffSnapshots(input: {
-    from: string;
-    to: string;
-  }): Promise<{
+  diffSnapshots(input: { from: string; to: string }): Promise<{
     addedNodes: Record<string, readonly string[]>;
     removedNodes: Record<string, readonly string[]>;
     modifiedSymbols: readonly unknown[];
@@ -80,7 +77,7 @@ export const findReusableRecipes = async (
       recipe: r,
       differ: opts.differ,
     });
-    candidates.push({ kind: "candidate", recipe: r, staleness });
+    candidates.push({ kind: 'candidate', recipe: r, staleness });
   }
 
   return { exact: exact.slice(0, limit), candidates };
@@ -101,7 +98,7 @@ export const assessStaleness = async (input: {
     return {
       currentSnapshotId: input.currentSnapshotId,
       diffComputed: false,
-      riskLevel: "unknown",
+      riskLevel: 'unknown',
     };
   }
   let diff;
@@ -115,7 +112,7 @@ export const assessStaleness = async (input: {
     return {
       currentSnapshotId: input.currentSnapshotId,
       diffComputed: false,
-      riskLevel: "high",
+      riskLevel: 'high',
     };
   }
 
@@ -133,11 +130,11 @@ export const assessStaleness = async (input: {
     summary.addedEdges +
     summary.removedEdges;
 
-  let riskLevel: RecipeStaleness["riskLevel"];
-  if (total === 0) riskLevel = "low";
-  else if (total < 10) riskLevel = "low";
-  else if (total < 100) riskLevel = "medium";
-  else riskLevel = "high";
+  let riskLevel: RecipeStaleness['riskLevel'];
+  if (total === 0) riskLevel = 'low';
+  else if (total < 10) riskLevel = 'low';
+  else if (total < 100) riskLevel = 'medium';
+  else riskLevel = 'high';
 
   return {
     currentSnapshotId: input.currentSnapshotId,
@@ -147,9 +144,7 @@ export const assessStaleness = async (input: {
   };
 };
 
-const countByTable = (
-  byTable: Record<string, readonly string[]>,
-): number => {
+const countByTable = (byTable: Record<string, readonly string[]>): number => {
   let n = 0;
   for (const ids of Object.values(byTable)) n += ids.length;
   return n;

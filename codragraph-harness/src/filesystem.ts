@@ -17,11 +17,11 @@
 // 82 files read per iteration). Nothing in here is hidden or schema-locked
 // beyond what's documented above.
 
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import type { HarnessOrigin } from "./harness/interface.js";
-import type { SourceFile } from "./proposer/interface.js";
-import type { Scores } from "./evaluator/score.js";
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import type { HarnessOrigin } from './harness/interface.js';
+import type { SourceFile } from './proposer/interface.js';
+import type { Scores } from './evaluator/score.js';
 
 /** Information returned when listing the store. */
 export interface CandidateSummary {
@@ -78,17 +78,17 @@ export class CandidateStore {
     rationale?: string;
   }): Promise<string> {
     const seq = await this.nextSequence();
-    const safe = input.name.replace(/[^a-zA-Z0-9_-]/g, "-");
-    const id = `${seq.toString().padStart(3, "0")}_${safe}`;
+    const safe = input.name.replace(/[^a-zA-Z0-9_-]/g, '-');
+    const id = `${seq.toString().padStart(3, '0')}_${safe}`;
     const dir = path.join(this.rootPath, id);
 
-    await fs.mkdir(path.join(dir, "source"), { recursive: true });
-    await fs.mkdir(path.join(dir, "traces"), { recursive: true });
+    await fs.mkdir(path.join(dir, 'source'), { recursive: true });
+    await fs.mkdir(path.join(dir, 'traces'), { recursive: true });
 
     for (const file of input.files) {
-      const target = path.join(dir, "source", file.path);
+      const target = path.join(dir, 'source', file.path);
       await fs.mkdir(path.dirname(target), { recursive: true });
-      await fs.writeFile(target, file.content, "utf8");
+      await fs.writeFile(target, file.content, 'utf8');
     }
 
     const metadata: CandidateMetadata = {
@@ -99,14 +99,10 @@ export class CandidateStore {
       parents: input.parents,
       createdAt: new Date().toISOString(),
     };
-    await fs.writeFile(
-      path.join(dir, "metadata.json"),
-      JSON.stringify(metadata, null, 2),
-      "utf8",
-    );
+    await fs.writeFile(path.join(dir, 'metadata.json'), JSON.stringify(metadata, null, 2), 'utf8');
 
     if (input.rationale) {
-      await fs.writeFile(path.join(dir, "rationale.md"), input.rationale, "utf8");
+      await fs.writeFile(path.join(dir, 'rationale.md'), input.rationale, 'utf8');
     }
 
     return id;
@@ -114,15 +110,15 @@ export class CandidateStore {
 
   /** Write the per-task trace JSON. Called by the evaluator. */
   async addTrace(id: string, trace: TraceRecord): Promise<void> {
-    const target = path.join(this.rootPath, id, "traces", `${trace.taskId}.json`);
+    const target = path.join(this.rootPath, id, 'traces', `${trace.taskId}.json`);
     await fs.mkdir(path.dirname(target), { recursive: true });
-    await fs.writeFile(target, JSON.stringify(trace, null, 2), "utf8");
+    await fs.writeFile(target, JSON.stringify(trace, null, 2), 'utf8');
   }
 
   /** Write the aggregate score.json. Overwritable: re-evaluation produces a new score. */
   async addScore(id: string, scores: Scores): Promise<void> {
-    const target = path.join(this.rootPath, id, "score.json");
-    await fs.writeFile(target, JSON.stringify(scores, null, 2), "utf8");
+    const target = path.join(this.rootPath, id, 'score.json');
+    await fs.writeFile(target, JSON.stringify(scores, null, 2), 'utf8');
   }
 
   /** List every candidate in insertion order. */
@@ -131,7 +127,7 @@ export class CandidateStore {
     try {
       entries = await fs.readdir(this.rootPath);
     } catch (err: unknown) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
       throw err;
     }
     entries.sort();
@@ -139,7 +135,7 @@ export class CandidateStore {
     for (const entry of entries) {
       const meta = await this.readMetadata(entry).catch(() => null);
       if (!meta) continue;
-      const hasScore = await this.exists(path.join(this.rootPath, entry, "score.json"));
+      const hasScore = await this.exists(path.join(this.rootPath, entry, 'score.json'));
       out.push({
         id: meta.id,
         name: meta.name,
@@ -153,38 +149,38 @@ export class CandidateStore {
   }
 
   async readMetadata(id: string): Promise<CandidateMetadata> {
-    const raw = await fs.readFile(path.join(this.rootPath, id, "metadata.json"), "utf8");
+    const raw = await fs.readFile(path.join(this.rootPath, id, 'metadata.json'), 'utf8');
     return JSON.parse(raw) as CandidateMetadata;
   }
 
   async readScore(id: string): Promise<Scores | null> {
     try {
-      const raw = await fs.readFile(path.join(this.rootPath, id, "score.json"), "utf8");
+      const raw = await fs.readFile(path.join(this.rootPath, id, 'score.json'), 'utf8');
       return JSON.parse(raw) as Scores;
     } catch (err: unknown) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
       throw err;
     }
   }
 
   async readSource(id: string): Promise<SourceFile[]> {
-    const sourceDir = path.join(this.rootPath, id, "source");
+    const sourceDir = path.join(this.rootPath, id, 'source');
     return await this.readDirRecursive(sourceDir, sourceDir);
   }
 
   async readTraces(id: string): Promise<TraceRecord[]> {
-    const tracesDir = path.join(this.rootPath, id, "traces");
+    const tracesDir = path.join(this.rootPath, id, 'traces');
     let files: string[];
     try {
       files = await fs.readdir(tracesDir);
     } catch (err: unknown) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
       throw err;
     }
     const out: TraceRecord[] = [];
     for (const f of files.sort()) {
-      if (!f.endsWith(".json")) continue;
-      const raw = await fs.readFile(path.join(tracesDir, f), "utf8");
+      if (!f.endsWith('.json')) continue;
+      const raw = await fs.readFile(path.join(tracesDir, f), 'utf8');
       out.push(JSON.parse(raw) as TraceRecord);
     }
     return out;
@@ -202,7 +198,7 @@ export class CandidateStore {
     try {
       entries = await fs.readdir(this.rootPath);
     } catch (err: unknown) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") return 0;
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return 0;
       throw err;
     }
     let max = -1;
@@ -226,11 +222,11 @@ export class CandidateStore {
   }
 
   private async readDirRecursive(dir: string, base: string): Promise<SourceFile[]> {
-    let entries: import("node:fs").Dirent[];
+    let entries: import('node:fs').Dirent[];
     try {
       entries = await fs.readdir(dir, { withFileTypes: true });
     } catch (err: unknown) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
       throw err;
     }
     const out: SourceFile[] = [];
@@ -239,8 +235,8 @@ export class CandidateStore {
       if (entry.isDirectory()) {
         out.push(...(await this.readDirRecursive(full, base)));
       } else if (entry.isFile()) {
-        const content = await fs.readFile(full, "utf8");
-        out.push({ path: path.relative(base, full).replace(/\\/g, "/"), content });
+        const content = await fs.readFile(full, 'utf8');
+        out.push({ path: path.relative(base, full).replace(/\\/g, '/'), content });
       }
     }
     return out;

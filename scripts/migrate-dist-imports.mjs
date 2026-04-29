@@ -16,7 +16,14 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 const root = path.resolve(process.argv[2] ?? '.');
-const SKIP_DIRS = new Set(['node_modules', 'dist', '.git', '.codragraph', 'coverage', 'playwright-report']);
+const SKIP_DIRS = new Set([
+  'node_modules',
+  'dist',
+  '.git',
+  '.codragraph',
+  'coverage',
+  'playwright-report',
+]);
 const TARGET_EXTS = new Set(['.ts', '.tsx', '.mjs', '.js', '.cjs']);
 
 const PACKAGES = [
@@ -34,7 +41,10 @@ const REWRITE = PACKAGES.map((pkg) => ({
   pkg,
   // Matches "<pkg>/dist/<path>.js" — the trailing .js is dropped from
   // the bare-specifier form.
-  pattern: new RegExp(`(['"\`])${pkg.replace(/-/g, '\\-')}\\/dist\\/((?:[\\w@.\\-]+\\/)*[\\w@.\\-]+)\\.js\\1`, 'g'),
+  pattern: new RegExp(
+    `(['"\`])${pkg.replace(/-/g, '\\-')}\\/dist\\/((?:[\\w@.\\-]+\\/)*[\\w@.\\-]+)\\.js\\1`,
+    'g',
+  ),
   replace: (_match, quote, inner) => `${quote}${pkg}/${inner}${quote}`,
 }));
 

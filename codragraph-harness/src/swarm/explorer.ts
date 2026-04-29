@@ -10,12 +10,14 @@
 // in the prompt. Same subprocess pattern as Phase 1; differs only in what
 // it asks the LLM to focus on.
 
-import { ClaudeCodeProposer, type ClaudeCodeProposerOptions } from "../proposer/claude-code.js";
-import type { Proposer } from "../proposer/interface.js";
-import type { ProposingRole } from "./interface.js";
+import { ClaudeCodeProposer, type ClaudeCodeProposerOptions } from '../proposer/claude-code.js';
+import type { Proposer } from '../proposer/interface.js';
+import type { ProposingRole } from './interface.js';
 
-export interface ExplorerOptions
-  extends Omit<ClaudeCodeProposerOptions, "additionalGuidance" | "proposerName" | "iterationDirNamer"> {
+export interface ExplorerOptions extends Omit<
+  ClaudeCodeProposerOptions,
+  'additionalGuidance' | 'proposerName' | 'iterationDirNamer'
+> {
   /** Override the explorer's prompt guidance. Default: built-in EXPLORER_GUIDANCE. */
   guidance?: string;
 }
@@ -38,15 +40,15 @@ When proposing:
 Quality bar: a proposal that loses on accuracy but lights up an unexplored region of the (accuracy, tokens, latency) Pareto frontier is GOOD. The Exploiter will refine winners later.`;
 
 export class ExplorerRole implements ProposingRole {
-  readonly name = "explorer";
-  readonly kind = "explorer" as const;
+  readonly name = 'explorer';
+  readonly kind = 'explorer' as const;
   readonly proposer: Proposer;
 
   constructor(options: ExplorerOptions) {
     this.proposer = new ClaudeCodeProposer({
       ...options,
       additionalGuidance: options.guidance ?? EXPLORER_GUIDANCE,
-      proposerName: "explorer",
+      proposerName: 'explorer',
       iterationDirNamer: (i) => `iteration-${i}-explorer`,
     });
   }

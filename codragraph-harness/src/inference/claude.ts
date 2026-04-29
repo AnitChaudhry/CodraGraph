@@ -3,13 +3,13 @@
 // Uses @anthropic-ai/sdk Messages API. API key from `apiKey` option or
 // ANTHROPIC_API_KEY env var.
 
-import Anthropic from "@anthropic-ai/sdk";
+import Anthropic from '@anthropic-ai/sdk';
 import type {
   CompletionInput,
   CompletionResult,
   InferenceProvider,
   ToolCall,
-} from "./interface.js";
+} from './interface.js';
 
 export interface ClaudeOptions {
   apiKey?: string;
@@ -20,11 +20,11 @@ export interface ClaudeOptions {
   baseURL?: string;
 }
 
-const DEFAULT_MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = 'claude-sonnet-4-6';
 const DEFAULT_MAX_TOKENS = 4096;
 
 export class ClaudeInferenceProvider implements InferenceProvider {
-  readonly name = "claude";
+  readonly name = 'claude';
   private client: Anthropic;
   private defaults: { model: string; maxTokens: number };
 
@@ -50,9 +50,9 @@ export class ClaudeInferenceProvider implements InferenceProvider {
         system: input.systemPrompt,
         temperature: input.temperature,
         messages: input.messages
-          .filter((m) => m.role !== "system")
+          .filter((m) => m.role !== 'system')
           .map((m) => ({
-            role: m.role as "user" | "assistant",
+            role: m.role as 'user' | 'assistant',
             content: m.content,
           })),
         tools: input.tools?.map((t) => ({
@@ -69,18 +69,18 @@ export class ClaudeInferenceProvider implements InferenceProvider {
     // Duck-typing the content blocks avoids depending on which symbol path
     // (Anthropic.TextBlock vs Anthropic.Messages.TextBlock) the installed
     // SDK version exports.
-    type TextBlock = { type: "text"; text: string };
-    type ToolUseBlock = { type: "tool_use"; id: string; name: string; input: unknown };
+    type TextBlock = { type: 'text'; text: string };
+    type ToolUseBlock = { type: 'tool_use'; id: string; name: string; input: unknown };
 
     const textContent = (response.content as Array<TextBlock | ToolUseBlock | { type: string }>)
-      .filter((b): b is TextBlock => b.type === "text")
+      .filter((b): b is TextBlock => b.type === 'text')
       .map((b) => b.text)
-      .join("");
+      .join('');
 
     const toolCalls: ToolCall[] = (
       response.content as Array<TextBlock | ToolUseBlock | { type: string }>
     )
-      .filter((b): b is ToolUseBlock => b.type === "tool_use")
+      .filter((b): b is ToolUseBlock => b.type === 'tool_use')
       .map((b) => ({
         id: b.id,
         name: b.name,

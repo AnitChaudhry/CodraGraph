@@ -4,13 +4,9 @@ import {
   type TableManifest,
   type ObjectId,
   SCHEMA_VERSION,
-} from "../types.js";
-import {
-  canonicalJsonStringify,
-  putJson,
-  type ContentAddressedStore,
-} from "../cas/interface.js";
-import { type GraphRow, type RowSource, synthesizeEdgeId } from "./row-source.js";
+} from '../types.js';
+import { canonicalJsonStringify, putJson, type ContentAddressedStore } from '../cas/interface.js';
+import { type GraphRow, type RowSource, synthesizeEdgeId } from './row-source.js';
 
 export interface SerializeSnapshotOptions {
   readonly source: RowSource;
@@ -124,7 +120,7 @@ export const serializeSnapshot = async (
   // ── Manifest + Snapshot ──────────────────────────────────────────
   const manifest: SnapshotManifest = {
     schemaVersion: SCHEMA_VERSION,
-    type: "snapshot-manifest",
+    type: 'snapshot-manifest',
     nodeTables: sortedRecord(nodeTables),
     edges: edgesManifest,
   };
@@ -132,12 +128,10 @@ export const serializeSnapshot = async (
 
   const snapshot: Snapshot = {
     schemaVersion: SCHEMA_VERSION,
-    type: "snapshot",
+    type: 'snapshot',
     manifestId,
     createdAt: opts.createdAt ?? new Date().toISOString(),
-    ...(opts.indexedRepoCommit !== undefined
-      ? { indexedRepoCommit: opts.indexedRepoCommit }
-      : {}),
+    ...(opts.indexedRepoCommit !== undefined ? { indexedRepoCommit: opts.indexedRepoCommit } : {}),
   };
   const snapshotId = await putJson(cas, snapshot);
 
@@ -161,20 +155,17 @@ export const serializeSnapshot = async (
  * to fail loudly rather than silently invent a synthetic id.
  */
 const readLogicalId = (row: GraphRow, tableName: string): string => {
-  const id = row["id"];
-  if (typeof id !== "string" || id.length === 0) {
+  const id = row['id'];
+  if (typeof id !== 'string' || id.length === 0) {
     throw new Error(
       `serializeSnapshot: node row in table "${tableName}" is missing a string \`id\` ` +
-        `(got ${id === undefined ? "undefined" : JSON.stringify(id)})`,
+        `(got ${id === undefined ? 'undefined' : JSON.stringify(id)})`,
     );
   }
   return id;
 };
 
-const sortedTableManifest = (
-  rowCount: number,
-  rows: Record<string, ObjectId>,
-): TableManifest => {
+const sortedTableManifest = (rowCount: number, rows: Record<string, ObjectId>): TableManifest => {
   return { rowCount, rows: sortedRecord(rows) };
 };
 

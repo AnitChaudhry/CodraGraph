@@ -4,7 +4,7 @@
 // LLM-based compression ships first; NLP / MLM paths land later (or via
 // Docker sidecar — see project memory).
 
-export { LlmCompressor, estimateTokens } from "codragraph-compress";
+export { LlmCompressor, estimateTokens } from 'codragraph-compress';
 
 export type {
   Compressor,
@@ -13,4 +13,4 @@ export type {
   DecompressOptions,
   DecompressResult,
   CompressionLevel,
-} from "codragraph-compress";
+} from 'codragraph-compress';

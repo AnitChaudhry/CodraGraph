@@ -9,9 +9,9 @@
  * misbehaves.
  */
 
-import type { GraphRow, RowSource } from "codragraph-graphstore";
-import { NODE_TABLES, REL_TABLE_NAME, type NodeTableName } from "codragraph-shared";
-import { executeQuery } from "../lbug/lbug-adapter.js";
+import type { GraphRow, RowSource } from 'codragraph-graphstore';
+import { NODE_TABLES, REL_TABLE_NAME, type NodeTableName } from 'codragraph-shared';
+import { executeQuery } from '../lbug/lbug-adapter.js';
 
 export interface LbugRowSourceOptions {
   /** Filter the node tables enumerated by `listNodeTables` — defaults to every NODE_TABLE. */
@@ -20,9 +20,7 @@ export interface LbugRowSourceOptions {
   readonly onSkip?: (tableName: string, error: unknown) => void;
 }
 
-export const createLbugRowSource = (
-  opts: LbugRowSourceOptions = {},
-): RowSource => {
+export const createLbugRowSource = (opts: LbugRowSourceOptions = {}): RowSource => {
   const onSkip = opts.onSkip ?? (() => {});
   const tables: readonly NodeTableName[] = opts.nodeTables ?? NODE_TABLES;
 
@@ -30,9 +28,7 @@ export const createLbugRowSource = (
     return [...tables];
   };
 
-  const streamNodeTable = async function* (
-    tableName: string,
-  ): AsyncIterable<GraphRow> {
+  const streamNodeTable = async function* (tableName: string): AsyncIterable<GraphRow> {
     let rows: unknown[];
     try {
       // `MATCH (n:T) RETURN n` returns one row per node. The node value
@@ -85,11 +81,11 @@ export const createLbugRowSource = (
     let yielded = 0;
     for (const raw of rows) {
       const r = raw as Record<string, unknown> | null | undefined;
-      const from = pickField(r, "from", 0);
-      const to = pickField(r, "to", 1);
-      const type = pickField(r, "type", 2);
-      const rel = pickField(r, "rel", 3);
-      if (typeof from !== "string" || typeof to !== "string") continue;
+      const from = pickField(r, 'from', 0);
+      const to = pickField(r, 'to', 1);
+      const type = pickField(r, 'type', 2);
+      const rel = pickField(r, 'rel', 3);
+      if (typeof from !== 'string' || typeof to !== 'string') continue;
       yield normalizeEdgeRow({ from, to, type, rel: isPlainObject(rel) ? rel : null });
       yielded++;
     }
@@ -114,9 +110,9 @@ export const createLbugRowSource = (
  * caller treats that as "skip and surface".
  */
 const unwrapNode = (raw: unknown): Record<string, unknown> | null => {
-  if (!raw || typeof raw !== "object") return null;
+  if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
-  const candidate = r["n"] ?? r[0];
+  const candidate = r['n'] ?? r[0];
   return isPlainObject(candidate) ? candidate : null;
 };
 
@@ -131,7 +127,7 @@ const pickField = (
 };
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
+  typeof v === 'object' && v !== null && !Array.isArray(v);
 
 /**
  * Sanitize a node row for canonical hashing:
@@ -145,7 +141,7 @@ const isPlainObject = (v: unknown): v is Record<string, unknown> =>
 const normalizeNodeRow = (node: Record<string, unknown>): GraphRow => {
   const out: Record<string, unknown> = {};
   for (const key of Object.keys(node).sort()) {
-    if (key === "_id" || key === "_label") continue;
+    if (key === '_id' || key === '_label') continue;
     out[key] = node[key];
   }
   return out;
@@ -158,20 +154,20 @@ const normalizeEdgeRow = (r: {
   rel?: Record<string, unknown> | null;
 }): GraphRow => {
   const props: Record<string, unknown> = {};
-  if (r.rel && typeof r.rel === "object") {
+  if (r.rel && typeof r.rel === 'object') {
     for (const key of Object.keys(r.rel).sort()) {
       // Skip the synthetic from/to/type that show up under `rel` too —
       // we already project them as top-level columns and don't want
       // duplication in the canonical row.
-      if (key === "from" || key === "to" || key === "type") continue;
-      if (key.startsWith("_")) continue;
+      if (key === 'from' || key === 'to' || key === 'type') continue;
+      if (key.startsWith('_')) continue;
       props[key] = r.rel[key];
     }
   }
   return {
     from: String(r.from),
     to: String(r.to),
-    type: typeof r.type === "string" ? r.type : String(r.type ?? ""),
+    type: typeof r.type === 'string' ? r.type : String(r.type ?? ''),
     ...props,
   };
 };

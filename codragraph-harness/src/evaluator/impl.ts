@@ -2,13 +2,13 @@
 // per-task traces and aggregate Scores. Lives in impl.ts so runner.ts stays a
 // pure interface module.
 
-import type { Harness, HarnessContext } from "../harness/interface.js";
-import type { TaskInput } from "../types.js";
-import { InMemoryTraceWriter } from "../trace.js";
-import { aggregateScores, type PerTaskScore, type Scores } from "./score.js";
-import { scoreAnswer, type JudgeResult } from "./judge.js";
-import type { Evaluator, EvaluateInput } from "./runner.js";
-import type { InferenceProvider } from "../inference/interface.js";
+import type { HarnessContext } from '../harness/interface.js';
+import type { TaskInput } from '../types.js';
+import { InMemoryTraceWriter } from '../trace.js';
+import { aggregateScores, type PerTaskScore, type Scores } from './score.js';
+import { scoreAnswer, type JudgeResult } from './judge.js';
+import type { Evaluator, EvaluateInput } from './runner.js';
+import type { InferenceProvider } from '../inference/interface.js';
 
 export interface CodebaseQATask extends TaskInput {
   /** Expected answer string — substring or paraphrase match accepted. */
@@ -38,7 +38,7 @@ const DEFAULT_TASK_TIMEOUT_MS = 60_000;
  * Evaluator interface stays minimal so the algorithm doesn't need to know.
  */
 export class CodebaseQAEvaluator implements Evaluator {
-  readonly name = "codebase-qa";
+  readonly name = 'codebase-qa';
   constructor(private readonly options: CodebaseQAEvaluatorOptions = {}) {}
 
   async evaluate(input: EvaluateInput): Promise<Scores> {
@@ -54,7 +54,7 @@ export class CodebaseQAEvaluator implements Evaluator {
       };
 
       const startedAt = Date.now();
-      let answer = "";
+      let answer = '';
       let tokens = 0;
       let runError: string | undefined;
       try {
@@ -67,13 +67,13 @@ export class CodebaseQAEvaluator implements Evaluator {
         tokens = result.tokens.total;
       } catch (err: unknown) {
         runError = err instanceof Error ? err.message : String(err);
-        trace.step("evaluator.error", { error: runError });
+        trace.step('evaluator.error', { error: runError });
       }
       const latencyMs = Date.now() - startedAt;
 
       let judgement: JudgeResult;
       if (runError) {
-        judgement = { correct: false, method: "harness-error", note: runError };
+        judgement = { correct: false, method: 'harness-error', note: runError };
       } else {
         judgement = await scoreAnswer(task.question, task.expectedAnswer, answer, {
           acceptParaphrases: task.acceptParaphrases,

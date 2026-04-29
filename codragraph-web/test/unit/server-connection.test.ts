@@ -28,7 +28,9 @@ describe('normalizeServerUrl', () => {
   });
 
   it('preserves existing https://', () => {
-    expect(normalizeServerUrl('https://codragraph.example.com')).toBe('https://codragraph.example.com');
+    expect(normalizeServerUrl('https://codragraph.example.com')).toBe(
+      'https://codragraph.example.com',
+    );
   });
 });
 

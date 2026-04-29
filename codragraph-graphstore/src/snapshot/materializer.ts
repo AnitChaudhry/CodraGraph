@@ -1,11 +1,6 @@
-import {
-  type Snapshot,
-  type SnapshotManifest,
-  type ObjectId,
-  parseObjectId,
-} from "../types.js";
-import { type ContentAddressedStore, getJson } from "../cas/interface.js";
-import { type GraphRow, type RowSink } from "./row-source.js";
+import { type Snapshot, type SnapshotManifest, type ObjectId, parseObjectId } from '../types.js';
+import { type ContentAddressedStore, getJson } from '../cas/interface.js';
+import { type GraphRow, type RowSink } from './row-source.js';
 
 export interface MaterializeSnapshotOptions {
   readonly cas: ContentAddressedStore;
@@ -34,7 +29,7 @@ export const materializeSnapshot = async (
   const batchSize = opts.batchSize ?? 1000;
 
   const snapshot = await getJson<Snapshot>(cas, opts.snapshotId);
-  if (snapshot.type !== "snapshot") {
+  if (snapshot.type !== 'snapshot') {
     throw new Error(
       `materializeSnapshot: object ${opts.snapshotId} is not a snapshot ` +
         `(type=${JSON.stringify((snapshot as { type?: unknown }).type)})`,
@@ -42,10 +37,8 @@ export const materializeSnapshot = async (
   }
   const manifestId = parseObjectId(snapshot.manifestId);
   const manifest = await getJson<SnapshotManifest>(cas, manifestId);
-  if (manifest.type !== "snapshot-manifest") {
-    throw new Error(
-      `materializeSnapshot: object ${manifestId} is not a snapshot-manifest`,
-    );
+  if (manifest.type !== 'snapshot-manifest') {
+    throw new Error(`materializeSnapshot: object ${manifestId} is not a snapshot-manifest`);
   }
 
   const stats: { nodeRowsByTable: Record<string, number>; edgeRowCount: number } = {

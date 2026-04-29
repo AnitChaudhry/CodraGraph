@@ -1,8 +1,8 @@
 // In-memory TraceWriter — accumulates per-step records during a single
 // harness invocation, then materializes a TraceRecord for the store.
 
-import type { TraceWriter } from "./types.js";
-import type { TraceRecord } from "./filesystem.js";
+import type { TraceWriter } from './types.js';
+import type { TraceRecord } from './filesystem.js';
 
 export class InMemoryTraceWriter implements TraceWriter {
   private steps: Array<{ name: string; payload: Record<string, unknown>; t: number }> = [];

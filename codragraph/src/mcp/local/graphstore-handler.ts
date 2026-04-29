@@ -41,10 +41,7 @@ const buildCtx = (storagePath: string): GraphstoreCtx => {
   return { root, cas: new FsCAS({ root }) };
 };
 
-const resolveTarget = async (
-  ctx: GraphstoreCtx,
-  target: string,
-): Promise<ObjectId> => {
+const resolveTarget = async (ctx: GraphstoreCtx, target: string): Promise<ObjectId> => {
   const branches = await listBranches({ root: ctx.root });
   const hit = branches.find((b) => b.name === target);
   if (hit) return hit.head;
@@ -111,9 +108,7 @@ export interface GraphstoreBranchesParams {
   readonly storagePath: string;
 }
 
-export const handleGraphstoreBranches = async (
-  params: GraphstoreBranchesParams,
-) => {
+export const handleGraphstoreBranches = async (params: GraphstoreBranchesParams) => {
   const ctx = buildCtx(params.storagePath);
   const branches = await listBranches({ root: ctx.root });
   const headState = await readHead({ root: ctx.root });
@@ -182,9 +177,7 @@ const formatDiff = (
   };
 };
 
-const countByTable = (
-  byTable: Record<string, ObjectId[]>,
-): Record<string, number> => {
+const countByTable = (byTable: Record<string, ObjectId[]>): Record<string, number> => {
   const out: Record<string, number> = {};
   for (const [t, ids] of Object.entries(byTable)) {
     if (ids.length > 0) out[t] = ids.length;
@@ -203,9 +196,7 @@ export interface GraphstoreBlameParams {
   readonly limit?: number;
 }
 
-export const handleGraphstoreBlameSymbol = async (
-  params: GraphstoreBlameParams,
-) => {
+export const handleGraphstoreBlameSymbol = async (params: GraphstoreBlameParams) => {
   const ctx = buildCtx(params.storagePath);
   const head = await resolveHeadCommit({ root: ctx.root });
   if (head === null) {
@@ -224,10 +215,7 @@ export const handleGraphstoreBlameSymbol = async (
   }> = [];
   for await (const entry of walkCommits({ cas: ctx.cas, from: head })) {
     const snapshot = await getJson<Snapshot>(ctx.cas, entry.commit.snapshot);
-    const manifest = await getJson<SnapshotManifest>(
-      ctx.cas,
-      parseObjectId(snapshot.manifestId),
-    );
+    const manifest = await getJson<SnapshotManifest>(ctx.cas, parseObjectId(snapshot.manifestId));
     const found = locateSymbol(manifest, params.symbolId, params.table);
     history.push({
       commitId: entry.id,
@@ -254,9 +242,7 @@ export interface GraphstoreSemanticDiffParams {
   readonly to: string;
 }
 
-export const handleGraphstoreSemanticDiff = async (
-  params: GraphstoreSemanticDiffParams,
-) => {
+export const handleGraphstoreSemanticDiff = async (params: GraphstoreSemanticDiffParams) => {
   const ctx = buildCtx(params.storagePath);
   const [fromCommitId, toCommitId] = await Promise.all([
     resolveTarget(ctx, params.from),
@@ -312,19 +298,14 @@ export interface GraphstoreMergeParams {
 export const handleGraphstoreMerge = async (params: GraphstoreMergeParams) => {
   const ctx = buildCtx(params.storagePath);
   const headState = await readHead({ root: ctx.root });
-  const branch =
-    params.into ??
-    (headState.kind === 'branch' ? headState.branch : null);
+  const branch = params.into ?? (headState.kind === 'branch' ? headState.branch : null);
   if (!branch) {
     return {
       kind: 'error',
-      message:
-        'merge requires either --into <branch> or a non-detached HEAD on the target repo',
+      message: 'merge requires either --into <branch> or a non-detached HEAD on the target repo',
     };
   }
-  const ours = (await listBranches({ root: ctx.root })).find(
-    (b) => b.name === branch,
-  )?.head;
+  const ours = (await listBranches({ root: ctx.root })).find((b) => b.name === branch)?.head;
   if (!ours) {
     return { kind: 'error', message: `target branch "${branch}" not found` };
   }
@@ -422,11 +403,7 @@ const locateSymbol = (
   return null;
 };
 
-const compressBlameTransitions = <
-  T extends { rowHash: ObjectId | null },
->(
-  history: T[],
-): T[] => {
+const compressBlameTransitions = <T extends { rowHash: ObjectId | null }>(history: T[]): T[] => {
   const out: T[] = [];
   let lastHash: ObjectId | null = null;
   for (let i = 0; i < history.length; i++) {

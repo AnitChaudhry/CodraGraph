@@ -19,15 +19,9 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { StatCard } from './StatCard';
 import { CapabilityCard } from './CapabilityCard';
-import {
-  fetchGraphstoreLog,
-  type GraphstoreCommit,
-} from '@/services/graphstore-client';
+import { fetchGraphstoreLog, type GraphstoreCommit } from '@/services/graphstore-client';
 // (the GraphstoreCommit type is also referenced by the Top-recipes panel below)
-import {
-  fetchRecipesList,
-  type RecipeSummary,
-} from '@/services/recipes-client';
+import { fetchRecipesList, type RecipeSummary } from '@/services/recipes-client';
 import type { DashboardSection } from '@/hooks/useDashboardSection';
 import type { BackendRepo } from '@/services/backend-client';
 import { useGraphstoreContext } from '@/hooks/useGraphstoreContext';
@@ -53,9 +47,7 @@ interface RemoteState<T> {
   reason?: string;
 }
 
-export const OverviewSection = ({
-  onNavigate,
-}: OverviewSectionProps): React.JSX.Element => {
+export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX.Element => {
   const { projectName, availableRepos } = useAppState();
   const currentRepo = projectName || null;
   const repo = useCurrentRepo(currentRepo, availableRepos);
@@ -65,9 +57,10 @@ export const OverviewSection = ({
     status: 'idle',
     data: null,
   });
-  const [recipesState, setRecipesState] = useState<RemoteState<RecipeSummary[]>>(
-    { status: 'idle', data: null },
-  );
+  const [recipesState, setRecipesState] = useState<RemoteState<RecipeSummary[]>>({
+    status: 'idle',
+    data: null,
+  });
 
   useEffect(() => {
     if (!currentRepo) return;
@@ -146,9 +139,7 @@ export const OverviewSection = ({
             icon={Workflow}
             accentClassName="text-node-interface"
             hint={
-              stats.communities
-                ? `${stats.communities.toLocaleString()} communities`
-                : undefined
+              stats.communities ? `${stats.communities.toLocaleString()} communities` : undefined
             }
             loading={!repo}
           />
@@ -157,7 +148,7 @@ export const OverviewSection = ({
         {/* Capabilities row */}
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-text-secondary">
+            <h2 className="text-sm font-semibold tracking-wider text-text-secondary uppercase">
               Capabilities
             </h2>
             <Badge variant="outline" className="text-text-muted">
@@ -203,11 +194,7 @@ export const OverviewSection = ({
               tagline='"Your codebase has git history; your agent should too."'
               icon={GitCommit}
               status={repo?.headCommit ? 'active' : 'ready'}
-              metric={
-                repo?.headCommit
-                  ? repo.headCommit.replace(/^sha256:/, '').slice(0, 12)
-                  : '—'
-              }
+              metric={repo?.headCommit ? repo.headCommit.replace(/^sha256:/, '').slice(0, 12) : '—'}
               detail={
                 repo?.currentBranch
                   ? `HEAD on ${repo.currentBranch}`
@@ -284,11 +271,7 @@ const useCurrentRepo = (
   return availableRepos.find((r) => r.name === currentRepo) ?? null;
 };
 
-const CommitsList = ({
-  state,
-}: {
-  state: RemoteState<GraphstoreCommit[]>;
-}): React.JSX.Element => {
+const CommitsList = ({ state }: { state: RemoteState<GraphstoreCommit[]> }): React.JSX.Element => {
   if (state.status === 'loading' || state.status === 'idle') {
     return (
       <div className="space-y-2">
@@ -311,7 +294,9 @@ const CommitsList = ({
     return (
       <EmptyHint
         title="No commits yet"
-        body={'Run `codragraph analyze` to capture the first snapshot, or `codragraph commit -m "message"` to record a checkpoint.'}
+        body={
+          'Run `codragraph analyze` to capture the first snapshot, or `codragraph commit -m "message"` to record a checkpoint.'
+        }
       />
     );
   }
@@ -369,10 +354,7 @@ const RecipesList = ({
       {state.data.map((r) => {
         const commit = commitBySnapshotId.get(r.snapshotId);
         return (
-          <li
-            key={r.id}
-            className="rounded-md border border-border-subtle bg-deep px-3 py-2"
-          >
+          <li key={r.id} className="rounded-md border border-border-subtle bg-deep px-3 py-2">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium text-text-primary">
@@ -416,9 +398,7 @@ const EmptyHint = ({
   <div className="rounded-md border border-dashed border-border-subtle bg-deep p-4">
     <p className="text-sm font-medium text-text-primary">{title}</p>
     <p className="mt-1 text-xs text-text-secondary">{body}</p>
-    {reason && (
-      <p className="mt-2 font-mono text-[10px] text-text-muted">reason: {reason}</p>
-    )}
+    {reason && <p className="mt-2 font-mono text-[10px] text-text-muted">reason: {reason}</p>}
   </div>
 );
 

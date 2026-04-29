@@ -20,8 +20,8 @@
 // We keep the Phase 1 `Proposer` interface unchanged so single-proposer
 // `search()` still works; swarm uses the richer contracts below.
 
-import type { Proposer, HarnessSource } from "../proposer/interface.js";
-import type { Scores } from "../evaluator/score.js";
+import type { Proposer, HarnessSource } from '../proposer/interface.js';
+import type { Scores } from '../evaluator/score.js';
 
 /** Common identity carried by every role. */
 export interface Role {
@@ -29,7 +29,7 @@ export interface Role {
   readonly kind: RoleKind;
 }
 
-export type RoleKind = "explorer" | "exploiter" | "critic";
+export type RoleKind = 'explorer' | 'exploiter' | 'critic';
 
 /**
  * A role that *proposes* candidates. Both Explorer and Exploiter implement
@@ -38,7 +38,7 @@ export type RoleKind = "explorer" | "exploiter" | "critic";
  * role-specific prompt).
  */
 export interface ProposingRole extends Role {
-  readonly kind: "explorer" | "exploiter";
+  readonly kind: 'explorer' | 'exploiter';
   /** Underlying proposer; the role customizes inputs/prompts but delegates execution. */
   readonly proposer: Proposer;
 }
@@ -49,7 +49,7 @@ export interface ProposingRole extends Role {
  * paying evaluation cost. Runs in-process (no subprocess) — cheap and fast.
  */
 export interface CriticRole extends Role {
-  readonly kind: "critic";
+  readonly kind: 'critic';
   review(input: CriticReviewInput): Promise<CriticReviewResult>;
 }
 
@@ -65,7 +65,7 @@ export interface CriticReviewResult {
   /** Free-text reason; written to the critic-rejected log. */
   reason: string;
   /** Severity of any concerns: NONE = looks good, LOW = stylistic, HIGH = likely broken, BLOCK = security/safety. */
-  riskLevel: "NONE" | "LOW" | "MEDIUM" | "HIGH" | "BLOCK";
+  riskLevel: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'BLOCK';
 }
 
 /**
@@ -140,7 +140,7 @@ export interface SwarmStepResult {
     source: HarnessSource;
     proposingRole: string;
     reason: string;
-    riskLevel: CriticReviewResult["riskLevel"];
+    riskLevel: CriticReviewResult['riskLevel'];
   }>;
   /** Per-role telemetry for SwarmState. */
   roleStats: Record<string, RoleStats>;

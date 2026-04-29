@@ -1,4 +1,4 @@
-import type { ObjectId } from "../types.js";
+import type { ObjectId } from '../types.js';
 
 /**
  * Content-addressed object store. Every value is keyed by its sha256
@@ -40,10 +40,7 @@ export interface ContentAddressedStore {
 }
 
 /** Convenience: JSON-encode `value` and `put` it. Returns the new id. */
-export const putJson = async (
-  cas: ContentAddressedStore,
-  value: unknown,
-): Promise<ObjectId> => {
+export const putJson = async (cas: ContentAddressedStore, value: unknown): Promise<ObjectId> => {
   const json = canonicalJsonStringify(value);
   const bytes = new TextEncoder().encode(json);
   return cas.put(bytes);
@@ -55,7 +52,7 @@ export const getJson = async <T = unknown>(
   id: ObjectId,
 ): Promise<T> => {
   const bytes = await cas.get(id);
-  const text = new TextDecoder("utf-8").decode(bytes);
+  const text = new TextDecoder('utf-8').decode(bytes);
   return JSON.parse(text) as T;
 };
 
@@ -74,7 +71,7 @@ export const getJson = async <T = unknown>(
  */
 export const canonicalJsonStringify = (value: unknown): string => {
   return JSON.stringify(value, (_key, v) => {
-    if (v && typeof v === "object" && !Array.isArray(v)) {
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
       const sorted: Record<string, unknown> = {};
       for (const k of Object.keys(v as Record<string, unknown>).sort()) {
         sorted[k] = (v as Record<string, unknown>)[k];
@@ -87,9 +84,9 @@ export const canonicalJsonStringify = (value: unknown): string => {
 
 /** Thrown by {@link ContentAddressedStore.get} when the object is missing. */
 export class ObjectNotFoundError extends Error {
-  readonly kind = "ObjectNotFoundError" as const;
+  readonly kind = 'ObjectNotFoundError' as const;
   constructor(public readonly id: ObjectId) {
     super(`Object ${id} not found in content-addressed store`);
-    this.name = "ObjectNotFoundError";
+    this.name = 'ObjectNotFoundError';
   }
 }

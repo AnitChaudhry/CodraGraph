@@ -8,7 +8,7 @@
 // HttpGraphClient becomes the Phase 2 path for out-of-process / hosted
 // scenarios (uses MCP-over-HTTP via @modelcontextprotocol/sdk Client).
 
-import type { LocalBackend } from "codragraph/mcp/local/local-backend";
+import type { LocalBackend } from 'codragraph/mcp/local/local-backend';
 import type {
   GraphClient,
   GraphContextInput,
@@ -17,7 +17,7 @@ import type {
   GraphImpactResult,
   GraphQueryInput,
   GraphQueryResult,
-} from "../types.js";
+} from '../types.js';
 
 export interface LocalGraphClientOptions {
   /** A LocalBackend instance — wire it from codragraph's exported factory. */
@@ -58,7 +58,7 @@ export class LocalGraphClient implements GraphClient {
 
   async query(input: GraphQueryInput): Promise<GraphQueryResult> {
     const repo = input.repo ?? this.options.defaultRepo;
-    const raw = (await this.options.backend.callTool("query", {
+    const raw = (await this.options.backend.callTool('query', {
       query: input.query,
       limit: input.limit,
       repo,
@@ -67,7 +67,7 @@ export class LocalGraphClient implements GraphClient {
 
     const symbols = (raw.process_symbols ?? []).concat(raw.definitions ?? []);
     const seen = new Set<string>();
-    const results: GraphQueryResult["results"] = [];
+    const results: GraphQueryResult['results'] = [];
     let rank = 0;
     for (const sym of symbols) {
       if (!sym.name) continue;
@@ -75,7 +75,7 @@ export class LocalGraphClient implements GraphClient {
       seen.add(sym.name);
       results.push({
         name: sym.name,
-        score: 1 / (++rank),
+        score: 1 / ++rank,
         file: sym.filePath ?? sym.file_path,
       });
       if (input.limit && results.length >= input.limit) break;
@@ -85,7 +85,7 @@ export class LocalGraphClient implements GraphClient {
 
   async context(input: GraphContextInput): Promise<GraphContextResult> {
     const repo = input.repo ?? this.options.defaultRepo;
-    const raw = (await this.options.backend.callTool("context", {
+    const raw = (await this.options.backend.callTool('context', {
       name: input.name,
       repo,
     })) as ContextResultRaw;
@@ -111,14 +111,14 @@ export class LocalGraphClient implements GraphClient {
 
   async impact(input: GraphImpactInput): Promise<GraphImpactResult> {
     const repo = input.repo ?? this.options.defaultRepo;
-    const raw = (await this.options.backend.callTool("impact", {
+    const raw = (await this.options.backend.callTool('impact', {
       target: input.target,
-      direction: input.direction ?? "upstream",
+      direction: input.direction ?? 'upstream',
       repo,
     })) as ImpactResultRaw;
     if (raw.error) throw new Error(`codragraph impact: ${raw.error}`);
 
-    const affected: GraphImpactResult["affected"] = [];
+    const affected: GraphImpactResult['affected'] = [];
     for (const [depthStr, items] of Object.entries(raw.byDepth ?? {})) {
       const depth = parseInt(depthStr, 10);
       for (const it of items) {
@@ -133,9 +133,9 @@ export class LocalGraphClient implements GraphClient {
   }
 }
 
-function deriveRiskLevel(count: number): "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" {
-  if (count >= 50) return "CRITICAL";
-  if (count >= 20) return "HIGH";
-  if (count >= 5) return "MEDIUM";
-  return "LOW";
+function deriveRiskLevel(count: number): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
+  if (count >= 50) return 'CRITICAL';
+  if (count >= 20) return 'HIGH';
+  if (count >= 5) return 'MEDIUM';
+  return 'LOW';
 }

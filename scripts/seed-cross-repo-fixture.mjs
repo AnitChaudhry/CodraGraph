@@ -101,13 +101,40 @@ const hrFrontendSources = [
       listNodeTables: async () => ['File', 'Function', 'Class'],
       streamNodeTable: async function* (table) {
         if (table === 'File') {
-          yield { id: 'file:src/CandidateList.tsx', name: 'CandidateList.tsx', filePath: 'src/CandidateList.tsx' };
-          yield { id: 'file:src/api/candidates.ts', name: 'candidates.ts', filePath: 'src/api/candidates.ts' };
+          yield {
+            id: 'file:src/CandidateList.tsx',
+            name: 'CandidateList.tsx',
+            filePath: 'src/CandidateList.tsx',
+          };
+          yield {
+            id: 'file:src/api/candidates.ts',
+            name: 'candidates.ts',
+            filePath: 'src/api/candidates.ts',
+          };
         } else if (table === 'Function') {
-          yield { id: 'fn:fetchCandidates', name: 'fetchCandidates', filePath: 'src/api/candidates.ts', isExported: true, parameterCount: 1, returnType: 'Promise<Candidate[]>' };
-          yield { id: 'fn:CandidateList', name: 'CandidateList', filePath: 'src/CandidateList.tsx', isExported: true, parameterCount: 1, returnType: 'JSX.Element' };
+          yield {
+            id: 'fn:fetchCandidates',
+            name: 'fetchCandidates',
+            filePath: 'src/api/candidates.ts',
+            isExported: true,
+            parameterCount: 1,
+            returnType: 'Promise<Candidate[]>',
+          };
+          yield {
+            id: 'fn:CandidateList',
+            name: 'CandidateList',
+            filePath: 'src/CandidateList.tsx',
+            isExported: true,
+            parameterCount: 1,
+            returnType: 'JSX.Element',
+          };
         } else if (table === 'Class') {
-          yield { id: 'cls:Candidate', name: 'Candidate', filePath: 'src/types.ts', isExported: true };
+          yield {
+            id: 'cls:Candidate',
+            name: 'Candidate',
+            filePath: 'src/types.ts',
+            isExported: true,
+          };
         }
       },
       streamEdges: async function* () {
@@ -124,20 +151,79 @@ const hrFrontendSources = [
       listNodeTables: async () => ['File', 'Function', 'Class', 'Interface'],
       streamNodeTable: async function* (table) {
         if (table === 'File') {
-          yield { id: 'file:src/CandidateList.tsx', name: 'CandidateList.tsx', filePath: 'src/CandidateList.tsx' };
-          yield { id: 'file:src/InterviewFlow.tsx', name: 'InterviewFlow.tsx', filePath: 'src/InterviewFlow.tsx' };
-          yield { id: 'file:src/api/candidates.ts', name: 'candidates.ts', filePath: 'src/api/candidates.ts' };
-          yield { id: 'file:src/api/interviews.ts', name: 'interviews.ts', filePath: 'src/api/interviews.ts' };
+          yield {
+            id: 'file:src/CandidateList.tsx',
+            name: 'CandidateList.tsx',
+            filePath: 'src/CandidateList.tsx',
+          };
+          yield {
+            id: 'file:src/InterviewFlow.tsx',
+            name: 'InterviewFlow.tsx',
+            filePath: 'src/InterviewFlow.tsx',
+          };
+          yield {
+            id: 'file:src/api/candidates.ts',
+            name: 'candidates.ts',
+            filePath: 'src/api/candidates.ts',
+          };
+          yield {
+            id: 'file:src/api/interviews.ts',
+            name: 'interviews.ts',
+            filePath: 'src/api/interviews.ts',
+          };
         } else if (table === 'Function') {
-          yield { id: 'fn:fetchCandidates', name: 'fetchCandidates', filePath: 'src/api/candidates.ts', isExported: true, parameterCount: 1, returnType: 'Promise<Candidate[]>' };
-          yield { id: 'fn:scheduleInterview', name: 'scheduleInterview', filePath: 'src/api/interviews.ts', isExported: true, parameterCount: 2, returnType: 'Promise<Interview>' };
-          yield { id: 'fn:CandidateList', name: 'CandidateList', filePath: 'src/CandidateList.tsx', isExported: true, parameterCount: 1, returnType: 'JSX.Element' };
-          yield { id: 'fn:InterviewFlow', name: 'InterviewFlow', filePath: 'src/InterviewFlow.tsx', isExported: true, parameterCount: 1, returnType: 'JSX.Element' };
+          yield {
+            id: 'fn:fetchCandidates',
+            name: 'fetchCandidates',
+            filePath: 'src/api/candidates.ts',
+            isExported: true,
+            parameterCount: 1,
+            returnType: 'Promise<Candidate[]>',
+          };
+          yield {
+            id: 'fn:scheduleInterview',
+            name: 'scheduleInterview',
+            filePath: 'src/api/interviews.ts',
+            isExported: true,
+            parameterCount: 2,
+            returnType: 'Promise<Interview>',
+          };
+          yield {
+            id: 'fn:CandidateList',
+            name: 'CandidateList',
+            filePath: 'src/CandidateList.tsx',
+            isExported: true,
+            parameterCount: 1,
+            returnType: 'JSX.Element',
+          };
+          yield {
+            id: 'fn:InterviewFlow',
+            name: 'InterviewFlow',
+            filePath: 'src/InterviewFlow.tsx',
+            isExported: true,
+            parameterCount: 1,
+            returnType: 'JSX.Element',
+          };
         } else if (table === 'Class') {
-          yield { id: 'cls:Candidate', name: 'Candidate', filePath: 'src/types.ts', isExported: true };
-          yield { id: 'cls:Interview', name: 'Interview', filePath: 'src/types.ts', isExported: true };
+          yield {
+            id: 'cls:Candidate',
+            name: 'Candidate',
+            filePath: 'src/types.ts',
+            isExported: true,
+          };
+          yield {
+            id: 'cls:Interview',
+            name: 'Interview',
+            filePath: 'src/types.ts',
+            isExported: true,
+          };
         } else if (table === 'Interface') {
-          yield { id: 'iface:InterviewSlot', name: 'InterviewSlot', filePath: 'src/types.ts', isExported: true };
+          yield {
+            id: 'iface:InterviewSlot',
+            name: 'InterviewSlot',
+            filePath: 'src/types.ts',
+            isExported: true,
+          };
         }
       },
       streamEdges: async function* () {
@@ -161,21 +247,56 @@ const hrBackendSources = [
       listNodeTables: async () => ['File', 'Function', 'Class', 'Route'],
       streamNodeTable: async function* (table) {
         if (table === 'File') {
-          yield { id: 'file:src/routes/candidates.ts', name: 'candidates.ts', filePath: 'src/routes/candidates.ts' };
-          yield { id: 'file:src/routes/interviews.ts', name: 'interviews.ts', filePath: 'src/routes/interviews.ts' };
+          yield {
+            id: 'file:src/routes/candidates.ts',
+            name: 'candidates.ts',
+            filePath: 'src/routes/candidates.ts',
+          };
+          yield {
+            id: 'file:src/routes/interviews.ts',
+            name: 'interviews.ts',
+            filePath: 'src/routes/interviews.ts',
+          };
         } else if (table === 'Function') {
-          yield { id: 'fn:listCandidates', name: 'listCandidates', filePath: 'src/routes/candidates.ts', isExported: true };
-          yield { id: 'fn:scheduleInterview', name: 'scheduleInterview', filePath: 'src/routes/interviews.ts', isExported: true };
+          yield {
+            id: 'fn:listCandidates',
+            name: 'listCandidates',
+            filePath: 'src/routes/candidates.ts',
+            isExported: true,
+          };
+          yield {
+            id: 'fn:scheduleInterview',
+            name: 'scheduleInterview',
+            filePath: 'src/routes/interviews.ts',
+            isExported: true,
+          };
         } else if (table === 'Class') {
-          yield { id: 'cls:Candidate', name: 'Candidate', filePath: 'src/models/Candidate.ts', isExported: true };
+          yield {
+            id: 'cls:Candidate',
+            name: 'Candidate',
+            filePath: 'src/models/Candidate.ts',
+            isExported: true,
+          };
         } else if (table === 'Route') {
-          yield { id: 'route:GET /api/candidates', name: 'GET /api/candidates', filePath: 'src/routes/candidates.ts' };
-          yield { id: 'route:POST /api/interviews', name: 'POST /api/interviews', filePath: 'src/routes/interviews.ts' };
+          yield {
+            id: 'route:GET /api/candidates',
+            name: 'GET /api/candidates',
+            filePath: 'src/routes/candidates.ts',
+          };
+          yield {
+            id: 'route:POST /api/interviews',
+            name: 'POST /api/interviews',
+            filePath: 'src/routes/interviews.ts',
+          };
         }
       },
       streamEdges: async function* () {
         yield { from: 'route:GET /api/candidates', to: 'fn:listCandidates', type: 'HANDLES_ROUTE' };
-        yield { from: 'route:POST /api/interviews', to: 'fn:scheduleInterview', type: 'HANDLES_ROUTE' };
+        yield {
+          from: 'route:POST /api/interviews',
+          to: 'fn:scheduleInterview',
+          type: 'HANDLES_ROUTE',
+        };
         yield { from: 'fn:listCandidates', to: 'cls:Candidate', type: 'USES' };
       },
     },
@@ -188,27 +309,85 @@ const hrBackendSources = [
       listNodeTables: async () => ['File', 'Function', 'Class', 'Interface', 'Route'],
       streamNodeTable: async function* (table) {
         if (table === 'File') {
-          yield { id: 'file:src/routes/candidates.ts', name: 'candidates.ts', filePath: 'src/routes/candidates.ts' };
-          yield { id: 'file:src/routes/interviews.ts', name: 'interviews.ts', filePath: 'src/routes/interviews.ts' };
+          yield {
+            id: 'file:src/routes/candidates.ts',
+            name: 'candidates.ts',
+            filePath: 'src/routes/candidates.ts',
+          };
+          yield {
+            id: 'file:src/routes/interviews.ts',
+            name: 'interviews.ts',
+            filePath: 'src/routes/interviews.ts',
+          };
         } else if (table === 'Function') {
-          yield { id: 'fn:listCandidates', name: 'listCandidates', filePath: 'src/routes/candidates.ts', isExported: true };
-          yield { id: 'fn:scheduleInterview', name: 'scheduleInterview', filePath: 'src/routes/interviews.ts', isExported: true };
-          yield { id: 'fn:searchInterviewSlots', name: 'searchInterviewSlots', filePath: 'src/routes/interviews.ts', isExported: true };
+          yield {
+            id: 'fn:listCandidates',
+            name: 'listCandidates',
+            filePath: 'src/routes/candidates.ts',
+            isExported: true,
+          };
+          yield {
+            id: 'fn:scheduleInterview',
+            name: 'scheduleInterview',
+            filePath: 'src/routes/interviews.ts',
+            isExported: true,
+          };
+          yield {
+            id: 'fn:searchInterviewSlots',
+            name: 'searchInterviewSlots',
+            filePath: 'src/routes/interviews.ts',
+            isExported: true,
+          };
         } else if (table === 'Class') {
-          yield { id: 'cls:Candidate', name: 'Candidate', filePath: 'src/models/Candidate.ts', isExported: true };
-          yield { id: 'cls:Interview', name: 'Interview', filePath: 'src/models/Interview.ts', isExported: true };
+          yield {
+            id: 'cls:Candidate',
+            name: 'Candidate',
+            filePath: 'src/models/Candidate.ts',
+            isExported: true,
+          };
+          yield {
+            id: 'cls:Interview',
+            name: 'Interview',
+            filePath: 'src/models/Interview.ts',
+            isExported: true,
+          };
         } else if (table === 'Interface') {
-          yield { id: 'iface:InterviewSlot', name: 'InterviewSlot', filePath: 'src/models/InterviewSlot.ts', isExported: true };
+          yield {
+            id: 'iface:InterviewSlot',
+            name: 'InterviewSlot',
+            filePath: 'src/models/InterviewSlot.ts',
+            isExported: true,
+          };
         } else if (table === 'Route') {
-          yield { id: 'route:GET /api/candidates', name: 'GET /api/candidates', filePath: 'src/routes/candidates.ts' };
-          yield { id: 'route:POST /api/interviews', name: 'POST /api/interviews', filePath: 'src/routes/interviews.ts' };
-          yield { id: 'route:GET /api/interview-slots', name: 'GET /api/interview-slots', filePath: 'src/routes/interviews.ts' };
+          yield {
+            id: 'route:GET /api/candidates',
+            name: 'GET /api/candidates',
+            filePath: 'src/routes/candidates.ts',
+          };
+          yield {
+            id: 'route:POST /api/interviews',
+            name: 'POST /api/interviews',
+            filePath: 'src/routes/interviews.ts',
+          };
+          yield {
+            id: 'route:GET /api/interview-slots',
+            name: 'GET /api/interview-slots',
+            filePath: 'src/routes/interviews.ts',
+          };
         }
       },
       streamEdges: async function* () {
         yield { from: 'route:GET /api/candidates', to: 'fn:listCandidates', type: 'HANDLES_ROUTE' };
-        yield { from: 'route:POST /api/interviews', to: 'fn:scheduleInterview', type: 'HANDLES_ROUTE' };
-        yield { from: 'route:GET /api/interview-slots', to: 'fn:searchInterviewSlots', type: 'HANDLES_ROUTE' };
+        yield {
+          from: 'route:POST /api/interviews',
+          to: 'fn:scheduleInterview',
+          type: 'HANDLES_ROUTE',
+        };
+        yield {
+          from: 'route:GET /api/interview-slots',
+          to: 'fn:searchInterviewSlots',
+          type: 'HANDLES_ROUTE',
+        };
         yield { from: 'fn:listCandidates', to: 'cls:Candidate', type: 'USES' };
         yield { from: 'fn:scheduleInterview', to: 'cls:Interview', type: 'USES' };
         yield { from: 'fn:searchInterviewSlots', to: 'iface:InterviewSlot', type: 'USES' };
@@ -261,8 +440,7 @@ await fs.mkdir(groupsDir, { recursive: true });
 const groupConfig = {
   version: 1,
   name: groupName,
-  description:
-    'HR platform — frontend consumes backend HTTP routes for candidates and interviews.',
+  description: 'HR platform — frontend consumes backend HTTP routes for candidates and interviews.',
   repos: {
     'hr/frontend': 'hr-frontend',
     'hr/backend': 'hr-backend',
@@ -396,16 +574,32 @@ const contractRegistry = {
   ],
   crossLinks: [
     {
-      from: { repo: 'hr/frontend', symbolUid: 'fn:fetchCandidates', symbolRef: { filePath: 'src/api/candidates.ts', name: 'fetchCandidates' } },
-      to: { repo: 'hr/backend', symbolUid: 'fn:listCandidates', symbolRef: { filePath: 'src/routes/candidates.ts', name: 'listCandidates' } },
+      from: {
+        repo: 'hr/frontend',
+        symbolUid: 'fn:fetchCandidates',
+        symbolRef: { filePath: 'src/api/candidates.ts', name: 'fetchCandidates' },
+      },
+      to: {
+        repo: 'hr/backend',
+        symbolUid: 'fn:listCandidates',
+        symbolRef: { filePath: 'src/routes/candidates.ts', name: 'listCandidates' },
+      },
       type: 'http',
       contractId: 'GET /api/candidates',
       matchType: 'manifest',
       confidence: 1.0,
     },
     {
-      from: { repo: 'hr/frontend', symbolUid: 'fn:scheduleInterview', symbolRef: { filePath: 'src/api/interviews.ts', name: 'scheduleInterview' } },
-      to: { repo: 'hr/backend', symbolUid: 'fn:scheduleInterview', symbolRef: { filePath: 'src/routes/interviews.ts', name: 'scheduleInterview' } },
+      from: {
+        repo: 'hr/frontend',
+        symbolUid: 'fn:scheduleInterview',
+        symbolRef: { filePath: 'src/api/interviews.ts', name: 'scheduleInterview' },
+      },
+      to: {
+        repo: 'hr/backend',
+        symbolUid: 'fn:scheduleInterview',
+        symbolRef: { filePath: 'src/routes/interviews.ts', name: 'scheduleInterview' },
+      },
       type: 'http',
       contractId: 'POST /api/interviews',
       matchType: 'manifest',
@@ -413,7 +607,10 @@ const contractRegistry = {
     },
   ],
 };
-await fs.writeFile(path.join(groupsDir, 'contracts.json'), JSON.stringify(contractRegistry, null, 2));
+await fs.writeFile(
+  path.join(groupsDir, 'contracts.json'),
+  JSON.stringify(contractRegistry, null, 2),
+);
 
 console.error(`✓ Cross-repo fixture seeded`);
 console.error(`  group: ${groupName}`);

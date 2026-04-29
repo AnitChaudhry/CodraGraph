@@ -68,10 +68,7 @@ const resolveGraphstore = async (cwd: string): Promise<ResolvedRoot> => {
  * Resolve a user-supplied target (branch name or commit id) into a commit id.
  * Path: branch ref first, fall back to literal commit id parsing.
  */
-const resolveCommitTarget = async (
-  ctx: ResolvedRoot,
-  target: string,
-): Promise<ObjectId> => {
+const resolveCommitTarget = async (ctx: ResolvedRoot, target: string): Promise<ObjectId> => {
   // Branch ref?
   const branches = await listBranches({ root: ctx.graphstoreRoot });
   const match = branches.find((b) => b.name === target);
@@ -279,10 +276,7 @@ export const branchCreateCommand = async (name: string, opts: { from?: string } 
 //                     snapshot. Destructive of the current lbug state —
 //                     run `commit` first if you have unsaved changes.
 
-export const checkoutCommand = async (
-  target: string,
-  opts: { materialize?: boolean } = {},
-) => {
+export const checkoutCommand = async (target: string, opts: { materialize?: boolean } = {}) => {
   const ctx = await resolveGraphstore(process.cwd());
   const branches = await listBranches({ root: ctx.graphstoreRoot });
   const branchHit = branches.find((b) => b.name === target);
@@ -387,7 +381,10 @@ export const materializeCommand = async (target: string, opts: { into: string })
 // "changed" hit is the symbol's most-recent change commit; we keep
 // walking to surface its full change history.
 
-export const blameCommand = async (symbolId: string, opts: { table?: string; limit?: string } = {}) => {
+export const blameCommand = async (
+  symbolId: string,
+  opts: { table?: string; limit?: string } = {},
+) => {
   const ctx = await resolveGraphstore(process.cwd());
   const head = await resolveHeadCommit({ root: ctx.graphstoreRoot });
   if (head === null) {
@@ -416,10 +413,7 @@ export const blameCommand = async (symbolId: string, opts: { table?: string; lim
   for (let i = 0; i < history.length; i++) {
     const entry = history[i]!;
     const snapshot = await getJson<Snapshot>(ctx.cas, entry.commit.snapshot);
-    const manifest = await getJson<SnapshotManifest>(
-      ctx.cas,
-      parseObjectId(snapshot.manifestId),
-    );
+    const manifest = await getJson<SnapshotManifest>(ctx.cas, parseObjectId(snapshot.manifestId));
 
     const found = locateSymbolHash(manifest, symbolId, tableHint);
     if (!found) {
@@ -587,14 +581,13 @@ export const branchDeleteCommand = async (name: string) => {
 // codragraph merge <branch>
 // ──────────────────────────────────────────────────────────────────────
 
-export const mergeCommand = async (
-  target: string,
-  opts: { message?: string } = {},
-) => {
+export const mergeCommand = async (target: string, opts: { message?: string } = {}) => {
   const ctx = await resolveGraphstore(process.cwd());
   const headState = await readHead({ root: ctx.graphstoreRoot });
   if (headState.kind !== 'branch') {
-    console.error('Refusing to merge from a detached HEAD. Run `codragraph checkout <branch>` first.');
+    console.error(
+      'Refusing to merge from a detached HEAD. Run `codragraph checkout <branch>` first.',
+    );
     process.exitCode = 1;
     return;
   }
@@ -613,9 +606,7 @@ export const mergeCommand = async (
       return;
     case 'fast-forward':
       await setHead({ root: ctx.graphstoreRoot, branch: headState.branch, commit: result.to });
-      process.stdout.write(
-        `Fast-forwarded ${headState.branch} → ${result.to.slice(7, 7 + 12)}\n`,
-      );
+      process.stdout.write(`Fast-forwarded ${headState.branch} → ${result.to.slice(7, 7 + 12)}\n`);
       return;
     case 'conflicts': {
       if (result.base === null) {
@@ -638,8 +629,7 @@ export const mergeCommand = async (
       return;
     }
     case 'merged': {
-      const message =
-        opts.message ?? `Merge ${target} into ${headState.branch}`;
+      const message = opts.message ?? `Merge ${target} into ${headState.branch}`;
       const commit = await createCommit({
         cas: ctx.cas,
         snapshot: result.snapshotId,
@@ -654,9 +644,7 @@ export const mergeCommand = async (
       });
       const tableSummary = Object.entries(result.stats.tables)
         .filter(([, s]) => s.takenFromOurs + s.takenFromTheirs > 0)
-        .map(
-          ([t, s]) => `${t}=+${s.takenFromTheirs}/${s.takenFromOurs}`,
-        )
+        .map(([t, s]) => `${t}=+${s.takenFromTheirs}/${s.takenFromOurs}`)
         .join(' ');
       process.stdout.write(
         `Merged ${target} into ${headState.branch} (${commit.commitId.slice(7, 7 + 12)})\n` +
@@ -703,10 +691,7 @@ const formatBytes = (n: number): string => {
 // expose it as a separate module-local helper so the CLI handler can
 // dispatch on the flag.
 
-export const diffSemanticCommand = async (
-  from: string,
-  to: string,
-) => {
+export const diffSemanticCommand = async (from: string, to: string) => {
   const ctx = await resolveGraphstore(process.cwd());
   const fromCommit = await readCommit(ctx.cas, await resolveCommitTarget(ctx, from));
   const toCommit = await readCommit(ctx.cas, await resolveCommitTarget(ctx, to));

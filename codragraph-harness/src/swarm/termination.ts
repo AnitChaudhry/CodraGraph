@@ -6,7 +6,7 @@
 // Each predicate is pure: takes SwarmState, returns boolean. Compose by
 // calling `anyOf(...predicates)` — coordinator stops on the first true.
 
-import type { SwarmState, TerminationPredicate } from "./interface.js";
+import type { SwarmState, TerminationPredicate } from './interface.js';
 
 /**
  * Stop after a fixed number of iterations. Mirrors Phase 1's iterations
@@ -14,7 +14,7 @@ import type { SwarmState, TerminationPredicate } from "./interface.js";
  * are configured.
  */
 export function maxIterations(n: number): TerminationPredicate {
-  if (n < 1) throw new Error("maxIterations: n must be >= 1");
+  if (n < 1) throw new Error('maxIterations: n must be >= 1');
   return {
     name: `max-iterations-${n}`,
     shouldStop(state: SwarmState): boolean {
@@ -31,7 +31,7 @@ export function maxIterations(n: number): TerminationPredicate {
  * from. Strictly equal scores on the same id don't trigger a change.
  */
 export function paretoPlateau(k: number): TerminationPredicate {
-  if (k < 1) throw new Error("paretoPlateau: k must be >= 1");
+  if (k < 1) throw new Error('paretoPlateau: k must be >= 1');
   return {
     name: `pareto-plateau-${k}`,
     shouldStop(state: SwarmState): boolean {
@@ -42,7 +42,7 @@ export function paretoPlateau(k: number): TerminationPredicate {
 
 /** Stop when total proposer + evaluator tokens exceed `t`. */
 export function tokenBudget(t: number): TerminationPredicate {
-  if (t < 1) throw new Error("tokenBudget: t must be >= 1");
+  if (t < 1) throw new Error('tokenBudget: t must be >= 1');
   return {
     name: `token-budget-${t}`,
     shouldStop(state: SwarmState): boolean {
@@ -53,7 +53,7 @@ export function tokenBudget(t: number): TerminationPredicate {
 
 /** Stop when wall-clock elapsed exceeds `ms`. */
 export function timeBudget(ms: number): TerminationPredicate {
-  if (ms < 1) throw new Error("timeBudget: ms must be >= 1");
+  if (ms < 1) throw new Error('timeBudget: ms must be >= 1');
   return {
     name: `time-budget-${ms}ms`,
     shouldStop(state: SwarmState): boolean {
@@ -68,7 +68,7 @@ export function timeBudget(ms: number): TerminationPredicate {
  * state.totalCostUsd is undefined, this predicate never fires.
  */
 export function costBudget(usd: number): TerminationPredicate {
-  if (usd <= 0) throw new Error("costBudget: usd must be > 0");
+  if (usd <= 0) throw new Error('costBudget: usd must be > 0');
   return {
     name: `cost-budget-$${usd}`,
     shouldStop(state: SwarmState): boolean {
@@ -80,7 +80,7 @@ export function costBudget(usd: number): TerminationPredicate {
 /** Compose: stops when ANY of the given predicates says stop. */
 export function anyOf(...predicates: TerminationPredicate[]): TerminationPredicate {
   return {
-    name: `any-of(${predicates.map((p) => p.name).join(",")})`,
+    name: `any-of(${predicates.map((p) => p.name).join(',')})`,
     shouldStop(state: SwarmState): boolean {
       return predicates.some((p) => p.shouldStop(state));
     },

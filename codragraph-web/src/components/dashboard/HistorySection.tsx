@@ -48,14 +48,10 @@ export const HistorySection = (): React.JSX.Element => {
   const ctx = useGraphstoreContext(currentRepo);
 
   const [branches, setBranches] = useState<GraphstoreBranch[] | null>(null);
-  const [branchesUnavailable, setBranchesUnavailable] = useState<string | null>(
-    null,
-  );
+  const [branchesUnavailable, setBranchesUnavailable] = useState<string | null>(null);
   const [commits, setCommits] = useState<GraphstoreCommit[] | null>(null);
   const [logUnavailable, setLogUnavailable] = useState<string | null>(null);
-  const [selectedCommit, setSelectedCommit] = useState<GraphstoreCommit | null>(
-    null,
-  );
+  const [selectedCommit, setSelectedCommit] = useState<GraphstoreCommit | null>(null);
   const [diff, setDiff] = useState<GraphstoreSemanticDiffResult | null>(null);
   const [diffLoading, setDiffLoading] = useState(false);
 
@@ -138,15 +134,13 @@ export const HistorySection = (): React.JSX.Element => {
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-        <span className="text-xs text-text-muted">
-          {commits?.length ?? 0} commits
-        </span>
+        <span className="text-xs text-text-muted">{commits?.length ?? 0} commits</span>
       </div>
 
       {/* Two-column body */}
       <div className="flex min-h-0 flex-1">
         <div className="flex w-1/2 min-w-0 flex-col border-r border-border-subtle">
-          <div className="border-b border-border-subtle px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          <div className="border-b border-border-subtle px-4 py-2 text-xs font-semibold tracking-wider text-text-secondary uppercase">
             Commits
           </div>
           <ScrollArea className="flex-1">
@@ -210,7 +204,7 @@ export const HistorySection = (): React.JSX.Element => {
         </div>
 
         <div className="flex w-1/2 min-w-0 flex-col">
-          <div className="border-b border-border-subtle px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          <div className="border-b border-border-subtle px-4 py-2 text-xs font-semibold tracking-wider text-text-secondary uppercase">
             Structural diff
           </div>
           <ScrollArea className="flex-1">
@@ -238,19 +232,15 @@ export const HistorySection = (): React.JSX.Element => {
 
       {branchesUnavailable && !branches?.length && (
         <div className="border-t border-border-subtle bg-amber-500/10 px-4 py-2 text-xs text-amber-300">
-          Versioning endpoints aren't wired on this server yet. The History view will
-          populate once `/api/graphstore/*` is live.
+          Versioning endpoints aren't wired on this server yet. The History view will populate once
+          `/api/graphstore/*` is live.
         </div>
       )}
     </div>
   );
 };
 
-const DiffSummary = ({
-  diff,
-}: {
-  diff: GraphstoreSemanticDiffResult;
-}): React.JSX.Element => {
+const DiffSummary = ({ diff }: { diff: GraphstoreSemanticDiffResult }): React.JSX.Element => {
   const totals = {
     added: Object.values(diff.summary.addedNodes).reduce((a, b) => a + b, 0),
     removed: Object.values(diff.summary.removedNodes).reduce((a, b) => a + b, 0),
@@ -287,18 +277,14 @@ const DiffSummary = ({
       {/* Headline: what broke / what fixed */}
       <div className="grid grid-cols-2 gap-2">
         <Card
-          className={
-            breakageCount > 0
-              ? 'border-red-500/40 bg-red-500/5'
-              : 'border-border-subtle'
-          }
+          className={breakageCount > 0 ? 'border-red-500/40 bg-red-500/5' : 'border-border-subtle'}
         >
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-text-secondary">
+            <div className="flex items-center gap-2 text-xs tracking-wider text-text-secondary uppercase">
               <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
               What broke
             </div>
-            <div className="mt-1 font-mono text-2xl font-semibold tabular-nums text-red-400">
+            <div className="mt-1 font-mono text-2xl font-semibold text-red-400 tabular-nums">
               {breakageCount}
             </div>
             <p className="mt-1 text-[11px] text-text-muted">
@@ -308,22 +294,18 @@ const DiffSummary = ({
         </Card>
         <Card
           className={
-            fixCount > 0
-              ? 'border-emerald-500/40 bg-emerald-500/5'
-              : 'border-border-subtle'
+            fixCount > 0 ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-border-subtle'
           }
         >
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-text-secondary">
+            <div className="flex items-center gap-2 text-xs tracking-wider text-text-secondary uppercase">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
               What's new
             </div>
-            <div className="mt-1 font-mono text-2xl font-semibold tabular-nums text-emerald-400">
+            <div className="mt-1 font-mono text-2xl font-semibold text-emerald-400 tabular-nums">
               {fixCount}
             </div>
-            <p className="mt-1 text-[11px] text-text-muted">
-              new exported APIs · new processes
-            </p>
+            <p className="mt-1 text-[11px] text-text-muted">new exported APIs · new processes</p>
           </CardContent>
         </Card>
       </div>
@@ -335,7 +317,13 @@ const DiffSummary = ({
         <CountTile label="modified" value={totals.modified} accent="text-amber-400" prefix="~" />
       </div>
 
-      {breakageCount > 0 && <BreakagePanel diff={diff} signatureBreakers={signatureBreakers} visibilityHides={visibilityHides} />}
+      {breakageCount > 0 && (
+        <BreakagePanel
+          diff={diff}
+          signatureBreakers={signatureBreakers}
+          visibilityHides={visibilityHides}
+        />
+      )}
       {fixCount > 0 && <FixesPanel diff={diff} />}
 
       <Separator />
@@ -349,13 +337,17 @@ const DiffSummary = ({
           <ul className="space-y-1 text-sm">
             {Object.entries(diff.summary.addedNodes).map(([t, n]) => (
               <li key={`a-${t}`} className="flex items-center gap-2">
-                <Badge variant="success" className="font-mono">+{n}</Badge>
+                <Badge variant="success" className="font-mono">
+                  +{n}
+                </Badge>
                 <span className="text-text-secondary">{t}</span>
               </li>
             ))}
             {Object.entries(diff.summary.removedNodes).map(([t, n]) => (
               <li key={`r-${t}`} className="flex items-center gap-2">
-                <Badge variant="destructive" className="font-mono">-{n}</Badge>
+                <Badge variant="destructive" className="font-mono">
+                  -{n}
+                </Badge>
                 <span className="text-text-secondary">{t}</span>
               </li>
             ))}
@@ -373,11 +365,10 @@ const DiffSummary = ({
           <CardContent>
             <ul className="space-y-1.5 text-sm">
               {diff.classifiedModifications.slice(0, 25).map((m) => (
-                <li
-                  key={`${m.table}/${m.id}`}
-                  className="flex items-center gap-2 truncate"
-                >
-                  <Badge variant="warning" className="font-mono">{m.table}</Badge>
+                <li key={`${m.table}/${m.id}`} className="flex items-center gap-2 truncate">
+                  <Badge variant="warning" className="font-mono">
+                    {m.table}
+                  </Badge>
                   <span className="font-mono text-xs text-text-primary">{m.id}</span>
                   <div className="ml-auto flex shrink-0 gap-1">
                     {m.changes.map((c) => (
@@ -408,7 +399,7 @@ const CountTile = ({
   prefix: string;
 }): React.JSX.Element => (
   <div className="rounded-md border border-border-subtle bg-deep p-3">
-    <div className="text-xs uppercase tracking-wider text-text-secondary">{label}</div>
+    <div className="text-xs tracking-wider text-text-secondary uppercase">{label}</div>
     <div className={`mt-1 font-mono text-2xl font-semibold tabular-nums ${accent}`}>
       {prefix}
       {value}
@@ -435,13 +426,15 @@ const BreakagePanel = ({
     <CardContent className="space-y-3 text-sm">
       {diff.removedAPIs.length > 0 && (
         <div>
-          <p className="mb-1.5 text-xs uppercase tracking-wider text-text-secondary">
+          <p className="mb-1.5 text-xs tracking-wider text-text-secondary uppercase">
             Removed exported APIs ({diff.removedAPIs.length})
           </p>
           <ul className="space-y-1">
             {diff.removedAPIs.slice(0, 8).map((a) => (
               <li key={`${a.table}/${a.id}`} className="flex items-center gap-2 truncate">
-                <Badge variant="destructive" className="font-mono">{a.table}</Badge>
+                <Badge variant="destructive" className="font-mono">
+                  {a.table}
+                </Badge>
                 <span className="font-mono text-xs text-text-primary">{a.name ?? a.id}</span>
                 {a.filePath && (
                   <span className="ml-auto truncate font-mono text-[10px] text-text-muted">
@@ -455,13 +448,15 @@ const BreakagePanel = ({
       )}
       {diff.removedProcesses.length > 0 && (
         <div>
-          <p className="mb-1.5 text-xs uppercase tracking-wider text-text-secondary">
+          <p className="mb-1.5 text-xs tracking-wider text-text-secondary uppercase">
             Removed processes ({diff.removedProcesses.length})
           </p>
           <ul className="space-y-1">
             {diff.removedProcesses.slice(0, 5).map((p) => (
               <li key={p.id} className="flex items-center gap-2 truncate">
-                <Badge variant="destructive" className="font-mono">Process</Badge>
+                <Badge variant="destructive" className="font-mono">
+                  Process
+                </Badge>
                 <span className="font-mono text-xs text-text-primary">{p.name ?? p.id}</span>
               </li>
             ))}
@@ -470,13 +465,15 @@ const BreakagePanel = ({
       )}
       {signatureBreakers.length > 0 && (
         <div>
-          <p className="mb-1.5 text-xs uppercase tracking-wider text-text-secondary">
+          <p className="mb-1.5 text-xs tracking-wider text-text-secondary uppercase">
             Breaking signatures ({signatureBreakers.length})
           </p>
           <ul className="space-y-1">
             {signatureBreakers.slice(0, 5).map((m) => (
               <li key={`${m.table}/${m.id}`} className="flex items-center gap-2 text-xs">
-                <Badge variant="warning" className="font-mono">sig</Badge>
+                <Badge variant="warning" className="font-mono">
+                  sig
+                </Badge>
                 <span className="font-mono text-text-primary">{m.name ?? m.id}</span>
                 {m.signatureChange?.parameterCountChanged && (
                   <span className="text-text-muted">
@@ -497,13 +494,15 @@ const BreakagePanel = ({
       )}
       {visibilityHides.length > 0 && (
         <div>
-          <p className="mb-1.5 text-xs uppercase tracking-wider text-text-secondary">
+          <p className="mb-1.5 text-xs tracking-wider text-text-secondary uppercase">
             No-longer-exported ({visibilityHides.length})
           </p>
           <ul className="space-y-1">
             {visibilityHides.slice(0, 5).map((m) => (
               <li key={`${m.table}/${m.id}`} className="flex items-center gap-2 text-xs">
-                <Badge variant="warning" className="font-mono">vis</Badge>
+                <Badge variant="warning" className="font-mono">
+                  vis
+                </Badge>
                 <span className="font-mono text-text-primary">{m.name ?? m.id}</span>
                 <span className="text-text-muted">exported → internal</span>
               </li>
@@ -515,11 +514,7 @@ const BreakagePanel = ({
   </Card>
 );
 
-const FixesPanel = ({
-  diff,
-}: {
-  diff: GraphstoreSemanticDiffResult;
-}): React.JSX.Element => (
+const FixesPanel = ({ diff }: { diff: GraphstoreSemanticDiffResult }): React.JSX.Element => (
   <Card className="border-emerald-500/30 bg-emerald-500/5">
     <CardHeader className="pb-2">
       <CardTitle className="flex items-center gap-2 text-sm text-emerald-300">
@@ -530,13 +525,15 @@ const FixesPanel = ({
     <CardContent className="space-y-3 text-sm">
       {diff.addedAPIs.length > 0 && (
         <div>
-          <p className="mb-1.5 text-xs uppercase tracking-wider text-text-secondary">
+          <p className="mb-1.5 text-xs tracking-wider text-text-secondary uppercase">
             New exported APIs ({diff.addedAPIs.length})
           </p>
           <ul className="space-y-1">
             {diff.addedAPIs.slice(0, 8).map((a) => (
               <li key={`${a.table}/${a.id}`} className="flex items-center gap-2 truncate">
-                <Badge variant="success" className="font-mono">{a.table}</Badge>
+                <Badge variant="success" className="font-mono">
+                  {a.table}
+                </Badge>
                 <span className="font-mono text-xs text-text-primary">{a.name ?? a.id}</span>
                 {a.filePath && (
                   <span className="ml-auto truncate font-mono text-[10px] text-text-muted">
@@ -550,13 +547,15 @@ const FixesPanel = ({
       )}
       {diff.addedProcesses.length > 0 && (
         <div>
-          <p className="mb-1.5 text-xs uppercase tracking-wider text-text-secondary">
+          <p className="mb-1.5 text-xs tracking-wider text-text-secondary uppercase">
             New processes ({diff.addedProcesses.length})
           </p>
           <ul className="space-y-1">
             {diff.addedProcesses.slice(0, 5).map((p) => (
               <li key={p.id} className="flex items-center gap-2 truncate">
-                <Badge variant="success" className="font-mono">Process</Badge>
+                <Badge variant="success" className="font-mono">
+                  Process
+                </Badge>
                 <span className="font-mono text-xs text-text-primary">{p.name ?? p.id}</span>
               </li>
             ))}
@@ -575,12 +574,10 @@ const SectionUnavailable = ({
   endpoint: string;
 }): React.JSX.Element => (
   <div className="m-4 rounded-md border border-dashed border-border-subtle bg-deep p-6">
-    <h3 className="text-sm font-semibold text-text-primary">
-      Versioning endpoint unavailable
-    </h3>
+    <h3 className="text-sm font-semibold text-text-primary">Versioning endpoint unavailable</h3>
     <p className="mt-1 text-xs text-text-secondary">
-      The codragraph server hasn't exposed <code className="font-mono">{endpoint}</code> yet.
-      Once it does, this view will populate from the graph-versioning layer.
+      The codragraph server hasn't exposed <code className="font-mono">{endpoint}</code> yet. Once
+      it does, this view will populate from the graph-versioning layer.
     </p>
     <p className="mt-3 font-mono text-[10px] text-text-muted">reason: {reason}</p>
   </div>

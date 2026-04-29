@@ -46,7 +46,7 @@ export interface Recipe {
   readonly provenance?: Record<string, unknown>;
 }
 
-export type RecipeSearchSource = "swarm" | "phase1";
+export type RecipeSearchSource = 'swarm' | 'phase1';
 
 export interface HarnessRecipeBody {
   readonly name: string;
@@ -83,9 +83,9 @@ export interface RecipeScores extends ParetoCoords {
  * pattern-match without inspecting fields.
  */
 export type RecipeMatch =
-  | { readonly kind: "exact"; readonly recipe: Recipe }
+  | { readonly kind: 'exact'; readonly recipe: Recipe }
   | {
-      readonly kind: "candidate";
+      readonly kind: 'candidate';
       readonly recipe: Recipe;
       readonly staleness: RecipeStaleness;
     };
@@ -120,5 +120,5 @@ export interface RecipeStaleness {
    * recommended. The threshold is intentionally simple (sum < 10 = low,
    * < 100 = medium, else high) and tunable in a follow-up.
    */
-  readonly riskLevel: "low" | "medium" | "high" | "unknown";
+  readonly riskLevel: 'low' | 'medium' | 'high' | 'unknown';
 }

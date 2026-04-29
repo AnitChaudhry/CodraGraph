@@ -60,11 +60,48 @@ const sourceA = () => ({
       yield { id: 'file:src/auth.ts', name: 'auth.ts', filePath: 'src/auth.ts' };
       yield { id: 'file:src/db.ts', name: 'db.ts', filePath: 'src/db.ts' };
     } else if (table === 'Function') {
-      yield { id: 'fn:authenticate', name: 'authenticate', filePath: 'src/auth.ts', isExported: true, parameterCount: 2, returnType: 'Promise<User>', startLine: 12, endLine: 28, content: 'async fn body v1' };
-      yield { id: 'fn:hash', name: 'hash', filePath: 'src/auth.ts', isExported: false, parameterCount: 1, returnType: 'string', startLine: 30, endLine: 35, content: 'crypto-based' };
-      yield { id: 'fn:connect', name: 'connect', filePath: 'src/db.ts', isExported: true, parameterCount: 1, returnType: 'Db', startLine: 5, endLine: 18, content: 'pool init' };
+      yield {
+        id: 'fn:authenticate',
+        name: 'authenticate',
+        filePath: 'src/auth.ts',
+        isExported: true,
+        parameterCount: 2,
+        returnType: 'Promise<User>',
+        startLine: 12,
+        endLine: 28,
+        content: 'async fn body v1',
+      };
+      yield {
+        id: 'fn:hash',
+        name: 'hash',
+        filePath: 'src/auth.ts',
+        isExported: false,
+        parameterCount: 1,
+        returnType: 'string',
+        startLine: 30,
+        endLine: 35,
+        content: 'crypto-based',
+      };
+      yield {
+        id: 'fn:connect',
+        name: 'connect',
+        filePath: 'src/db.ts',
+        isExported: true,
+        parameterCount: 1,
+        returnType: 'Db',
+        startLine: 5,
+        endLine: 18,
+        content: 'pool init',
+      };
     } else if (table === 'Class') {
-      yield { id: 'cls:User', name: 'User', filePath: 'src/auth.ts', isExported: true, startLine: 38, endLine: 60 };
+      yield {
+        id: 'cls:User',
+        name: 'User',
+        filePath: 'src/auth.ts',
+        isExported: true,
+        startLine: 38,
+        endLine: 60,
+      };
     }
   },
   streamEdges: async function* () {
@@ -82,15 +119,74 @@ const sourceB = () => ({
       yield { id: 'file:src/db.ts', name: 'db.ts', filePath: 'src/db.ts' };
       yield { id: 'file:src/session.ts', name: 'session.ts', filePath: 'src/session.ts' };
     } else if (table === 'Function') {
-      yield { id: 'fn:authenticate', name: 'authenticate', filePath: 'src/auth.ts', isExported: true, parameterCount: 3, returnType: 'Promise<Session>', startLine: 12, endLine: 35, content: 'async fn body v2 — added scope arg' };
-      yield { id: 'fn:hash', name: 'hash', filePath: 'src/auth.ts', isExported: false, parameterCount: 1, returnType: 'string', startLine: 37, endLine: 42, content: 'crypto-based' };
-      yield { id: 'fn:connect', name: 'connect', filePath: 'src/db.ts', isExported: true, parameterCount: 1, returnType: 'Db', startLine: 5, endLine: 18, content: 'pool init' };
-      yield { id: 'fn:createSession', name: 'createSession', filePath: 'src/session.ts', isExported: true, parameterCount: 1, returnType: 'Session', startLine: 8, endLine: 16, content: 'new code' };
+      yield {
+        id: 'fn:authenticate',
+        name: 'authenticate',
+        filePath: 'src/auth.ts',
+        isExported: true,
+        parameterCount: 3,
+        returnType: 'Promise<Session>',
+        startLine: 12,
+        endLine: 35,
+        content: 'async fn body v2 — added scope arg',
+      };
+      yield {
+        id: 'fn:hash',
+        name: 'hash',
+        filePath: 'src/auth.ts',
+        isExported: false,
+        parameterCount: 1,
+        returnType: 'string',
+        startLine: 37,
+        endLine: 42,
+        content: 'crypto-based',
+      };
+      yield {
+        id: 'fn:connect',
+        name: 'connect',
+        filePath: 'src/db.ts',
+        isExported: true,
+        parameterCount: 1,
+        returnType: 'Db',
+        startLine: 5,
+        endLine: 18,
+        content: 'pool init',
+      };
+      yield {
+        id: 'fn:createSession',
+        name: 'createSession',
+        filePath: 'src/session.ts',
+        isExported: true,
+        parameterCount: 1,
+        returnType: 'Session',
+        startLine: 8,
+        endLine: 16,
+        content: 'new code',
+      };
     } else if (table === 'Class') {
-      yield { id: 'cls:User', name: 'User', filePath: 'src/auth.ts', isExported: true, startLine: 44, endLine: 70 };
-      yield { id: 'cls:Session', name: 'Session', filePath: 'src/session.ts', isExported: true, startLine: 18, endLine: 30 };
+      yield {
+        id: 'cls:User',
+        name: 'User',
+        filePath: 'src/auth.ts',
+        isExported: true,
+        startLine: 44,
+        endLine: 70,
+      };
+      yield {
+        id: 'cls:Session',
+        name: 'Session',
+        filePath: 'src/session.ts',
+        isExported: true,
+        startLine: 18,
+        endLine: 30,
+      };
     } else if (table === 'Interface') {
-      yield { id: 'iface:SessionStore', name: 'SessionStore', filePath: 'src/session.ts', isExported: true };
+      yield {
+        id: 'iface:SessionStore',
+        name: 'SessionStore',
+        filePath: 'src/session.ts',
+        isExported: true,
+      };
     }
   },
   streamEdges: async function* () {
@@ -154,7 +250,13 @@ await recipeStore.put({
   harness: {
     name: 'graph-aware-rerank',
     version: '0.2.1',
-    files: [{ path: 'index.ts', content: '// graph-aware harness body\nexport default { run: async (task, ctx) => {/*...*/} };' }],
+    files: [
+      {
+        path: 'index.ts',
+        content:
+          '// graph-aware harness body\nexport default { run: async (task, ctx) => {/*...*/} };',
+      },
+    ],
   },
   paretoCoords: { accuracy: 0.91, tokens: 4200, latencyMs: 1450 },
   scores: { accuracy: 0.91, tokens: 4200, latencyMs: 1450, taskCount: 30 },
@@ -169,7 +271,12 @@ await recipeStore.put({
   harness: {
     name: 'few-shot-cypher',
     version: '0.1.4',
-    files: [{ path: 'index.ts', content: '// few-shot variant\nexport default { run: async (task, ctx) => {/*...*/} };' }],
+    files: [
+      {
+        path: 'index.ts',
+        content: '// few-shot variant\nexport default { run: async (task, ctx) => {/*...*/} };',
+      },
+    ],
   },
   paretoCoords: { accuracy: 0.84, tokens: 2800, latencyMs: 950 },
   scores: { accuracy: 0.84, tokens: 2800, latencyMs: 950, taskCount: 30 },
@@ -184,7 +291,12 @@ await recipeStore.put({
   harness: {
     name: 'process-walker',
     version: '0.1.0',
-    files: [{ path: 'index.ts', content: '// walks processes\nexport default { run: async (task, ctx) => {/*...*/} };' }],
+    files: [
+      {
+        path: 'index.ts',
+        content: '// walks processes\nexport default { run: async (task, ctx) => {/*...*/} };',
+      },
+    ],
   },
   paretoCoords: { accuracy: 0.62, tokens: 6800, latencyMs: 2100 },
   scores: { accuracy: 0.62, tokens: 6800, latencyMs: 2100, taskCount: 12 },
@@ -202,8 +314,7 @@ const meta = {
 await fs.writeFile(path.join(storagePath, 'meta.json'), JSON.stringify(meta, null, 2));
 
 // ── Register in global registry ───────────────────────────────────────
-const codragraphHome =
-  process.env.CODRAGRAPH_HOME ?? path.join(os.homedir(), '.codragraph');
+const codragraphHome = process.env.CODRAGRAPH_HOME ?? path.join(os.homedir(), '.codragraph');
 await fs.mkdir(codragraphHome, { recursive: true });
 const registryPath = path.join(codragraphHome, 'registry.json');
 let registry = [];

@@ -7,7 +7,7 @@ services:
   vllm:
     image: vllm/vllm-openai:v0.6.3
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
     volumes:
@@ -23,19 +23,19 @@ services:
       - --model
       - ${MODEL}
       - --gpu-memory-utilization
-      - "${GPU_MEMORY_UTILIZATION:-0.9}"
+      - '${GPU_MEMORY_UTILIZATION:-0.9}'
       - --max-model-len
-      - "${MAX_MODEL_LEN:-32768}"
+      - '${MAX_MODEL_LEN:-32768}'
       - --tensor-parallel-size
-      - "${TENSOR_PARALLEL_SIZE:-1}"
+      - '${TENSOR_PARALLEL_SIZE:-1}'
       - --max-num-seqs
-      - "${MAX_NUM_SEQS:-64}"
+      - '${MAX_NUM_SEQS:-64}'
       - --max-num-batched-tokens
-      - "${MAX_NUM_BATCHED_TOKENS:-8192}"
+      - '${MAX_NUM_BATCHED_TOKENS:-8192}'
       - --enable-prefix-caching
       - --disable-log-requests
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/v1/models']
       interval: 15s
       timeout: 5s
       retries: 30
@@ -54,7 +54,7 @@ services:
       - NODE_ENV=production
     working_dir: /workspace/repo
     # Run interactively (override via `docker compose run`)
-    command: ["sleep", "infinity"]
+    command: ['sleep', 'infinity']
 
   # --- Bench scripts (run-benchmark.ts, report.ts) -------------------------
   bench:
@@ -80,7 +80,7 @@ services:
       - JUDGE_PROVIDER=${JUDGE_PROVIDER:-anthropic}
       - JUDGE_MODEL=${JUDGE_MODEL:-claude-haiku-4-5-20251001}
     # Run interactively via `docker compose run --rm bench npm run benchmark -- ...`
-    command: ["sleep", "infinity"]
+    command: ['sleep', 'infinity']
 
 volumes:
   hf_cache:

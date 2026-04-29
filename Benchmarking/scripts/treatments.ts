@@ -4,24 +4,19 @@
 // responsible for: setting up the agent's tools, running the per-task loop,
 // invoking the judge, accumulating tokens/latency/cost.
 
-import { CodebaseQAEvaluator } from "codragraph-harness/evaluator/impl";
-import { scoreAnswer } from "codragraph-harness/evaluator/judge";
-import { LlmCompressor } from "codragraph-compress/index";
-import {
-  zeroShot,
-  fewShot,
-  graphAware,
-} from "codragraph-harness/harness/seeds/index";
-import { LocalGraphClient } from "codragraph-harness/graph/local-client";
-import { InMemoryTraceWriter } from "codragraph-harness/trace";
-import { resolveBudget } from "codragraph-harness/types";
-import type { InferenceProvider } from "codragraph-harness/inference/interface";
-import type { Harness, HarnessContext } from "codragraph-harness/harness/interface";
-import type { GraphClient } from "codragraph-harness/types";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import type { ModelSpec, TaskInput, TaskResult, TreatmentTag } from "./types.js";
-import { computeCost } from "./pricing.js";
+import { CodebaseQAEvaluator } from 'codragraph-harness/evaluator/impl';
+import { scoreAnswer } from 'codragraph-harness/evaluator/judge';
+import { LlmCompressor } from 'codragraph-compress/index';
+import { graphAware } from 'codragraph-harness/harness/seeds/index';
+import { LocalGraphClient } from 'codragraph-harness/graph/local-client';
+import { resolveBudget } from 'codragraph-harness/types';
+import type { InferenceProvider } from 'codragraph-harness/inference/interface';
+import type { Harness, HarnessContext } from 'codragraph-harness/harness/interface';
+import type { GraphClient } from 'codragraph-harness/types';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import type { ModelSpec, TaskInput, TaskResult, TreatmentTag } from './types.js';
+import { computeCost } from './pricing.js';
 
 export interface RunTreatmentInput {
   treatment: TreatmentTag;
@@ -37,17 +32,17 @@ export interface RunTreatmentInput {
 
 export async function runTreatment(input: RunTreatmentInput): Promise<TaskResult[]> {
   switch (input.treatment) {
-    case "baseline-grep":
+    case 'baseline-grep':
       return runBaselineGrep(input);
-    case "baseline-fullfile":
+    case 'baseline-fullfile':
       return runBaselineFullFile(input);
-    case "codragraph-graph-only":
+    case 'codragraph-graph-only':
       return runWithSeedHarness(input, graphAware);
-    case "codragraph-graph-compress":
+    case 'codragraph-graph-compress':
       return runGraphCompress(input);
-    case "codragraph-harness-tuned":
-    case "codragraph-swarm-tuned":
-    case "codragraph-recipe-cached":
+    case 'codragraph-harness-tuned':
+    case 'codragraph-swarm-tuned':
+    case 'codragraph-recipe-cached':
       throw new Error(
         `Treatment ${input.treatment} requires a precomputed recipe. Run \`tsx swarm-tune.ts\` first to populate the recipe cache, then re-run with the cached recipe path. (Implementation: load the recipe's TS module from the candidate filesystem and use it as the harness in runWithLoadedHarness.)`,
       );
@@ -74,7 +69,7 @@ async function runBaselineGrep(input: RunTreatmentInput): Promise<TaskResult[]> 
     const startedAtMs = Date.now();
     let inputTokens = 0;
     let outputTokens = 0;
-    let answer = "";
+    let answer = '';
     let errorReason: string | undefined;
     let toolCalls = 0;
 
@@ -84,19 +79,19 @@ async function runBaselineGrep(input: RunTreatmentInput): Promise<TaskResult[]> 
       toolCalls = 1;
 
       const systemPrompt = [
-        "You are a developer answering questions about a codebase.",
-        "You ran `grep` with keywords from the question and got these results:",
-        "",
+        'You are a developer answering questions about a codebase.',
+        'You ran `grep` with keywords from the question and got these results:',
+        '',
         grepHits,
-        "",
-        "Use the grep results above to answer. If a result references a file, you can trust the path.",
-        "Be concise. Cite file paths.",
-      ].join("\n");
+        '',
+        'Use the grep results above to answer. If a result references a file, you can trust the path.',
+        'Be concise. Cite file paths.',
+      ].join('\n');
 
       const completion = await input.inference.complete({
         model: input.model.modelId,
         systemPrompt,
-        messages: [{ role: "user", content: task.question }],
+        messages: [{ role: 'user', content: task.question }],
         temperature: 0,
         maxTokens: 512,
         timeoutMs: input.taskTimeoutMs,
@@ -127,9 +122,7 @@ async function runBaselineGrep(input: RunTreatmentInput): Promise<TaskResult[]> 
       correct: judgement.correct,
       judgeMethod: judgement.method,
       judgeNote: judgement.note,
-      costUsd:
-        computeCost(input.model, inputTokens, outputTokens) +
-        judgement.judgeCostUsd,
+      costUsd: computeCost(input.model, inputTokens, outputTokens) + judgement.judgeCostUsd,
       errorReason,
       seed: input.seed,
       startedAt,
@@ -148,24 +141,24 @@ async function runBaselineFullFile(input: RunTreatmentInput): Promise<TaskResult
     const startedAtMs = Date.now();
     let inputTokens = 0;
     let outputTokens = 0;
-    let answer = "";
+    let answer = '';
     let errorReason: string | undefined;
 
     try {
       const filesBlock = await keywordRankedFiles(input.repoPath, task.question, 32_000);
       const systemPrompt = [
-        "You are a developer answering questions about a codebase.",
-        "Below are the most likely-relevant files in the repo:",
-        "",
+        'You are a developer answering questions about a codebase.',
+        'Below are the most likely-relevant files in the repo:',
+        '',
         filesBlock,
-        "",
-        "Answer concisely. Cite file paths.",
-      ].join("\n");
+        '',
+        'Answer concisely. Cite file paths.',
+      ].join('\n');
 
       const completion = await input.inference.complete({
         model: input.model.modelId,
         systemPrompt,
-        messages: [{ role: "user", content: task.question }],
+        messages: [{ role: 'user', content: task.question }],
         temperature: 0,
         maxTokens: 512,
         timeoutMs: input.taskTimeoutMs,
@@ -194,9 +187,7 @@ async function runBaselineFullFile(input: RunTreatmentInput): Promise<TaskResult
       correct: judgement.correct,
       judgeMethod: judgement.method,
       judgeNote: judgement.note,
-      costUsd:
-        computeCost(input.model, inputTokens, outputTokens) +
-        judgement.judgeCostUsd,
+      costUsd: computeCost(input.model, inputTokens, outputTokens) + judgement.judgeCostUsd,
       errorReason,
       seed: input.seed,
       startedAt,
@@ -225,7 +216,7 @@ async function runWithSeedHarness(
     acceptParaphrases: t.acceptParaphrases,
     repo: t.repo ?? input.repoPath,
   }));
-  const budget = resolveBudget({ policy: "balanced" });
+  const budget = resolveBudget({ policy: 'balanced' });
   const scores = await evaluator.evaluate({
     harness,
     tasks,
@@ -252,7 +243,7 @@ async function runWithSeedHarness(
       answer: pt.actualAnswer,
       expectedAnswer: pt.expectedAnswer,
       correct: pt.correct,
-      judgeMethod: pt.judgeNote ? "llm-judge" : "substring",
+      judgeMethod: pt.judgeNote ? 'llm-judge' : 'substring',
       judgeNote: pt.judgeNote,
       costUsd: computeCost(input.model, Math.round(pt.tokens * 0.9), Math.round(pt.tokens * 0.1)),
       seed: input.seed,
@@ -266,9 +257,9 @@ async function runWithSeedHarness(
 async function runGraphCompress(input: RunTreatmentInput): Promise<TaskResult[]> {
   // Build a graph-aware harness wrapped to compress retrieved context.
   const compressedGraphAware: Harness = {
-    name: "graph-aware-compressed",
-    version: "1.0.0",
-    origin: { kind: "seed" },
+    name: 'graph-aware-compressed',
+    version: '1.0.0',
+    origin: { kind: 'seed' },
     async run(task, ctx: HarnessContext) {
       // Run graph-aware retrieval as normal
       const graphResult = await ctx.graph.query({
@@ -278,23 +269,23 @@ async function runGraphCompress(input: RunTreatmentInput): Promise<TaskResult[]>
       });
       const compressor = new LlmCompressor();
       let contextSnippets = graphResult.results
-        .map((r) => `${r.name}${r.file ? ` (${r.file})` : ""}${r.snippet ? `\n${r.snippet}` : ""}`)
-        .join("\n\n");
+        .map((r) => `${r.name}${r.file ? ` (${r.file})` : ''}${r.snippet ? `\n${r.snippet}` : ''}`)
+        .join('\n\n');
       // Compress when there's substantive context to compress
       if (contextSnippets.length > 500) {
         const compressed = await compressor.compress(contextSnippets, {
           inference: ctx.inference,
-          level: "balanced",
+          level: 'balanced',
         });
         contextSnippets = compressed.compressed;
       }
       const startedAt = Date.now();
       const result = await ctx.inference.complete({
         systemPrompt:
-          "You answer questions about a codebase. Use the compressed context below as authoritative. Cite file paths. Be concise.",
+          'You answer questions about a codebase. Use the compressed context below as authoritative. Cite file paths. Be concise.',
         messages: [
           {
-            role: "user",
+            role: 'user',
             content: `Compressed context:\n${contextSnippets}\n\nQuestion: ${task.question}\nAnswer:`,
           },
         ],
@@ -316,14 +307,14 @@ async function runGraphCompress(input: RunTreatmentInput): Promise<TaskResult[]>
 async function buildGraphClient(repoPath: string): Promise<GraphClient> {
   // Use codragraph's LocalBackend in-process. Requires the repo to have been
   // analyzed (`codragraph analyze`) before the bench runs.
-  const { LocalBackend } = await import("codragraph/mcp/local/local-backend");
+  const { LocalBackend } = await import('codragraph/mcp/local/local-backend');
   const backend = new LocalBackend();
   return new LocalGraphClient({ backend, defaultRepo: repoPath });
 }
 
 interface JudgementResult {
   correct: boolean;
-  method: TaskResult["judgeMethod"];
+  method: TaskResult['judgeMethod'];
   note?: string;
   judgeTokens: number;
   judgeCostUsd: number;
@@ -338,7 +329,7 @@ async function judgeAnswer(
   if (harnessError) {
     return {
       correct: false,
-      method: "harness-error",
+      method: 'harness-error',
       note: harnessError,
       judgeTokens: 0,
       judgeCostUsd: 0,
@@ -350,12 +341,12 @@ async function judgeAnswer(
   });
   // scoreAnswer doesn't currently return token usage; estimate roughly when judge fired.
   // Conservative: 200 input + 50 output tokens per LLM-judge call.
-  const usedJudge = result.method.startsWith("judge:");
+  const usedJudge = result.method.startsWith('judge:');
   const judgeTokens = usedJudge ? 250 : 0;
   const judgeCostUsd = 0; // We track it but provider-specific computation is in computeCost
   return {
     correct: result.correct,
-    method: usedJudge ? "llm-judge" : result.method === "substring" ? "substring" : "exact",
+    method: usedJudge ? 'llm-judge' : result.method === 'substring' ? 'substring' : 'exact',
     note: result.note,
     judgeTokens,
     judgeCostUsd,
@@ -374,7 +365,7 @@ async function simulateGrep(repoPath: string, question: string): Promise<string>
     hits.push(`# grep "${kw}":`);
     hits.push(...found);
   }
-  return hits.join("\n").slice(0, 6000); // cap
+  return hits.join('\n').slice(0, 6000); // cap
 }
 
 async function keywordRankedFiles(
@@ -392,10 +383,10 @@ async function keywordRankedFiles(
   );
   ranked.sort((a, b) => b.score - a.score);
   const top = ranked.filter((r) => r.score > 0).slice(0, 10);
-  let body = "";
+  let body = '';
   for (const t of top) {
     if (body.length > charLimit) break;
-    const content = await fs.readFile(t.path, "utf8").catch(() => "");
+    const content = await fs.readFile(t.path, 'utf8').catch(() => '');
     body += `\n=== ${path.relative(repoPath, t.path)} ===\n${content.slice(0, 4000)}\n`;
   }
   return body.slice(0, charLimit);
@@ -403,16 +394,53 @@ async function keywordRankedFiles(
 
 function extractKeywords(question: string, max: number): string[] {
   const stopwords = new Set([
-    "the", "a", "an", "is", "are", "was", "were", "what", "where", "when", "why",
-    "how", "does", "do", "did", "would", "should", "could", "this", "that",
-    "those", "these", "and", "or", "but", "if", "then", "of", "to", "in", "on",
-    "at", "for", "with", "by", "from", "as", "it", "its", "be", "been",
+    'the',
+    'a',
+    'an',
+    'is',
+    'are',
+    'was',
+    'were',
+    'what',
+    'where',
+    'when',
+    'why',
+    'how',
+    'does',
+    'do',
+    'did',
+    'would',
+    'should',
+    'could',
+    'this',
+    'that',
+    'those',
+    'these',
+    'and',
+    'or',
+    'but',
+    'if',
+    'then',
+    'of',
+    'to',
+    'in',
+    'on',
+    'at',
+    'for',
+    'with',
+    'by',
+    'from',
+    'as',
+    'it',
+    'its',
+    'be',
+    'been',
   ]);
   return [
     ...new Set(
       question
         .toLowerCase()
-        .replace(/[^a-z0-9_./\-\s]/g, " ")
+        .replace(/[^a-z0-9_./\-\s]/g, ' ')
         .split(/\s+/)
         .filter((w) => w.length > 2 && !stopwords.has(w)),
     ),
@@ -426,8 +454,8 @@ async function grepLinesIn(repoPath: string, keyword: string, limit: number): Pr
   for (const f of files) {
     if (matches.length >= limit) break;
     try {
-      const content = await fs.readFile(f, "utf8");
-      const lines = content.split("\n");
+      const content = await fs.readFile(f, 'utf8');
+      const lines = content.split('\n');
       for (let i = 0; i < lines.length; i++) {
         if (matches.length >= limit) break;
         if (lines[i]!.toLowerCase().includes(keyword.toLowerCase())) {
@@ -443,7 +471,15 @@ async function grepLinesIn(repoPath: string, keyword: string, limit: number): Pr
 
 async function listSourceFiles(repoPath: string): Promise<string[]> {
   const out: string[] = [];
-  const skip = new Set(["node_modules", ".git", "dist", "build", "candidates", "results", ".codragraph"]);
+  const skip = new Set([
+    'node_modules',
+    '.git',
+    'dist',
+    'build',
+    'candidates',
+    'results',
+    '.codragraph',
+  ]);
   async function walk(dir: string): Promise<void> {
     const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
     for (const entry of entries) {
@@ -462,9 +498,10 @@ async function listSourceFiles(repoPath: string): Promise<string[]> {
 
 async function scoreFileForKeywords(filePath: string, keywords: string[]): Promise<number> {
   try {
-    const content = (await fs.readFile(filePath, "utf8")).slice(0, 8000).toLowerCase();
+    const content = (await fs.readFile(filePath, 'utf8')).slice(0, 8000).toLowerCase();
     return keywords.reduce(
-      (acc, kw) => acc + (content.includes(kw) ? 1 : 0) + (filePath.toLowerCase().includes(kw) ? 2 : 0),
+      (acc, kw) =>
+        acc + (content.includes(kw) ? 1 : 0) + (filePath.toLowerCase().includes(kw) ? 2 : 0),
       0,
     );
   } catch {

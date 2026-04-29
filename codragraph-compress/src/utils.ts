@@ -21,7 +21,7 @@ export function estimateTokens(text: string): number {
  * library. This is good enough for compression-time prose.
  */
 export function splitSentences(text: string): string[] {
-  const cleaned = text.replace(/\s+/g, " ").trim();
+  const cleaned = text.replace(/\s+/g, ' ').trim();
   if (!cleaned) return [];
 
   // Split on punctuation followed by whitespace + capital letter (or start of line).
@@ -56,32 +56,31 @@ export function cosineSimilarity(a: readonly number[], b: readonly number[]): nu
 /** Detect non-prose content where compression is unsafe (code, structured data). */
 export function isProse(text: string): boolean {
   const codeIndicators = [
-    "def ",
-    "class ",
-    "function ",
-    "import ",
-    "const ",
-    "let ",
-    "var ",
-    "public ",
-    "private ",
-    "protected ",
-    "#include",
-    "package ",
-    "=>",
-    "->",
-    "::",
-    "!=",
-    "==",
-    "<=",
-    ">=",
-    "&&",
-    "||",
+    'def ',
+    'class ',
+    'function ',
+    'import ',
+    'const ',
+    'let ',
+    'var ',
+    'public ',
+    'private ',
+    'protected ',
+    '#include',
+    'package ',
+    '=>',
+    '->',
+    '::',
+    '!=',
+    '==',
+    '<=',
+    '>=',
+    '&&',
+    '||',
   ];
   let codeScore = 0;
   for (const ind of codeIndicators) if (text.includes(ind)) codeScore++;
-  const braceCount =
-    (text.match(/[{}\[\]]/g) ?? []).length;
+  const braceCount = (text.match(/[{}\[\]]/g) ?? []).length;
   const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
   if (wordCount < 5) return true;
   if (codeScore >= 2 || braceCount > wordCount * 0.2) return false;

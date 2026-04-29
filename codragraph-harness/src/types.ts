@@ -45,7 +45,7 @@ export interface TokenUsage {
  * Within any policy, individual fields can still be overridden; the policy
  * defaults apply only to fields that are undefined.
  */
-export type BudgetPolicy = "min" | "balanced" | "max" | "custom";
+export type BudgetPolicy = 'min' | 'balanced' | 'max' | 'custom';
 
 /** Bounded resource envelope a harness must respect. */
 export interface TokenBudget {
@@ -66,7 +66,7 @@ export interface ResolvedBudget {
   timeoutMs: number;
 }
 
-const POLICY_DEFAULTS: Record<Exclude<BudgetPolicy, "custom">, ResolvedBudget> = {
+const POLICY_DEFAULTS: Record<Exclude<BudgetPolicy, 'custom'>, ResolvedBudget> = {
   min: { maxInputTokens: 4_000, maxOutputTokens: 1_024, timeoutMs: 30_000 },
   balanced: { maxInputTokens: 32_000, maxOutputTokens: 4_096, timeoutMs: 60_000 },
   max: { maxInputTokens: 200_000, maxOutputTokens: 8_192, timeoutMs: 180_000 },
@@ -79,8 +79,8 @@ const POLICY_DEFAULTS: Record<Exclude<BudgetPolicy, "custom">, ResolvedBudget> =
  * sensible numbers.
  */
 export function resolveBudget(budget: TokenBudget = {}): ResolvedBudget {
-  const policy = budget.policy ?? "balanced";
-  const base = policy === "custom" ? POLICY_DEFAULTS.balanced : POLICY_DEFAULTS[policy];
+  const policy = budget.policy ?? 'balanced';
+  const base = policy === 'custom' ? POLICY_DEFAULTS.balanced : POLICY_DEFAULTS[policy];
   return {
     maxInputTokens: budget.maxInputTokens ?? base.maxInputTokens,
     maxOutputTokens: budget.maxOutputTokens ?? base.maxOutputTokens,
@@ -101,7 +101,7 @@ export const PROVIDER_CONTEXT_WINDOWS: Record<string, number> = {
 
 /** A chat message in a generic provider-agnostic format. */
 export interface Message {
-  role: "user" | "assistant" | "system";
+  role: 'user' | 'assistant' | 'system';
   content: string;
 }
 
@@ -144,14 +144,14 @@ export interface GraphContextResult {
 
 export interface GraphImpactInput {
   target: string;
-  direction?: "upstream" | "downstream";
+  direction?: 'upstream' | 'downstream';
   repo?: string;
   maxDepth?: number;
 }
 export interface GraphImpactResult {
   target: string;
   affected: Array<{ name: string; depth: number; file?: string }>;
-  riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 }
 
 /** Append-only structured trace recorder, persisted to the candidate's traces/ dir. */

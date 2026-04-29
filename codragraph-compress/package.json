@@ -1,7 +1,7 @@
 {
   "name": "codragraph-compress",
   "version": "0.1.0",
-  "description": "Lossless semantic compression for LLM contexts \u2014 strip grammar, keep facts, save tokens.",
+  "description": "Lossless semantic compression for LLM contexts — strip grammar, keep facts, save tokens.",
   "author": {
     "name": "Anit Chaudhary",
     "email": "getintouch.anit@gmail.com",

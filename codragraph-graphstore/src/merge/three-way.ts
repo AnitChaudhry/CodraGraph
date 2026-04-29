@@ -5,14 +5,10 @@ import {
   type TableManifest,
   parseObjectId,
   SCHEMA_VERSION,
-} from "../types.js";
-import {
-  type ContentAddressedStore,
-  getJson,
-  putJson,
-} from "../cas/interface.js";
-import { findLowestCommonAncestor } from "../history/log.js";
-import { readCommit } from "../history/commit.js";
+} from '../types.js';
+import { type ContentAddressedStore, getJson, putJson } from '../cas/interface.js';
+import { findLowestCommonAncestor } from '../history/log.js';
+import { readCommit } from '../history/commit.js';
 
 export interface ThreeWayMergeOptions {
   readonly cas: ContentAddressedStore;
@@ -37,16 +33,16 @@ export interface ThreeWayMergeOptions {
  *                             returned for the caller to surface.
  */
 export type ThreeWayMergeResult =
-  | { readonly kind: "already-up-to-date" }
-  | { readonly kind: "fast-forward"; readonly to: ObjectId }
+  | { readonly kind: 'already-up-to-date' }
+  | { readonly kind: 'fast-forward'; readonly to: ObjectId }
   | {
-      readonly kind: "merged";
+      readonly kind: 'merged';
       readonly base: ObjectId;
       readonly snapshotId: ObjectId;
       readonly stats: MergeStats;
     }
   | {
-      readonly kind: "conflicts";
+      readonly kind: 'conflicts';
       readonly base: ObjectId | null;
       readonly conflicts: MergeConflict[];
     };
@@ -56,7 +52,12 @@ export interface MergeStats {
     string,
     { takenFromOurs: number; takenFromTheirs: number; unchanged: number; deleted: number }
   >;
-  readonly edges: { takenFromOurs: number; takenFromTheirs: number; unchanged: number; deleted: number };
+  readonly edges: {
+    takenFromOurs: number;
+    takenFromTheirs: number;
+    unchanged: number;
+    deleted: number;
+  };
 }
 
 export interface MergeConflict {
@@ -75,9 +76,9 @@ export interface MergeConflict {
 }
 
 export type ConflictReason =
-  | "modified-on-both-sides"
-  | "modified-vs-deleted"
-  | "added-on-both-sides-with-different-content";
+  | 'modified-on-both-sides'
+  | 'modified-vs-deleted'
+  | 'added-on-both-sides-with-different-content';
 
 /**
  * Three-way merge of two commit ids using their lowest common ancestor.
@@ -91,25 +92,23 @@ export type ConflictReason =
  * and return the new snapshot id. Conflicts short-circuit the write —
  * we never produce a half-merged snapshot.
  */
-export const threeWayMerge = async (
-  opts: ThreeWayMergeOptions,
-): Promise<ThreeWayMergeResult> => {
+export const threeWayMerge = async (opts: ThreeWayMergeOptions): Promise<ThreeWayMergeResult> => {
   if (opts.ours === opts.theirs) {
-    return { kind: "already-up-to-date" };
+    return { kind: 'already-up-to-date' };
   }
 
   const base = await findLowestCommonAncestor(opts.cas, opts.ours, opts.theirs);
   if (base === opts.ours) {
-    return { kind: "fast-forward", to: opts.theirs };
+    return { kind: 'fast-forward', to: opts.theirs };
   }
   if (base === opts.theirs) {
-    return { kind: "already-up-to-date" };
+    return { kind: 'already-up-to-date' };
   }
   if (base === null) {
     // Orphan branches — no LCA. Phase 4 refuses to invent a merge here;
     // every row would look added-on-both-sides. Surface as conflicts so
     // the caller can decide.
-    return { kind: "conflicts", base: null, conflicts: [] };
+    return { kind: 'conflicts', base: null, conflicts: [] };
   }
 
   // Resolve commit → snapshot → manifest for all three points.
@@ -163,7 +162,7 @@ export const threeWayMerge = async (
   // ── Edges ─────────────────────────────────────────────────────────
   const edgeConflicts: MergeConflict[] = [];
   const mergedEdges = mergeTable(
-    "edge",
+    'edge',
     baseManifest.edges,
     oursManifest.edges,
     theirsManifest.edges,
@@ -173,7 +172,7 @@ export const threeWayMerge = async (
   stats.edges = mergedEdges.stats;
 
   if (conflicts.length > 0) {
-    return { kind: "conflicts", base, conflicts };
+    return { kind: 'conflicts', base, conflicts };
   }
 
   // Write the merged manifest + snapshot. createdAt is set to "now" so
@@ -182,7 +181,7 @@ export const threeWayMerge = async (
   // distinguishable in history).
   const mergedManifest: SnapshotManifest = {
     schemaVersion: SCHEMA_VERSION,
-    type: "snapshot-manifest",
+    type: 'snapshot-manifest',
     nodeTables: sortedRecord(mergedNodeTables),
     edges: { rowCount: Object.keys(mergedEdges.rows).length, rows: mergedEdges.rows },
   };
@@ -190,14 +189,14 @@ export const threeWayMerge = async (
 
   const snapshot: Snapshot = {
     schemaVersion: SCHEMA_VERSION,
-    type: "snapshot",
+    type: 'snapshot',
     manifestId,
     createdAt: new Date().toISOString(),
   };
   const snapshotId = await putJson(opts.cas, snapshot);
 
   return {
-    kind: "merged",
+    kind: 'merged',
     base,
     snapshotId,
     stats: { tables: stats.tables, edges: stats.edges },
@@ -284,10 +283,10 @@ const mergeTable = (
     // a precise reason so the conflict UI can render a useful message.
     const reason: ConflictReason =
       b === null
-        ? "added-on-both-sides-with-different-content"
+        ? 'added-on-both-sides-with-different-content'
         : o === null || t === null
-          ? "modified-vs-deleted"
-          : "modified-on-both-sides";
+          ? 'modified-vs-deleted'
+          : 'modified-on-both-sides';
 
     conflicts.push({
       kind: conflictKind,
@@ -308,17 +307,12 @@ const loadManifestFromCommit = async (
 ): Promise<SnapshotManifest> => {
   const commit = await readCommit(cas, commitId);
   const snapshot = await getJson<Snapshot>(cas, commit.snapshot);
-  if (snapshot.type !== "snapshot") {
+  if (snapshot.type !== 'snapshot') {
     throw new Error(`threeWayMerge: ${commit.snapshot} is not a snapshot`);
   }
-  const manifest = await getJson<SnapshotManifest>(
-    cas,
-    parseObjectId(snapshot.manifestId),
-  );
-  if (manifest.type !== "snapshot-manifest") {
-    throw new Error(
-      `threeWayMerge: manifest at ${snapshot.manifestId} has wrong type`,
-    );
+  const manifest = await getJson<SnapshotManifest>(cas, parseObjectId(snapshot.manifestId));
+  if (manifest.type !== 'snapshot-manifest') {
+    throw new Error(`threeWayMerge: manifest at ${snapshot.manifestId} has wrong type`);
   }
   return manifest;
 };

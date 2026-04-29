@@ -1,4 +1,4 @@
-import type { Message, TokenUsage } from "../types.js";
+import type { Message, TokenUsage } from '../types.js';
 
 /**
  * InferenceProvider — provider-agnostic completion interface.

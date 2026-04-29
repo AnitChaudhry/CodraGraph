@@ -4,11 +4,11 @@
 // This file defines the contract so algorithm.ts can wire it without depending on
 // the implementation.
 
-import type { Harness } from "../harness/interface.js";
-import type { GraphClient, ResolvedBudget, TaskInput } from "../types.js";
-import type { InferenceProvider } from "../inference/interface.js";
-import type { TraceRecord } from "../filesystem.js";
-import type { Scores } from "./score.js";
+import type { Harness } from '../harness/interface.js';
+import type { GraphClient, ResolvedBudget, TaskInput } from '../types.js';
+import type { InferenceProvider } from '../inference/interface.js';
+import type { TraceRecord } from '../filesystem.js';
+import type { Scores } from './score.js';
 
 export interface Evaluator {
   /** Stable identifier; allows multiple evaluator strategies (e.g., "exact-match", "llm-judge"). */

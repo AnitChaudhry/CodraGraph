@@ -329,7 +329,10 @@ describe('.codragraphignore negation overrides hardcoded DEFAULT_IGNORE_LIST (#7
     // `__tests__/generated/foo.ts` stays blocked. This locks in the
     // guarantee the design comment makes about "standard rules still
     // layer on top" for the compound case.
-    await fs.writeFile(path.join(tmpDir, '.codragraphignore'), '!__tests__/\n__tests__/generated/\n');
+    await fs.writeFile(
+      path.join(tmpDir, '.codragraphignore'),
+      '!__tests__/\n__tests__/generated/\n',
+    );
     const filter = await createIgnoreFilter(tmpDir);
     // Parent negation still in effect: top-level tests allowed.
     expect(filter.ignored(mkPath('__tests__/foo.test.ts'))).toBe(false);

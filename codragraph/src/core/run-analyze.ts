@@ -241,7 +241,9 @@ export async function runFullAnalysis(
         );
       }
     } catch (err) {
-      log(`graphstore: snapshot failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+      log(
+        `graphstore: snapshot failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
 
     // ── Phase 3: FTS (85–90%) ─────────────────────────────────────────

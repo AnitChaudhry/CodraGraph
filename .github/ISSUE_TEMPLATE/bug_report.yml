@@ -1,7 +1,7 @@
 name: Bug report
 description: Something is broken or behaves unexpectedly.
-title: "[bug] "
-labels: ["bug", "needs-triage"]
+title: '[bug] '
+labels: ['bug', 'needs-triage']
 body:
   - type: markdown
     attributes:
@@ -33,7 +33,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: 'Run `<pkg> --version` or check `package.json`. Include the commit SHA if you''re on a fork.'
+      description: "Run `<pkg> --version` or check `package.json`. Include the commit SHA if you're on a fork."
       placeholder: 'e.g. codragraph 1.6.2 / commit abc1234'
     validations:
       required: true

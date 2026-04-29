@@ -1,7 +1,7 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import crypto from "node:crypto";
-import type { Recipe } from "./types.js";
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import type { Recipe } from './types.js';
 
 /**
  * Persistent store for harness recipes.
@@ -34,7 +34,7 @@ export interface RecipeStore {
   delete(id: string): Promise<boolean>;
 }
 
-export interface RecipeInput extends Omit<Recipe, "id"> {
+export interface RecipeInput extends Omit<Recipe, 'id'> {
   /** When omitted, the store derives a sha256 id from the canonical content. */
   readonly id?: string;
 }
@@ -83,7 +83,7 @@ export class FsRecipeStore implements RecipeStore {
       scores: input.scores,
       ...(input.provenance !== undefined ? { provenance: input.provenance } : {}),
     };
-    await fs.mkdir(path.join(this.root, "by-id"), { recursive: true });
+    await fs.mkdir(path.join(this.root, 'by-id'), { recursive: true });
     const target = this.idPath(id);
     // Idempotent: if the same id already exists, leave it (canonical
     // content guarantees byte-equality).
@@ -111,10 +111,10 @@ export class FsRecipeStore implements RecipeStore {
 
   async get(id: string): Promise<Recipe | null> {
     try {
-      const raw = await fs.readFile(this.idPath(id), "utf-8");
+      const raw = await fs.readFile(this.idPath(id), 'utf-8');
       return JSON.parse(raw) as Recipe;
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
       throw err;
     }
   }
@@ -146,19 +146,19 @@ export class FsRecipeStore implements RecipeStore {
       await this.refreshIndex();
       return true;
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") return false;
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return false;
       throw err;
     }
   }
 
   /** Path on disk for a given recipe id. */
   idPath(id: string): string {
-    return path.join(this.root, "by-id", `${sanitizeIdForFs(id)}.json`);
+    return path.join(this.root, 'by-id', `${sanitizeIdForFs(id)}.json`);
   }
 
   /** Index file path; exposed for tests/debugging. */
   indexPath(): string {
-    return path.join(this.root, "index.json");
+    return path.join(this.root, 'index.json');
   }
 
   /** Re-derive the index from disk. Cheap — recipes are O(hundreds). */
@@ -190,19 +190,19 @@ export class FsRecipeStore implements RecipeStore {
   }
 
   private async readAll(): Promise<Recipe[]> {
-    const dir = path.join(this.root, "by-id");
+    const dir = path.join(this.root, 'by-id');
     let entries: string[];
     try {
       entries = await fs.readdir(dir);
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
       throw err;
     }
     const recipes: Recipe[] = [];
     for (const name of entries) {
-      if (!name.endsWith(".json")) continue;
+      if (!name.endsWith('.json')) continue;
       try {
-        const raw = await fs.readFile(path.join(dir, name), "utf-8");
+        const raw = await fs.readFile(path.join(dir, name), 'utf-8');
         recipes.push(JSON.parse(raw) as Recipe);
       } catch {
         // Skip unreadable files rather than failing the whole listing.
@@ -221,7 +221,7 @@ export class FsRecipeStore implements RecipeStore {
  * harness body + same taskFamily + same snapshotId + same scores ⇒ same
  * id ⇒ idempotent put.
  */
-export const deriveRecipeId = (input: Omit<Recipe, "id">): string => {
+export const deriveRecipeId = (input: Omit<Recipe, 'id'>): string => {
   const canonical = canonicalJson({
     taskFamily: input.taskFamily,
     snapshotId: input.snapshotId,
@@ -231,13 +231,13 @@ export const deriveRecipeId = (input: Omit<Recipe, "id">): string => {
     paretoCoords: input.paretoCoords,
     scores: input.scores,
   });
-  const digest = crypto.createHash("sha256").update(canonical).digest("hex");
+  const digest = crypto.createHash('sha256').update(canonical).digest('hex');
   return `recipe:${digest.slice(0, 32)}`;
 };
 
 const canonicalJson = (value: unknown): string =>
   JSON.stringify(value, (_k, v) => {
-    if (v && typeof v === "object" && !Array.isArray(v)) {
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
       const sorted: Record<string, unknown> = {};
       for (const k of Object.keys(v as Record<string, unknown>).sort()) {
         sorted[k] = (v as Record<string, unknown>)[k];
@@ -252,4 +252,4 @@ const canonicalJson = (value: unknown): string =>
  * a filename on every platform. The transformation is one-to-one for
  * the formats we generate (hex digests, optional `recipe:` prefix).
  */
-const sanitizeIdForFs = (id: string): string => id.replace(/[^A-Za-z0-9._-]/g, "_");
+const sanitizeIdForFs = (id: string): string => id.replace(/[^A-Za-z0-9._-]/g, '_');

@@ -681,8 +681,7 @@ export class LocalBackend {
         // Same lazy-import dance as harness_run (see comments below) — keeps
         // codragraph-harness optional and avoids a circular build-time dep.
         const harnessModuleId: string = 'codragraph-harness/mcp/handler';
-        const dynImport = (id: string): Promise<unknown> =>
-          import(/* @vite-ignore */ id);
+        const dynImport = (id: string): Promise<unknown> => import(/* @vite-ignore */ id);
         let handler: ((p: unknown) => Promise<unknown>) | undefined;
         try {
           const mod = (await dynImport(harnessModuleId)) as {
@@ -711,8 +710,7 @@ export class LocalBackend {
       case 'graphstore_blame_symbol': {
         const handler = await import('./graphstore-handler.js');
         const storagePath = repo.storagePath;
-        const args =
-          (params as Record<string, unknown> | null | undefined) ?? {};
+        const args = (params as Record<string, unknown> | null | undefined) ?? {};
         switch (method) {
           case 'graphstore_log':
             return handler.handleGraphstoreLog({
@@ -755,8 +753,7 @@ export class LocalBackend {
               dryRun: typeof args['dryRun'] === 'boolean' ? args['dryRun'] : undefined,
             });
           case 'graphstore_blame_symbol': {
-            const symbolId =
-              typeof args['symbolId'] === 'string' ? args['symbolId'] : '';
+            const symbolId = typeof args['symbolId'] === 'string' ? args['symbolId'] : '';
             if (!symbolId) {
               throw new Error('graphstore_blame_symbol requires `symbolId`');
             }
@@ -776,8 +773,7 @@ export class LocalBackend {
         // Phase 4 × Phase 3 moat tools — same lazy-import dance as the
         // other harness handlers so codragraph-harness stays optional.
         const harnessModuleId: string = 'codragraph-harness/mcp/handler';
-        const dynImport = (id: string): Promise<unknown> =>
-          import(/* @vite-ignore */ id);
+        const dynImport = (id: string): Promise<unknown> => import(/* @vite-ignore */ id);
         let mod: {
           handleHarnessRecipesList?: (p: unknown) => Promise<unknown>;
           handleHarnessRecipesLookup?: (p: unknown) => Promise<unknown>;
@@ -810,8 +806,7 @@ export class LocalBackend {
         // .d.ts files do not exist while codragraph itself is being built
         // for the first time during workspace install.
         const harnessModuleId: string = 'codragraph-harness/mcp/handler';
-        const dynImport = (id: string): Promise<unknown> =>
-          import(/* @vite-ignore */ id);
+        const dynImport = (id: string): Promise<unknown> => import(/* @vite-ignore */ id);
         let handler: ((p: unknown) => Promise<unknown>) | undefined;
         try {
           const mod = (await dynImport(harnessModuleId)) as {
@@ -1129,7 +1124,10 @@ export class LocalBackend {
     try {
       bm25Results = await searchFTSFromLbug(query, limit, repo.id);
     } catch (err: any) {
-      console.error('CodraGraph: BM25/FTS search failed (FTS indexes may not exist) -', err.message);
+      console.error(
+        'CodraGraph: BM25/FTS search failed (FTS indexes may not exist) -',
+        err.message,
+      );
       return { results: [], ftsUsed: false };
     }
 

@@ -12,12 +12,12 @@
 //   import { search, ALL_SEEDS } from "codragraph-sdk/harness";
 //   import { FsCAS, diffSnapshots } from "codragraph-sdk/graphstore";
 
-export * as harness from "./harness.js";
-export * as graph from "./graph.js";
-export * as compress from "./compress.js";
-export * as swarm from "./swarm.js";
-export * as graphstore from "./graphstore.js";
-export * as recipes from "./recipes.js";
+export * as harness from './harness.js';
+export * as graph from './graph.js';
+export * as compress from './compress.js';
+export * as swarm from './swarm.js';
+export * as graphstore from './graphstore.js';
+export * as recipes from './recipes.js';
 
 // Re-export common types at the top level for ergonomics.
 export type {
@@ -35,4 +35,4 @@ export type {
   GraphContextResult,
   GraphImpactInput,
   GraphImpactResult,
-} from "codragraph-harness/types";
+} from 'codragraph-harness/types';

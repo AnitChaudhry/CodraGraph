@@ -1,8 +1,8 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import crypto from "node:crypto";
-import { ContentAddressedStore, ObjectNotFoundError } from "./interface.js";
-import { makeObjectId, objectIdHex, type ObjectId } from "../types.js";
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { ContentAddressedStore, ObjectNotFoundError } from './interface.js';
+import { makeObjectId, objectIdHex, type ObjectId } from '../types.js';
 
 export interface FsCASOptions {
   /**
@@ -31,7 +31,7 @@ export class FsCAS implements ContentAddressedStore {
 
   constructor(opts: FsCASOptions) {
     this.root = opts.root;
-    this.objectsDir = path.join(opts.root, "objects");
+    this.objectsDir = path.join(opts.root, 'objects');
   }
 
   async put(bytes: Uint8Array): Promise<ObjectId> {
@@ -83,7 +83,7 @@ export class FsCAS implements ContentAddressedStore {
       const buf = await fs.readFile(target);
       return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
         throw new ObjectNotFoundError(id);
       }
       throw err;
@@ -104,7 +104,7 @@ export class FsCAS implements ContentAddressedStore {
     try {
       prefixDirs = await fs.readdir(this.objectsDir);
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") return;
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return;
       throw err;
     }
     for (const prefix of prefixDirs) {
@@ -140,5 +140,5 @@ export class FsCAS implements ContentAddressedStore {
 const sha256Hex = (bytes: Uint8Array): string => {
   // Wrap in a Buffer view for crypto — avoids a copy.
   const buf = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  return crypto.createHash("sha256").update(buf).digest("hex");
+  return crypto.createHash('sha256').update(buf).digest('hex');
 };

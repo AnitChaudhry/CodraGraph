@@ -21,7 +21,7 @@ import type {
   GraphImpactResult,
   GraphQueryInput,
   GraphQueryResult,
-} from "../types.js";
+} from '../types.js';
 
 export interface HttpGraphClientOptions {
   baseURL?: string;
@@ -36,18 +36,14 @@ export class HttpGraphClient implements GraphClient {
 
   query(_input: GraphQueryInput): Promise<GraphQueryResult> {
     throw new Error(
-      "HttpGraphClient is a Phase 2 placeholder. Use LocalGraphClient (in-process) for Phase 1, " +
-        "or wait for the MCP-over-HTTP client landing in Phase 2.",
+      'HttpGraphClient is a Phase 2 placeholder. Use LocalGraphClient (in-process) for Phase 1, ' +
+        'or wait for the MCP-over-HTTP client landing in Phase 2.',
     );
   }
   context(_input: GraphContextInput): Promise<GraphContextResult> {
-    throw new Error(
-      "HttpGraphClient is a Phase 2 placeholder. Use LocalGraphClient (in-process).",
-    );
+    throw new Error('HttpGraphClient is a Phase 2 placeholder. Use LocalGraphClient (in-process).');
   }
   impact(_input: GraphImpactInput): Promise<GraphImpactResult> {
-    throw new Error(
-      "HttpGraphClient is a Phase 2 placeholder. Use LocalGraphClient (in-process).",
-    );
+    throw new Error('HttpGraphClient is a Phase 2 placeholder. Use LocalGraphClient (in-process).');
   }
 }

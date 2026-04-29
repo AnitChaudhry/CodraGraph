@@ -120,7 +120,10 @@
       "id": "qa-021",
       "question": "How many MCP tools does the codragraph package expose?",
       "expectedAnswer": "16",
-      "acceptParaphrases": ["sixteen", "13 tools plus 2 group resources is 13+2 — current count is 16 tools per AGENTS.md"]
+      "acceptParaphrases": [
+        "sixteen",
+        "13 tools plus 2 group resources is 13+2 — current count is 16 tools per AGENTS.md"
+      ]
     },
     {
       "id": "qa-022",

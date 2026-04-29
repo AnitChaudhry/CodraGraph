@@ -6,8 +6,8 @@ import {
   type SnapshotManifest,
   type TableManifest,
   parseObjectId,
-} from "../types.js";
-import { type ContentAddressedStore, getJson } from "../cas/interface.js";
+} from '../types.js';
+import { type ContentAddressedStore, getJson } from '../cas/interface.js';
 
 export interface DiffSnapshotsOptions {
   readonly cas: ContentAddressedStore;
@@ -22,12 +22,7 @@ export interface DiffSnapshotsOptions {
   readonly modifiedSymbolTables?: readonly string[];
 }
 
-const DEFAULT_SYMBOL_TABLES: readonly string[] = [
-  "Function",
-  "Method",
-  "Class",
-  "Interface",
-];
+const DEFAULT_SYMBOL_TABLES: readonly string[] = ['Function', 'Method', 'Class', 'Interface'];
 
 /**
  * Compute the structural diff between two snapshots — added/removed
@@ -39,12 +34,10 @@ const DEFAULT_SYMBOL_TABLES: readonly string[] = [
  * Semantic interpretation (signature changed vs body changed vs just
  * line numbers shifting) is deferred to {@link diffSemantic}.
  */
-export const diffSnapshots = async (
-  opts: DiffSnapshotsOptions,
-): Promise<GraphDiff> => {
+export const diffSnapshots = async (opts: DiffSnapshotsOptions): Promise<GraphDiff> => {
   const { cas, from, to } = opts;
   const symbolTables = new Set(opts.modifiedSymbolTables ?? DEFAULT_SYMBOL_TABLES);
-  const matchAllSymbolTables = symbolTables.has("*");
+  const matchAllSymbolTables = symbolTables.has('*');
 
   const fromManifest = await readManifest(cas, from);
   const toManifest = await readManifest(cas, to);
@@ -125,20 +118,15 @@ const readManifest = async (
   snapshotId: ObjectId,
 ): Promise<SnapshotManifest> => {
   const snapshot = await getJson<Snapshot>(cas, snapshotId);
-  if (snapshot.type !== "snapshot") {
+  if (snapshot.type !== 'snapshot') {
     throw new Error(
       `diffSnapshots: ${snapshotId} is not a snapshot ` +
         `(type=${JSON.stringify((snapshot as { type?: unknown }).type)})`,
     );
   }
-  const manifest = await getJson<SnapshotManifest>(
-    cas,
-    parseObjectId(snapshot.manifestId),
-  );
-  if (manifest.type !== "snapshot-manifest") {
-    throw new Error(
-      `diffSnapshots: manifest at ${snapshot.manifestId} has wrong type`,
-    );
+  const manifest = await getJson<SnapshotManifest>(cas, parseObjectId(snapshot.manifestId));
+  if (manifest.type !== 'snapshot-manifest') {
+    throw new Error(`diffSnapshots: manifest at ${snapshot.manifestId} has wrong type`);
   }
   return manifest;
 };

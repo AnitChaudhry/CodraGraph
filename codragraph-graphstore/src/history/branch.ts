@@ -1,10 +1,6 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import {
-  type Branch,
-  type ObjectId,
-  parseObjectId,
-} from "../types.js";
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { type Branch, type ObjectId, parseObjectId } from '../types.js';
 
 /**
  * On-disk layout (all relative to the graphstore root):
@@ -22,15 +18,15 @@ export interface BranchRefsOptions {
   readonly root: string;
 }
 
-const HEADS_SUBDIR = path.posix.join("refs", "heads");
-const HEAD_FILE = "HEAD";
-const HEAD_REF_PREFIX = "ref: ";
+const HEADS_SUBDIR = path.posix.join('refs', 'heads');
+const HEAD_FILE = 'HEAD';
+const HEAD_REF_PREFIX = 'ref: ';
 
 /** Pattern enforcing safe branch names — no path traversal, no whitespace. */
 const VALID_BRANCH_NAME = /^[A-Za-z0-9._/-]+$/;
 
 const validateBranchName = (name: string): void => {
-  if (!VALID_BRANCH_NAME.test(name) || name.startsWith("/") || name.includes("..")) {
+  if (!VALID_BRANCH_NAME.test(name) || name.startsWith('/') || name.includes('..')) {
     throw new Error(
       `Invalid branch name ${JSON.stringify(name)} — must match ${VALID_BRANCH_NAME.source} ` +
         `and contain no leading slash or '..' segment`,
@@ -57,7 +53,7 @@ export const createBranch = async (
   const target = refPath(opts.root, opts.name);
   await fs.mkdir(path.dirname(target), { recursive: true });
   // `wx` flag fails if the file already exists — atomic create-or-fail.
-  await fs.writeFile(target, `${opts.commit}\n`, { flag: "wx" });
+  await fs.writeFile(target, `${opts.commit}\n`, { flag: 'wx' });
   const stat = await fs.stat(target);
   return {
     name: opts.name,
@@ -81,10 +77,10 @@ export const getHead = async (
   opts: BranchRefsOptions & { branch: string },
 ): Promise<ObjectId | null> => {
   try {
-    const raw = await fs.readFile(refPath(opts.root, opts.branch), "utf-8");
+    const raw = await fs.readFile(refPath(opts.root, opts.branch), 'utf-8');
     return parseObjectId(raw.trim());
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
     throw err;
   }
 };
@@ -105,9 +101,9 @@ export const deleteBranch = async (
   try {
     head = await readHead(opts);
   } catch {
-    head = { kind: "unborn" };
+    head = { kind: 'unborn' };
   }
-  if (head.kind === "branch" && head.branch === opts.name) {
+  if (head.kind === 'branch' && head.branch === opts.name) {
     throw new Error(
       `Refusing to delete branch ${JSON.stringify(opts.name)} — it is currently checked out`,
     );
@@ -117,35 +113,33 @@ export const deleteBranch = async (
     await fs.unlink(target);
     return true;
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return false;
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return false;
     throw err;
   }
 };
 
 /** List every branch in the graphstore. */
-export const listBranches = async (
-  opts: BranchRefsOptions,
-): Promise<Branch[]> => {
+export const listBranches = async (opts: BranchRefsOptions): Promise<Branch[]> => {
   const dir = path.join(opts.root, HEADS_SUBDIR);
   let entries: string[];
   try {
     entries = await fs.readdir(dir, { recursive: true });
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
     throw err;
   }
   const branches: Branch[] = [];
   for (const rel of entries) {
     // Skip directory entries on the recursive walk; we only care about files.
     const full = path.join(dir, rel);
-    let stat: import("node:fs").Stats;
+    let stat: import('node:fs').Stats;
     try {
       stat = await fs.stat(full);
     } catch {
       continue;
     }
     if (!stat.isFile()) continue;
-    const raw = await fs.readFile(full, "utf-8");
+    const raw = await fs.readFile(full, 'utf-8');
     let head: ObjectId;
     try {
       head = parseObjectId(raw.trim());
@@ -155,7 +149,7 @@ export const listBranches = async (
       continue;
     }
     // Normalize separators so listings look the same on Windows / POSIX.
-    const name = rel.split(path.sep).join("/");
+    const name = rel.split(path.sep).join('/');
     branches.push({ name, head, createdAt: stat.birthtime.toISOString() });
   }
   branches.sort((a, b) => a.name.localeCompare(b.name));
@@ -167,9 +161,9 @@ export const listBranches = async (
 // ──────────────────────────────────────────────────────────────────────
 
 export type HeadState =
-  | { readonly kind: "branch"; readonly branch: string }
-  | { readonly kind: "detached"; readonly commit: ObjectId }
-  | { readonly kind: "unborn" };
+  | { readonly kind: 'branch'; readonly branch: string }
+  | { readonly kind: 'detached'; readonly commit: ObjectId }
+  | { readonly kind: 'unborn' };
 
 /**
  * Read the HEAD pointer. `unborn` means no HEAD file exists yet — the
@@ -178,10 +172,10 @@ export type HeadState =
 export const readHead = async (opts: BranchRefsOptions): Promise<HeadState> => {
   let raw: string;
   try {
-    raw = await fs.readFile(headPath(opts.root), "utf-8");
+    raw = await fs.readFile(headPath(opts.root), 'utf-8');
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
-      return { kind: "unborn" };
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      return { kind: 'unborn' };
     }
     throw err;
   }
@@ -189,15 +183,15 @@ export const readHead = async (opts: BranchRefsOptions): Promise<HeadState> => {
   if (trimmed.startsWith(HEAD_REF_PREFIX)) {
     const refTarget = trimmed.slice(HEAD_REF_PREFIX.length);
     // Accept the canonical `refs/heads/<name>` form.
-    const prefix = `${HEADS_SUBDIR.replace(/\\/g, "/")}/`;
+    const prefix = `${HEADS_SUBDIR.replace(/\\/g, '/')}/`;
     if (!refTarget.startsWith(prefix)) {
       throw new Error(
         `readHead: HEAD points at ${JSON.stringify(refTarget)}, expected refs/heads/<name>`,
       );
     }
-    return { kind: "branch", branch: refTarget.slice(prefix.length) };
+    return { kind: 'branch', branch: refTarget.slice(prefix.length) };
   }
-  return { kind: "detached", commit: parseObjectId(trimmed) };
+  return { kind: 'detached', commit: parseObjectId(trimmed) };
 };
 
 /** Point HEAD at a branch (`HEAD -> ref: refs/heads/<name>`). */
@@ -206,7 +200,7 @@ export const writeHeadBranch = async (
 ): Promise<void> => {
   validateBranchName(opts.branch);
   await fs.mkdir(opts.root, { recursive: true });
-  const refTarget = `${HEADS_SUBDIR.replace(/\\/g, "/")}/${opts.branch}`;
+  const refTarget = `${HEADS_SUBDIR.replace(/\\/g, '/')}/${opts.branch}`;
   await fs.writeFile(headPath(opts.root), `${HEAD_REF_PREFIX}${refTarget}\n`);
 };
 
@@ -224,11 +218,9 @@ export const writeHeadDetached = async (
  * branch ref if needed. Returns null when HEAD is unborn or the branch
  * ref it points at doesn't exist.
  */
-export const resolveHeadCommit = async (
-  opts: BranchRefsOptions,
-): Promise<ObjectId | null> => {
+export const resolveHeadCommit = async (opts: BranchRefsOptions): Promise<ObjectId | null> => {
   const head = await readHead(opts);
-  if (head.kind === "unborn") return null;
-  if (head.kind === "detached") return head.commit;
+  if (head.kind === 'unborn') return null;
+  if (head.kind === 'detached') return head.commit;
   return getHead({ root: opts.root, branch: head.branch });
 };

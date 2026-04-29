@@ -10,42 +10,42 @@
 // "codragraph-harness/mcp/handler" and register it in the local
 // handler dispatcher. (RFC.md spells out the exact integration point.)
 
-import path from "node:path";
-import { promises as fs } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { search } from "../algorithm.js";
-import { CandidateStore } from "../filesystem.js";
-import { CodebaseQAEvaluator, type CodebaseQATask } from "../evaluator/impl.js";
-import { ALL_SEEDS, SEEDS_BY_NAME } from "../harness/seeds/index.js";
-import { ClaudeCodeProposer } from "../proposer/claude-code.js";
-import { makeInferenceProvider, type ProviderName } from "../inference/index.js";
-import { LocalGraphClient } from "../graph/local-client.js";
-import { compileAndLoadCandidate } from "../loader.js";
-import type { Harness } from "../harness/interface.js";
-import type { ParetoPoint } from "../pareto.js";
-import type { BudgetPolicy } from "../types.js";
-import { swarmSearch } from "../swarm/algorithm.js";
-import { ExplorerRole } from "../swarm/explorer.js";
-import { ExploiterRole } from "../swarm/exploiter.js";
-import { LlmCriticRole } from "../swarm/critic.js";
+import path from 'node:path';
+import { promises as fs } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { search } from '../algorithm.js';
+import { CandidateStore } from '../filesystem.js';
+import { CodebaseQAEvaluator, type CodebaseQATask } from '../evaluator/impl.js';
+import { ALL_SEEDS, SEEDS_BY_NAME } from '../harness/seeds/index.js';
+import { ClaudeCodeProposer } from '../proposer/claude-code.js';
+import { makeInferenceProvider, type ProviderName } from '../inference/index.js';
+import { LocalGraphClient } from '../graph/local-client.js';
+import { compileAndLoadCandidate } from '../loader.js';
+import type { Harness } from '../harness/interface.js';
+import type { ParetoPoint } from '../pareto.js';
+import type { BudgetPolicy } from '../types.js';
+import { swarmSearch } from '../swarm/algorithm.js';
+import { ExplorerRole } from '../swarm/explorer.js';
+import { ExploiterRole } from '../swarm/exploiter.js';
+import { LlmCriticRole } from '../swarm/critic.js';
 import {
   costBudget,
   maxIterations,
   paretoPlateau,
   timeBudget,
   tokenBudget,
-} from "../swarm/termination.js";
-import type { TerminationPredicate, SwarmSearchResult } from "../swarm/interface.js";
-import { swarmSearchWithMoat } from "../moat/swarm-with-moat.js";
-import { FsRecipeStore } from "../moat/recipe-store.js";
-import { findReusableRecipes } from "../moat/lookup.js";
-import type { Recipe, RecipeMatch } from "../moat/types.js";
+} from '../swarm/termination.js';
+import type { TerminationPredicate, SwarmSearchResult } from '../swarm/interface.js';
+import { swarmSearchWithMoat } from '../moat/swarm-with-moat.js';
+import { FsRecipeStore } from '../moat/recipe-store.js';
+import { findReusableRecipes } from '../moat/lookup.js';
+import type { Recipe, RecipeMatch } from '../moat/types.js';
 
 export interface HarnessRunInput {
   task: string;
   iterations?: number;
   candidates_per_iteration?: number;
-  proposer?: "claude-code";
+  proposer?: 'claude-code';
   inference?: ProviderName;
   seeds?: string;
   output?: string;
@@ -88,9 +88,9 @@ export interface HarnessSwarmRunOutput {
   totalEvaluated: number;
   totalCriticRejected: number;
   totalLoadRejected: number;
-  terminatedAt: SwarmSearchResult["terminatedAt"];
-  paretoFrontier: SwarmSearchResult["frontier"];
-  perRole: SwarmSearchResult["perRole"];
+  terminatedAt: SwarmSearchResult['terminatedAt'];
+  paretoFrontier: SwarmSearchResult['frontier'];
+  perRole: SwarmSearchResult['perRole'];
   /** Phase 4 moat: present when task_family + snapshot_id were provided. */
   cache?: {
     fromCache: boolean;
@@ -114,15 +114,14 @@ export interface HarnessRunOutput {
  * in codragraph/src/mcp/tools.ts. Pure function — all I/O scoped to the
  * provided run directory.
  */
-export async function handleHarnessRun(
-  input: HarnessRunInput,
-): Promise<HarnessRunOutput> {
+export async function handleHarnessRun(input: HarnessRunInput): Promise<HarnessRunOutput> {
   const taskFile = path.resolve(input.task);
-  const taskRaw = await fs.readFile(taskFile, "utf8");
+  const taskRaw = await fs.readFile(taskFile, 'utf8');
   const taskFileParsed = JSON.parse(taskRaw) as { tasks: CodebaseQATask[] };
   const tasks = taskFileParsed.tasks;
 
-  const seedNames = input.seeds && input.seeds !== "all" ? input.seeds.split(",").map((s) => s.trim()) : null;
+  const seedNames =
+    input.seeds && input.seeds !== 'all' ? input.seeds.split(',').map((s) => s.trim()) : null;
   const seeds: Harness[] = seedNames
     ? seedNames.map((name) => {
         const seed = SEEDS_BY_NAME[name];
@@ -131,27 +130,27 @@ export async function handleHarnessRun(
       })
     : ALL_SEEDS;
 
-  const inference = await makeInferenceProvider((input.inference ?? "claude") as ProviderName);
+  const inference = await makeInferenceProvider((input.inference ?? 'claude') as ProviderName);
 
   // In-process graph client via codragraph's LocalBackend.
-  const { LocalBackend } = await import("codragraph/mcp/local/local-backend");
+  const { LocalBackend } = await import('codragraph/mcp/local/local-backend');
   const backend = new LocalBackend();
   const graph = new LocalGraphClient({ backend, defaultRepo: input.repo });
 
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const runId = `harness-${stamp}`;
   const runDir = input.output ?? path.resolve(`./runs/${runId}`);
   await fs.mkdir(runDir, { recursive: true });
-  const store = new CandidateStore(path.join(runDir, "candidates"));
+  const store = new CandidateStore(path.join(runDir, 'candidates'));
 
   // Locate the contract path relative to this file so handler works under tsx
   // and from the compiled dist/. fileURLToPath is required for Windows paths.
   const here = path.dirname(fileURLToPath(import.meta.url));
-  const contractPath = path.resolve(here, "..", "harness", "interface.ts");
+  const contractPath = path.resolve(here, '..', 'harness', 'interface.ts');
 
   const proposer = new ClaudeCodeProposer({
     contractPath,
-    proposalsRoot: path.join(runDir, "proposals"),
+    proposalsRoot: path.join(runDir, 'proposals'),
   });
   const evaluator = new CodebaseQAEvaluator();
 
@@ -165,7 +164,7 @@ export async function handleHarnessRun(
     seeds,
     iterations: input.iterations ?? 20,
     candidatesPerIteration: input.candidates_per_iteration ?? 2,
-    budget: { policy: input.budget ?? "balanced" },
+    budget: { policy: input.budget ?? 'balanced' },
     loadCandidate: compileAndLoadCandidate,
   });
 
@@ -187,11 +186,12 @@ export async function handleHarnessSwarmRun(
   input: HarnessSwarmRunInput,
 ): Promise<HarnessSwarmRunOutput> {
   const taskFile = path.resolve(input.task);
-  const taskRaw = await fs.readFile(taskFile, "utf8");
+  const taskRaw = await fs.readFile(taskFile, 'utf8');
   const taskFileParsed = JSON.parse(taskRaw) as { tasks: CodebaseQATask[] };
   const tasks = taskFileParsed.tasks;
 
-  const seedNames = input.seeds && input.seeds !== "all" ? input.seeds.split(",").map((s) => s.trim()) : null;
+  const seedNames =
+    input.seeds && input.seeds !== 'all' ? input.seeds.split(',').map((s) => s.trim()) : null;
   const seeds: Harness[] = seedNames
     ? seedNames.map((name) => {
         const seed = SEEDS_BY_NAME[name];
@@ -200,37 +200,35 @@ export async function handleHarnessSwarmRun(
       })
     : ALL_SEEDS;
 
-  const inference = await makeInferenceProvider((input.inference ?? "claude") as ProviderName);
+  const inference = await makeInferenceProvider((input.inference ?? 'claude') as ProviderName);
   const criticInference = await makeInferenceProvider(
-    (input.critic_inference ?? input.inference ?? "claude") as ProviderName,
+    (input.critic_inference ?? input.inference ?? 'claude') as ProviderName,
   );
 
-  const { LocalBackend } = await import("codragraph/mcp/local/local-backend");
+  const { LocalBackend } = await import('codragraph/mcp/local/local-backend');
   const backend = new LocalBackend();
   const graph = new LocalGraphClient({ backend, defaultRepo: input.repo });
 
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const runId = `harness-swarm-${stamp}`;
   const runDir = input.output ?? path.resolve(`./runs/${runId}`);
   await fs.mkdir(runDir, { recursive: true });
-  const store = new CandidateStore(path.join(runDir, "candidates"));
+  const store = new CandidateStore(path.join(runDir, 'candidates'));
 
   const here = path.dirname(fileURLToPath(import.meta.url));
-  const contractPath = path.resolve(here, "..", "harness", "interface.ts");
+  const contractPath = path.resolve(here, '..', 'harness', 'interface.ts');
 
   const explorer = new ExplorerRole({
     contractPath,
-    proposalsRoot: path.join(runDir, "proposals"),
+    proposalsRoot: path.join(runDir, 'proposals'),
   });
   const exploiter = new ExploiterRole({
     contractPath,
-    proposalsRoot: path.join(runDir, "proposals"),
+    proposalsRoot: path.join(runDir, 'proposals'),
   });
   const critic = new LlmCriticRole({ inference: criticInference });
 
-  const predicates: TerminationPredicate[] = [
-    maxIterations(input.max_iterations ?? 30),
-  ];
+  const predicates: TerminationPredicate[] = [maxIterations(input.max_iterations ?? 30)];
   if (input.plateau_k) predicates.push(paretoPlateau(input.plateau_k));
   if (input.token_budget) predicates.push(tokenBudget(input.token_budget));
   if (input.time_budget_ms) predicates.push(timeBudget(input.time_budget_ms));
@@ -245,7 +243,7 @@ export async function handleHarnessSwarmRun(
     store,
     evaluator,
     seeds,
-    budget: { policy: input.budget ?? "balanced" } as const,
+    budget: { policy: input.budget ?? 'balanced' } as const,
     loadCandidate: compileAndLoadCandidate,
     explorer,
     exploiter,
@@ -255,17 +253,14 @@ export async function handleHarnessSwarmRun(
     termination: predicates,
   };
 
-  const moatEnabled =
-    input.task_family !== undefined && input.snapshot_id !== undefined;
+  const moatEnabled = input.task_family !== undefined && input.snapshot_id !== undefined;
   if (input.use_cache && !moatEnabled) {
-    throw new Error(
-      "harness_swarm_run: use_cache requires both task_family and snapshot_id",
-    );
+    throw new Error('harness_swarm_run: use_cache requires both task_family and snapshot_id');
   }
 
   if (moatEnabled) {
     const recipeStoreRoot = path.resolve(
-      input.recipe_store ?? path.join(process.cwd(), ".codragraph", "recipes"),
+      input.recipe_store ?? path.join(process.cwd(), '.codragraph', 'recipes'),
     );
     const recipeStore = new FsRecipeStore({ root: recipeStoreRoot });
     const moat = await swarmSearchWithMoat({
@@ -340,7 +335,7 @@ export async function handleHarnessRecipesList(
   input: HarnessRecipesListInput,
 ): Promise<HarnessRecipesListOutput> {
   const recipeStoreRoot = path.resolve(
-    input.recipe_store ?? path.join(process.cwd(), ".codragraph", "recipes"),
+    input.recipe_store ?? path.join(process.cwd(), '.codragraph', 'recipes'),
   );
   const store = new FsRecipeStore({ root: recipeStoreRoot });
   const limit = input.limit ?? 50;
@@ -376,12 +371,12 @@ export interface HarnessRecipesLookupInput {
 
 export interface HarnessRecipesLookupOutput {
   recipeStoreRoot: string;
-  exact: HarnessRecipesListOutput["recipes"];
+  exact: HarnessRecipesListOutput['recipes'];
   candidates: Array<
-    HarnessRecipesListOutput["recipes"][number] & {
+    HarnessRecipesListOutput['recipes'][number] & {
       staleness: {
         diffComputed: boolean;
-        riskLevel: "low" | "medium" | "high" | "unknown";
+        riskLevel: 'low' | 'medium' | 'high' | 'unknown';
         summary?: {
           addedNodes: number;
           removedNodes: number;
@@ -398,7 +393,7 @@ export async function handleHarnessRecipesLookup(
   input: HarnessRecipesLookupInput,
 ): Promise<HarnessRecipesLookupOutput> {
   const recipeStoreRoot = path.resolve(
-    input.recipe_store ?? path.join(process.cwd(), ".codragraph", "recipes"),
+    input.recipe_store ?? path.join(process.cwd(), '.codragraph', 'recipes'),
   );
   const store = new FsRecipeStore({ root: recipeStoreRoot });
   const result = await findReusableRecipes({
@@ -408,7 +403,7 @@ export async function handleHarnessRecipesLookup(
     limit: input.limit ?? 10,
   });
 
-  const summarize = (r: Recipe): HarnessRecipesListOutput["recipes"][number] => ({
+  const summarize = (r: Recipe): HarnessRecipesListOutput['recipes'][number] => ({
     id: r.id,
     taskFamily: r.taskFamily,
     snapshotId: r.snapshotId,
@@ -419,11 +414,11 @@ export async function handleHarnessRecipesLookup(
     harnessName: r.harness.name,
   });
 
-  const candidates: HarnessRecipesLookupOutput["candidates"] = [];
+  const candidates: HarnessRecipesLookupOutput['candidates'] = [];
   for (const c of result.candidates as RecipeMatch[]) {
-    if (c.kind !== "candidate") continue;
+    if (c.kind !== 'candidate') continue;
     const base = summarize(c.recipe);
-    const stalenessOut: HarnessRecipesLookupOutput["candidates"][number]["staleness"] = {
+    const stalenessOut: HarnessRecipesLookupOutput['candidates'][number]['staleness'] = {
       diffComputed: c.staleness.diffComputed,
       riskLevel: c.staleness.riskLevel,
     };

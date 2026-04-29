@@ -4,8 +4,8 @@ import {
   type ObjectId,
   parseObjectId,
   SCHEMA_VERSION,
-} from "../types.js";
-import { type ContentAddressedStore, getJson, putJson } from "../cas/interface.js";
+} from '../types.js';
+import { type ContentAddressedStore, getJson, putJson } from '../cas/interface.js';
 
 export interface CreateCommitOptions {
   readonly cas: ContentAddressedStore;
@@ -30,12 +30,10 @@ export interface CreateCommitResult {
  * the deciding factor in practice (callers passing the current time
  * each call will always get a fresh id).
  */
-export const createCommit = async (
-  opts: CreateCommitOptions,
-): Promise<CreateCommitResult> => {
+export const createCommit = async (opts: CreateCommitOptions): Promise<CreateCommitResult> => {
   const commit: Commit = {
     schemaVersion: SCHEMA_VERSION,
-    type: "commit",
+    type: 'commit',
     snapshot: opts.snapshot,
     parents: [...opts.parents],
     author: { name: opts.author.name, email: opts.author.email },
@@ -50,12 +48,9 @@ export const createCommit = async (
  * Read and validate a Commit from CAS. Throws if the object exists but
  * doesn't have the expected shape.
  */
-export const readCommit = async (
-  cas: ContentAddressedStore,
-  id: ObjectId,
-): Promise<Commit> => {
+export const readCommit = async (cas: ContentAddressedStore, id: ObjectId): Promise<Commit> => {
   const commit = await getJson<Commit>(cas, id);
-  if (commit.type !== "commit") {
+  if (commit.type !== 'commit') {
     throw new Error(
       `readCommit: object ${id} is not a commit ` +
         `(type=${JSON.stringify((commit as { type?: unknown }).type)})`,

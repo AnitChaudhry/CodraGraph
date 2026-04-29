@@ -11,8 +11,8 @@
 // Saves evaluator cost ($) and time on bad proposals. Defaults to a
 // small/fast model since the task is structured (yes/no + reason).
 
-import type { InferenceProvider } from "../inference/interface.js";
-import type { CriticReviewInput, CriticReviewResult, CriticRole } from "./interface.js";
+import type { InferenceProvider } from '../inference/interface.js';
+import type { CriticReviewInput, CriticReviewResult, CriticRole } from './interface.js';
 
 export interface CriticOptions {
   /** Inference provider for review calls. Use a small/fast model — Haiku, GPT-4o-mini, etc. */
@@ -55,30 +55,30 @@ riskLevel guide:
 - BLOCK  = security/safety violation; reject and flag for human review`;
 
 export class LlmCriticRole implements CriticRole {
-  readonly name = "critic";
-  readonly kind = "critic" as const;
+  readonly name = 'critic';
+  readonly kind = 'critic' as const;
 
   constructor(private readonly options: CriticOptions) {}
 
   async review(input: CriticReviewInput): Promise<CriticReviewResult> {
     const sourceConcat = input.source.files
       .map((f) => `=== ${f.path} ===\n${f.content}`)
-      .join("\n\n");
+      .join('\n\n');
 
     const userMessage = [
       `Proposed harness: ${input.source.name}`,
-      input.iteration ? `Iteration: ${input.iteration}` : "",
+      input.iteration ? `Iteration: ${input.iteration}` : '',
       input.source.parents && input.source.parents.length > 0
-        ? `Parents: ${input.source.parents.join(", ")}`
-        : "",
-      "",
-      "Source:",
+        ? `Parents: ${input.source.parents.join(', ')}`
+        : '',
+      '',
+      'Source:',
       sourceConcat,
-      "",
-      input.source.rationale ? `Rationale: ${input.source.rationale}` : "",
+      '',
+      input.source.rationale ? `Rationale: ${input.source.rationale}` : '',
     ]
       .filter((s) => s.length > 0)
-      .join("\n");
+      .join('\n');
 
     let raw: string;
     try {
@@ -86,8 +86,8 @@ export class LlmCriticRole implements CriticRole {
         model: this.options.model,
         systemPrompt:
           CRITIC_SYSTEM_PROMPT +
-          (this.options.additionalGuidance ? `\n\n${this.options.additionalGuidance}` : ""),
-        messages: [{ role: "user", content: userMessage }],
+          (this.options.additionalGuidance ? `\n\n${this.options.additionalGuidance}` : ''),
+        messages: [{ role: 'user', content: userMessage }],
         temperature: 0,
         maxTokens: 200,
         timeoutMs: this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
@@ -98,7 +98,7 @@ export class LlmCriticRole implements CriticRole {
       return {
         accept: this.options.failOpen ?? false,
         reason: `critic call failed: ${reason}`,
-        riskLevel: "MEDIUM",
+        riskLevel: 'MEDIUM',
       };
     }
 
@@ -106,8 +106,8 @@ export class LlmCriticRole implements CriticRole {
     if (!parsed) {
       return {
         accept: this.options.failOpen ?? false,
-        reason: "critic returned malformed JSON; defaulting per failOpen policy",
-        riskLevel: "MEDIUM",
+        reason: 'critic returned malformed JSON; defaulting per failOpen policy',
+        riskLevel: 'MEDIUM',
       };
     }
     return parsed;
@@ -119,22 +119,22 @@ function parseCriticJson(text: string): CriticReviewResult | null {
   if (!match) return null;
   try {
     const obj = JSON.parse(match[0]) as Partial<CriticReviewResult>;
-    if (typeof obj.accept !== "boolean") return null;
-    if (typeof obj.reason !== "string") return null;
-    const validRiskLevels: CriticReviewResult["riskLevel"][] = [
-      "NONE",
-      "LOW",
-      "MEDIUM",
-      "HIGH",
-      "BLOCK",
+    if (typeof obj.accept !== 'boolean') return null;
+    if (typeof obj.reason !== 'string') return null;
+    const validRiskLevels: CriticReviewResult['riskLevel'][] = [
+      'NONE',
+      'LOW',
+      'MEDIUM',
+      'HIGH',
+      'BLOCK',
     ];
-    if (!validRiskLevels.includes(obj.riskLevel as CriticReviewResult["riskLevel"])) {
+    if (!validRiskLevels.includes(obj.riskLevel as CriticReviewResult['riskLevel'])) {
       return null;
     }
     return {
       accept: obj.accept,
       reason: obj.reason,
-      riskLevel: obj.riskLevel as CriticReviewResult["riskLevel"],
+      riskLevel: obj.riskLevel as CriticReviewResult['riskLevel'],
     };
   } catch {
     return null;

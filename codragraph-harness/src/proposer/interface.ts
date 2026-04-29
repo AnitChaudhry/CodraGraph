@@ -1,4 +1,4 @@
-import type { CandidateStore } from "../filesystem.js";
+import type { CandidateStore } from '../filesystem.js';
 
 /**
  * Proposer — generates new harness candidates from the filesystem 𝒟 of all

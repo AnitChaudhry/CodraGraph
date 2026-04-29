@@ -1,9 +1,9 @@
 // Public contracts for codragraph-compress.
 
-import type { InferenceProvider } from "codragraph-harness/inference/interface";
+import type { InferenceProvider } from 'codragraph-harness/inference/interface';
 
 /** Compression aggressiveness; affects the prompt and target token-reduction ratio. */
-export type CompressionLevel = "min" | "balanced" | "max";
+export type CompressionLevel = 'min' | 'balanced' | 'max';
 
 export interface Compressor {
   /** Stable identifier; "llm" / "nlp" / "mlm" / etc. */
@@ -25,7 +25,7 @@ export interface CompressOptions {
    * calls) vs whole-text (single call, may dilute on very long input).
    * Default: "auto" — sentence-split when text is over `sentenceSplitThreshold` chars.
    */
-  strategy?: "auto" | "single-call" | "per-sentence";
+  strategy?: 'auto' | 'single-call' | 'per-sentence';
   /** Char-count threshold for auto strategy. Default 1500. */
   sentenceSplitThreshold?: number;
   /** Optional: compute embedding similarity between original and compressed. Costs extra API calls. */

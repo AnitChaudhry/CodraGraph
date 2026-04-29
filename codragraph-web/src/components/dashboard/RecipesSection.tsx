@@ -13,10 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import {
-  fetchRecipesList,
-  type RecipeSummary,
-} from '@/services/recipes-client';
+import { fetchRecipesList, type RecipeSummary } from '@/services/recipes-client';
 import type { GraphstoreCommit } from '@/services/graphstore-client';
 import { useGraphstoreContext } from '@/hooks/useGraphstoreContext';
 import { RecipeDetailSheet } from './RecipeDetailSheet';
@@ -127,9 +124,7 @@ export const RecipesSection = (): React.JSX.Element => {
       <RecipeDetailSheet
         recipe={selectedRecipe}
         commit={
-          selectedRecipe
-            ? ctx.commitBySnapshotId.get(selectedRecipe.snapshotId) ?? null
-            : null
+          selectedRecipe ? (ctx.commitBySnapshotId.get(selectedRecipe.snapshotId) ?? null) : null
         }
         branch={ctx.currentBranch}
         onClose={() => setSelectedRecipe(null)}
@@ -183,10 +178,7 @@ const RecipeCard = ({
           <span className="ml-auto">{recipe.searchedAt.slice(0, 10)}</span>
         </div>
         {commit && (
-          <p
-            className="mt-1 truncate text-text-secondary"
-            title={commit.message}
-          >
+          <p className="mt-1 truncate text-text-secondary" title={commit.message}>
             {commit.message}
           </p>
         )}
@@ -205,7 +197,7 @@ const Metric = ({
   variant: 'success' | 'default';
 }): React.JSX.Element => (
   <div className="rounded-md border border-border-subtle bg-deep p-2">
-    <div className="text-[10px] uppercase tracking-wider text-text-muted">{label}</div>
+    <div className="text-[10px] tracking-wider text-text-muted uppercase">{label}</div>
     <Badge variant={variant} className="mt-1 font-mono">
       {value}
     </Badge>
@@ -214,12 +206,10 @@ const Metric = ({
 
 const UnavailableHint = ({ reason }: { reason: string }): React.JSX.Element => (
   <div className="rounded-md border border-dashed border-border-subtle bg-deep p-6">
-    <h3 className="text-sm font-semibold text-text-primary">
-      Recipes endpoint not wired
-    </h3>
+    <h3 className="text-sm font-semibold text-text-primary">Recipes endpoint not wired</h3>
     <p className="mt-1 text-xs text-text-secondary">
-      The codragraph server hasn't exposed <code className="font-mono">/api/recipes</code> yet.
-      Once wired, this section will list every recipe learned by{' '}
+      The codragraph server hasn't exposed <code className="font-mono">/api/recipes</code> yet. Once
+      wired, this section will list every recipe learned by{' '}
       <code className="font-mono">codragraph-harness swarm-search</code> for the current repo.
     </p>
     <p className="mt-3 font-mono text-[10px] text-text-muted">reason: {reason}</p>
@@ -230,11 +220,11 @@ const EmptyHint = (): React.JSX.Element => (
   <div className="rounded-md border border-dashed border-border-subtle bg-deep p-6">
     <h3 className="text-sm font-semibold text-text-primary">No recipes yet</h3>
     <p className="mt-1 text-xs text-text-secondary">
-      Recipes are Pareto-winning harnesses learned by swarm runs, tagged
-      against the graph snapshot they were trained on. Run:
+      Recipes are Pareto-winning harnesses learned by swarm runs, tagged against the graph snapshot
+      they were trained on. Run:
     </p>
     <pre className="mt-3 overflow-x-auto rounded-md border border-border-subtle bg-void p-3 text-xs text-text-primary">
-{`codragraph-harness swarm-search \\
+      {`codragraph-harness swarm-search \\
   --task ./tasks.json \\
   --task-family codebase-qa \\
   --snapshot-id sha256:<current-snapshot>`}

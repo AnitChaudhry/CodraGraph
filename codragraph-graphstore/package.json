@@ -1,7 +1,7 @@
 {
   "name": "codragraph-graphstore",
   "version": "0.1.0",
-  "description": "Dolt-like content-addressed versioning for the CodraGraph knowledge graph \u2014 snapshots, branches, diffs, three-way merge.",
+  "description": "Dolt-like content-addressed versioning for the CodraGraph knowledge graph — snapshots, branches, diffs, three-way merge.",
   "author": {
     "name": "Anit Chaudhary",
     "email": "getintouch.anit@gmail.com",

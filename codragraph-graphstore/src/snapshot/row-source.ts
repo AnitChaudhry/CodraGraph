@@ -67,8 +67,8 @@ export interface RowSink {
  * not "added/removed".
  */
 export const synthesizeEdgeId = (row: GraphRow): string => {
-  const from = String(row["from"] ?? "");
-  const to = String(row["to"] ?? "");
-  const type = String(row["type"] ?? "");
+  const from = String(row['from'] ?? '');
+  const to = String(row['to'] ?? '');
+  const type = String(row['type'] ?? '');
   return `${from}|${type}|${to}`;
 };

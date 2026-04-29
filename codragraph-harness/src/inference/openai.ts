@@ -3,13 +3,13 @@
 // Uses the openai package's Chat Completions API. Covers GPT-4o, GPT-4.1,
 // Codex models. API key from `apiKey` option or OPENAI_API_KEY env var.
 
-import OpenAI from "openai";
+import OpenAI from 'openai';
 import type {
   CompletionInput,
   CompletionResult,
   InferenceProvider,
   ToolCall,
-} from "./interface.js";
+} from './interface.js';
 
 export interface OpenAIOptions {
   apiKey?: string;
@@ -18,14 +18,14 @@ export interface OpenAIOptions {
   baseURL?: string;
 }
 
-const DEFAULT_MODEL = "gpt-4o";
+const DEFAULT_MODEL = 'gpt-4o';
 const DEFAULT_MAX_TOKENS = 4096;
 
 export class OpenAIInferenceProvider implements InferenceProvider {
   // Subclasses (OpenCodeInferenceProvider) override this with a different
   // literal — keep as a wider `string` type so override is permitted under
   // strict mode.
-  readonly name: string = "openai";
+  readonly name: string = 'openai';
   private client: OpenAI;
   private defaults: { model: string; maxTokens: number };
 
@@ -45,7 +45,7 @@ export class OpenAIInferenceProvider implements InferenceProvider {
     const max_tokens = input.maxTokens ?? this.defaults.maxTokens;
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
-    if (input.systemPrompt) messages.push({ role: "system", content: input.systemPrompt });
+    if (input.systemPrompt) messages.push({ role: 'system', content: input.systemPrompt });
     for (const m of input.messages) {
       messages.push({ role: m.role, content: m.content });
     }
@@ -57,7 +57,7 @@ export class OpenAIInferenceProvider implements InferenceProvider {
         max_tokens,
         temperature: input.temperature,
         tools: input.tools?.map((t) => ({
-          type: "function" as const,
+          type: 'function' as const,
           function: {
             name: t.name,
             description: t.description,
@@ -69,7 +69,7 @@ export class OpenAIInferenceProvider implements InferenceProvider {
     );
 
     const choice = completion.choices[0];
-    const content = choice?.message?.content ?? "";
+    const content = choice?.message?.content ?? '';
     const toolCalls: ToolCall[] =
       choice?.message?.tool_calls?.map((tc) => ({
         id: tc.id,

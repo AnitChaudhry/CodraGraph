@@ -14,15 +14,10 @@
 // Requires the `claude` CLI on PATH. API key configured in Claude Code's own
 // config — we don't manage it here.
 
-import { spawn } from "node:child_process";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import type {
-  HarnessSource,
-  ProposeInput,
-  Proposer,
-  SourceFile,
-} from "./interface.js";
+import { spawn } from 'node:child_process';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import type { HarnessSource, ProposeInput, Proposer, SourceFile } from './interface.js';
 
 export interface ClaudeCodeProposerOptions {
   /** Path to the `claude` binary. Default: "claude" (resolved via PATH). */
@@ -62,13 +57,12 @@ const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000;
 export class ClaudeCodeProposer implements Proposer {
   readonly name: string;
   constructor(private readonly options: ClaudeCodeProposerOptions) {
-    this.name = options.proposerName ?? "claude-code";
+    this.name = options.proposerName ?? 'claude-code';
   }
 
   async propose(input: ProposeInput): Promise<HarnessSource[]> {
     const proposalsRoot =
-      this.options.proposalsRoot ??
-      path.join(input.filesystem.rootPath, "..", "proposals");
+      this.options.proposalsRoot ?? path.join(input.filesystem.rootPath, '..', 'proposals');
     const iterDirName =
       this.options.iterationDirNamer?.(input.iteration) ?? `iteration-${input.iteration}`;
     const iterationDir = path.join(proposalsRoot, iterDirName);
@@ -85,7 +79,7 @@ export class ClaudeCodeProposer implements Proposer {
     });
 
     await runClaude({
-      binary: this.options.binary ?? "claude",
+      binary: this.options.binary ?? 'claude',
       prompt,
       timeoutMs: this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
       skipPermissions: this.options.skipPermissions ?? true,
@@ -115,7 +109,7 @@ function buildPrompt(args: PromptArgs): string {
     `Avoid trivial mutations (renaming variables, reformatting). Each candidate should target a hypothesis you formed from reading 𝒟.`,
   ];
   if (args.additionalGuidance && args.additionalGuidance.trim().length > 0) {
-    taskGuidance.push("", "=== Role-specific guidance ===", args.additionalGuidance.trim());
+    taskGuidance.push('', '=== Role-specific guidance ===', args.additionalGuidance.trim());
   }
 
   return [
@@ -153,7 +147,7 @@ function buildPrompt(args: PromptArgs): string {
     `<<<END_HARNESS_MANIFEST>>>`,
     ``,
     `Begin.`,
-  ].join("\n");
+  ].join('\n');
 }
 
 interface RunArgs {
@@ -166,30 +160,30 @@ interface RunArgs {
 
 async function runClaude(args: RunArgs): Promise<{ stdout: string; stderr: string }> {
   return await new Promise((resolve, reject) => {
-    const flags = ["-p"];
-    if (args.skipPermissions) flags.push("--dangerously-skip-permissions");
+    const flags = ['-p'];
+    if (args.skipPermissions) flags.push('--dangerously-skip-permissions');
     flags.push(...args.extraArgs);
     flags.push(args.prompt);
 
-    const child = spawn(args.binary, flags, { stdio: ["ignore", "pipe", "pipe"] });
-    let stdout = "";
-    let stderr = "";
+    const child = spawn(args.binary, flags, { stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
     const timer = setTimeout(() => {
-      child.kill("SIGTERM");
+      child.kill('SIGTERM');
       reject(new Error(`claude proposer subprocess exceeded ${args.timeoutMs}ms`));
     }, args.timeoutMs);
 
-    child.stdout.on("data", (chunk: Buffer) => {
-      stdout += chunk.toString("utf8");
+    child.stdout.on('data', (chunk: Buffer) => {
+      stdout += chunk.toString('utf8');
     });
-    child.stderr.on("data", (chunk: Buffer) => {
-      stderr += chunk.toString("utf8");
+    child.stderr.on('data', (chunk: Buffer) => {
+      stderr += chunk.toString('utf8');
     });
-    child.on("error", (err) => {
+    child.on('error', (err) => {
       clearTimeout(timer);
       reject(err);
     });
-    child.on("close", (code) => {
+    child.on('close', (code) => {
       clearTimeout(timer);
       if (code !== 0) {
         reject(new Error(`claude proposer exited with code ${code}: ${stderr}`));
@@ -201,11 +195,11 @@ async function runClaude(args: RunArgs): Promise<{ stdout: string; stderr: strin
 }
 
 async function readProposals(iterationDir: string): Promise<HarnessSource[]> {
-  let entries: import("node:fs").Dirent[];
+  let entries: import('node:fs').Dirent[];
   try {
     entries = await fs.readdir(iterationDir, { withFileTypes: true });
   } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
     throw err;
   }
 
@@ -216,16 +210,16 @@ async function readProposals(iterationDir: string): Promise<HarnessSource[]> {
     const files = await readSourceTree(candidateDir, candidateDir);
     if (files.length === 0) continue;
 
-    let rationale = "";
+    let rationale = '';
     try {
-      rationale = await fs.readFile(path.join(candidateDir, "rationale.md"), "utf8");
+      rationale = await fs.readFile(path.join(candidateDir, 'rationale.md'), 'utf8');
     } catch {
       // missing rationale.md is OK — proposer may have skipped it.
     }
 
     out.push({
       name: entry.name,
-      files: files.filter((f) => f.path !== "rationale.md"),
+      files: files.filter((f) => f.path !== 'rationale.md'),
       rationale,
     });
   }
@@ -240,9 +234,9 @@ async function readSourceTree(dir: string, base: string): Promise<SourceFile[]> 
     if (entry.isDirectory()) {
       out.push(...(await readSourceTree(full, base)));
     } else if (entry.isFile()) {
-      const content = await fs.readFile(full, "utf8");
+      const content = await fs.readFile(full, 'utf8');
       out.push({
-        path: path.relative(base, full).replace(/\\/g, "/"),
+        path: path.relative(base, full).replace(/\\/g, '/'),
         content,
       });
     }

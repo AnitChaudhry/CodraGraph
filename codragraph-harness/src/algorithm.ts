@@ -20,15 +20,15 @@
 // scaffold constraints) is the paper's key thesis: delegate search heuristics
 // to the proposer's coding ability.
 
-import type { Harness } from "./harness/interface.js";
-import type { Proposer } from "./proposer/interface.js";
-import type { InferenceProvider } from "./inference/interface.js";
-import type { GraphClient, TaskInput, TokenBudget } from "./types.js";
-import { resolveBudget } from "./types.js";
-import type { Evaluator } from "./evaluator/runner.js";
-import type { Scores } from "./evaluator/score.js";
-import { CandidateStore } from "./filesystem.js";
-import { ParetoFrontier, type ParetoPoint } from "./pareto.js";
+import type { Harness } from './harness/interface.js';
+import type { Proposer } from './proposer/interface.js';
+import type { InferenceProvider } from './inference/interface.js';
+import type { GraphClient, TaskInput, TokenBudget } from './types.js';
+import { resolveBudget } from './types.js';
+import type { Evaluator } from './evaluator/runner.js';
+import type { Scores } from './evaluator/score.js';
+import { CandidateStore } from './filesystem.js';
+import { ParetoFrontier, type ParetoPoint } from './pareto.js';
 
 export interface SearchOptions {
   /** Search-set 𝒳. */
@@ -66,18 +66,18 @@ export interface SearchOptions {
 }
 
 export type ProgressEvent =
-  | { type: "init"; seedCount: number; iterations: number }
-  | { type: "seed-evaluated"; id: string; scores: Scores }
-  | { type: "iteration-start"; iteration: number; populationSize: number }
-  | { type: "candidate-proposed"; id: string; iteration: number; name: string }
+  | { type: 'init'; seedCount: number; iterations: number }
+  | { type: 'seed-evaluated'; id: string; scores: Scores }
+  | { type: 'iteration-start'; iteration: number; populationSize: number }
+  | { type: 'candidate-proposed'; id: string; iteration: number; name: string }
   | {
-      type: "candidate-rejected";
+      type: 'candidate-rejected';
       iteration: number;
       name: string;
       reason: string;
     }
-  | { type: "candidate-evaluated"; id: string; iteration: number; scores: Scores }
-  | { type: "complete"; frontier: ParetoPoint[]; totalEvaluated: number };
+  | { type: 'candidate-evaluated'; id: string; iteration: number; scores: Scores }
+  | { type: 'complete'; frontier: ParetoPoint[]; totalEvaluated: number };
 
 export interface SearchResult {
   /** Pareto-optimal candidates by id, sorted by accuracy descending. */
@@ -99,7 +99,7 @@ export async function search(options: SearchOptions): Promise<SearchResult> {
 
   await options.store.init();
   onProgress({
-    type: "init",
+    type: 'init',
     seedCount: options.seeds.length,
     iterations: options.iterations,
   });
@@ -118,20 +118,20 @@ export async function search(options: SearchOptions): Promise<SearchResult> {
       // candidate was a seed, source is in the codragraph-harness package".
       files: [
         {
-          path: "SEED.md",
+          path: 'SEED.md',
           content: `# Seed harness\n\nName: ${seed.name}\nVersion: ${seed.version}\n\nSource lives in the codragraph-harness package (src/harness/seeds/) — not duplicated here. Proposer should read it from there to understand the baseline behavior.\n`,
         },
       ],
     });
     const scores = await runEvaluate(options, seed, id);
-    onProgress({ type: "seed-evaluated", id, scores });
+    onProgress({ type: 'seed-evaluated', id, scores });
     totalEvaluated++;
   }
 
   // Step 2: outer loop.
   for (let t = 1; t <= options.iterations; t++) {
     const populationSize = (await options.store.listCandidates()).length;
-    onProgress({ type: "iteration-start", iteration: t, populationSize });
+    onProgress({ type: 'iteration-start', iteration: t, populationSize });
 
     const sources = await options.proposer.propose({
       filesystem: options.store,
@@ -143,9 +143,9 @@ export async function search(options: SearchOptions): Promise<SearchResult> {
     for (const source of sources) {
       const id = await options.store.addCandidate({
         name: source.name,
-        version: "0.1.0",
+        version: '0.1.0',
         origin: {
-          kind: "proposer",
+          kind: 'proposer',
           proposer: options.proposer.name,
           iteration: t,
           parents: source.parents,
@@ -154,7 +154,7 @@ export async function search(options: SearchOptions): Promise<SearchResult> {
         parents: source.parents,
         rationale: source.rationale,
       });
-      onProgress({ type: "candidate-proposed", id, iteration: t, name: source.name });
+      onProgress({ type: 'candidate-proposed', id, iteration: t, name: source.name });
 
       let harness: Harness;
       try {
@@ -162,7 +162,7 @@ export async function search(options: SearchOptions): Promise<SearchResult> {
       } catch (err: unknown) {
         const reason = err instanceof Error ? err.message : String(err);
         onProgress({
-          type: "candidate-rejected",
+          type: 'candidate-rejected',
           iteration: t,
           name: source.name,
           reason,
@@ -172,7 +172,7 @@ export async function search(options: SearchOptions): Promise<SearchResult> {
       }
 
       const scores = await runEvaluate(options, harness, id);
-      onProgress({ type: "candidate-evaluated", id, iteration: t, scores });
+      onProgress({ type: 'candidate-evaluated', id, iteration: t, scores });
       totalEvaluated++;
     }
   }
@@ -189,16 +189,12 @@ export async function search(options: SearchOptions): Promise<SearchResult> {
     .getAll()
     .sort((a, b) => b.accuracy - a.accuracy);
 
-  onProgress({ type: "complete", frontier, totalEvaluated });
+  onProgress({ type: 'complete', frontier, totalEvaluated });
   return { frontier, totalEvaluated, totalRejected };
 }
 
 /** Helper: run the evaluator on one harness, persist score + traces. */
-async function runEvaluate(
-  options: SearchOptions,
-  harness: Harness,
-  id: string,
-): Promise<Scores> {
+async function runEvaluate(options: SearchOptions, harness: Harness, id: string): Promise<Scores> {
   // Resolve TokenBudget → ResolvedBudget once per evaluation so harnesses
   // see concrete numbers and never have to re-evaluate the policy.
   const resolved = resolveBudget(options.budget);

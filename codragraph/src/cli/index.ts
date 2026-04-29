@@ -201,7 +201,9 @@ configCmd
 
 configCmd
   .command('get <provider>')
-  .description('Show a provider\'s settings (api key redacted). Provider: claude, openai, opencode, openrouter, azure, cursor, custom.')
+  .description(
+    "Show a provider's settings (api key redacted). Provider: claude, openai, opencode, openrouter, azure, cursor, custom.",
+  )
   .action(createLazyAction(() => import('./config.js'), 'configGetCommand'));
 
 configCmd
@@ -217,7 +219,7 @@ configCmd
 configCmd
   .command('remove <provider>')
   .alias('rm')
-  .description('Remove a provider\'s configuration')
+  .description("Remove a provider's configuration")
   .action(createLazyAction(() => import('./config.js'), 'configRemoveCommand'));
 
 configCmd
@@ -233,9 +235,7 @@ program
   .option('-n, --limit <n>', 'Maximum number of commits to show', '50')
   .action(createLazyAction(() => import('./graphstore.js'), 'logCommand'));
 
-const branchCmd = program
-  .command('branch')
-  .description('Manage versioned-graph branches');
+const branchCmd = program.command('branch').description('Manage versioned-graph branches');
 branchCmd
   .command('list', { isDefault: true })
   .description('List branches')
@@ -286,7 +286,9 @@ program
 
 program
   .command('materialize <target>')
-  .description('Rebuild a target snapshot into a fresh LadybugDB at --into <path> (read-only inspection)')
+  .description(
+    'Rebuild a target snapshot into a fresh LadybugDB at --into <path> (read-only inspection)',
+  )
   .requiredOption('--into <path>', 'Output LadybugDB file path')
   .action(createLazyAction(() => import('./graphstore.js'), 'materializeCommand'));
 

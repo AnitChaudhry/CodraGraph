@@ -13,8 +13,8 @@
 // reason about, easy to run as a stand-alone "what would the swarm
 // propose?" mode in the dashboard later.
 
-import type { CandidateStore } from "../filesystem.js";
-import type { HarnessSource, ProposeInput } from "../proposer/interface.js";
+import type { CandidateStore } from '../filesystem.js';
+import type { HarnessSource, ProposeInput } from '../proposer/interface.js';
 import type {
   CriticRole,
   ProposingRole,
@@ -22,7 +22,7 @@ import type {
   SwarmCoordinator,
   SwarmStepInput,
   SwarmStepResult,
-} from "./interface.js";
+} from './interface.js';
 
 export interface DefaultSwarmCoordinatorOptions {
   store: CandidateStore;
@@ -64,12 +64,12 @@ export class DefaultSwarmCoordinator implements SwarmCoordinator {
       this.options.exploiter.proposer.propose(exploiterInput),
     ]);
 
-    const explorerProposals = unwrapResults(explorerResults, "explorer");
-    const exploiterProposals = unwrapResults(exploiterResults, "exploiter");
+    const explorerProposals = unwrapResults(explorerResults, 'explorer');
+    const exploiterProposals = unwrapResults(exploiterResults, 'exploiter');
 
     const tagged: Array<{ source: HarnessSource; proposingRole: string }> = [
-      ...explorerProposals.map((s) => ({ source: s, proposingRole: "explorer" })),
-      ...exploiterProposals.map((s) => ({ source: s, proposingRole: "exploiter" })),
+      ...explorerProposals.map((s) => ({ source: s, proposingRole: 'explorer' })),
+      ...exploiterProposals.map((s) => ({ source: s, proposingRole: 'exploiter' })),
     ];
 
     // Step 3: critic-review in parallel (cheap LLM calls; fan out is fine).
@@ -83,8 +83,8 @@ export class DefaultSwarmCoordinator implements SwarmCoordinator {
       }),
     );
 
-    const accepted: SwarmStepResult["accepted"] = [];
-    const criticRejected: SwarmStepResult["criticRejected"] = [];
+    const accepted: SwarmStepResult['accepted'] = [];
+    const criticRejected: SwarmStepResult['criticRejected'] = [];
     for (const r of reviews) {
       if (r.review.accept) {
         accepted.push({ source: r.source, proposingRole: r.proposingRole });
@@ -103,13 +103,13 @@ export class DefaultSwarmCoordinator implements SwarmCoordinator {
     const roleStats: Record<string, RoleStats> = {
       explorer: {
         proposed: explorerProposals.length,
-        acceptedByCritic: accepted.filter((a) => a.proposingRole === "explorer").length,
+        acceptedByCritic: accepted.filter((a) => a.proposingRole === 'explorer').length,
         frontierHits: 0,
         meanTokens: 0, // filled after evaluation when we know per-task token cost
       },
       exploiter: {
         proposed: exploiterProposals.length,
-        acceptedByCritic: accepted.filter((a) => a.proposingRole === "exploiter").length,
+        acceptedByCritic: accepted.filter((a) => a.proposingRole === 'exploiter').length,
         frontierHits: 0,
         meanTokens: 0,
       },
@@ -128,7 +128,7 @@ function unwrapResults(
   result: PromiseSettledResult<HarnessSource[]>,
   role: string,
 ): HarnessSource[] {
-  if (result.status === "fulfilled") return result.value;
+  if (result.status === 'fulfilled') return result.value;
   // One role's failure shouldn't kill the iteration — log to stderr, continue.
   console.error(
     `[swarm] ${role} proposer failed:`,

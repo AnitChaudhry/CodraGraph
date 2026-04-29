@@ -35,21 +35,17 @@ export const StatCard = ({
   return (
     <Card className={cn('relative p-5', className)}>
       <div className="flex items-start justify-between">
-        <p className="text-xs font-medium uppercase tracking-wider text-text-secondary">
-          {label}
-        </p>
+        <p className="text-xs font-medium tracking-wider text-text-secondary uppercase">{label}</p>
         {Icon && <Icon className={cn('h-4 w-4', accentClassName)} aria-hidden />}
       </div>
       {loading ? (
         <Skeleton className="mt-3 h-8 w-24" />
       ) : (
-        <p className="mt-3 font-mono text-3xl font-semibold tabular-nums text-text-primary">
+        <p className="mt-3 font-mono text-3xl font-semibold text-text-primary tabular-nums">
           {displayValue}
         </p>
       )}
-      {hint && !loading && (
-        <p className="mt-1 text-xs text-text-secondary">{hint}</p>
-      )}
+      {hint && !loading && <p className="mt-1 text-xs text-text-secondary">{hint}</p>}
     </Card>
   );
 };

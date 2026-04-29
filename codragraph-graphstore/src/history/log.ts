@@ -1,6 +1,6 @@
-import { type Commit, type ObjectId } from "../types.js";
-import { type ContentAddressedStore } from "../cas/interface.js";
-import { readCommit } from "./commit.js";
+import { type Commit, type ObjectId } from '../types.js';
+import { type ContentAddressedStore } from '../cas/interface.js';
+import { readCommit } from './commit.js';
 
 export interface WalkCommitsOptions {
   readonly cas: ContentAddressedStore;

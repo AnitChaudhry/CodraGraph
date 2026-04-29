@@ -1,12 +1,5 @@
 import * as React from 'react';
-import {
-  GitBranch,
-  History,
-  Layers,
-  LayoutDashboard,
-  Network,
-  Sparkles,
-} from 'lucide-react';
+import { GitBranch, History, Layers, LayoutDashboard, Network, Sparkles } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { DashboardSection } from '@/hooks/useDashboardSection';
 import { ThemeToggle } from './ThemeToggle';
@@ -36,10 +29,7 @@ const TABS: TabDef[] = [
   { value: 'recipes', label: 'Recipes', icon: Sparkles },
 ];
 
-export const DashboardTabs = ({
-  section,
-  onChange,
-}: DashboardTabsProps): React.JSX.Element => (
+export const DashboardTabs = ({ section, onChange }: DashboardTabsProps): React.JSX.Element => (
   <div className="border-b border-border-subtle bg-deep">
     <div className="mx-auto flex max-w-screen-2xl items-center gap-2 px-4 py-2">
       <Tabs value={section} onValueChange={(v) => onChange(v as DashboardSection)}>

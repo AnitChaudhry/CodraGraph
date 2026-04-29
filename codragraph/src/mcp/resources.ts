@@ -110,7 +110,7 @@ export function getResourceTemplates(): ResourceTemplate[] {
       uriTemplate: 'codragraph://repo/{name}/recipes',
       name: 'Harness Recipes',
       description:
-        "Phase 4 × Phase 3 moat: harness recipes learned for this repo, keyed by (snapshot_id, task_family). Pairs with harness_recipes_list / harness_recipes_lookup / harness_swarm_run with use_cache.",
+        'Phase 4 × Phase 3 moat: harness recipes learned for this repo, keyed by (snapshot_id, task_family). Pairs with harness_recipes_list / harness_recipes_lookup / harness_swarm_run with use_cache.',
       mimeType: 'text/yaml',
     },
     {
@@ -668,10 +668,7 @@ async function getSetupResource(backend: LocalBackend): Promise<string> {
 
 // ─── Phase 4: Versioned-graph resources ─────────────────────────────────
 
-async function getGraphstoreLogResource(
-  backend: LocalBackend,
-  repoName?: string,
-): Promise<string> {
+async function getGraphstoreLogResource(backend: LocalBackend, repoName?: string): Promise<string> {
   const repo = await backend.resolveRepo(repoName);
   const handler = await import('./local/graphstore-handler.js');
   let result;
@@ -719,9 +716,17 @@ async function getGraphstoreBranchesResource(
     return `error: ${err instanceof Error ? err.message : String(err)}`;
   }
   if (result.branches.length === 0) {
-    return [`repo: "${repo.name}"`, 'branches: []', '# Run `codragraph analyze` to create the first branch.'].join('\n');
+    return [
+      `repo: "${repo.name}"`,
+      'branches: []',
+      '# Run `codragraph analyze` to create the first branch.',
+    ].join('\n');
   }
-  const lines: string[] = [`repo: "${repo.name}"`, `current: "${result.current ?? '(detached)'}"`, 'branches:'];
+  const lines: string[] = [
+    `repo: "${repo.name}"`,
+    `current: "${result.current ?? '(detached)'}"`,
+    'branches:',
+  ];
   for (const b of result.branches) {
     lines.push(`  - name: "${b.name}"`);
     lines.push(`    head: "${b.head}"`);
@@ -762,10 +767,7 @@ async function getRecipesResource(
       .filter(Boolean)
       .join('\n');
   }
-  const lines: string[] = [
-    `repo: "${repo.name}"`,
-    `recipeStoreRoot: "${result.recipeStoreRoot}"`,
-  ];
+  const lines: string[] = [`repo: "${repo.name}"`, `recipeStoreRoot: "${result.recipeStoreRoot}"`];
   if (taskFamily) lines.push(`taskFamily: "${taskFamily}"`);
   lines.push(`count: ${result.recipes.length}`);
   lines.push('recipes:');

@@ -1,17 +1,17 @@
 // Shared types across the bench scripts.
 
-import type { Scores } from "codragraph-harness/evaluator/score";
+import type { Scores } from 'codragraph-harness/evaluator/score';
 
 export type TreatmentTag =
-  | "baseline-grep"
-  | "baseline-fullfile"
-  | "codragraph-graph-only"
-  | "codragraph-graph-compress"
-  | "codragraph-harness-tuned"
-  | "codragraph-swarm-tuned"
-  | "codragraph-recipe-cached";
+  | 'baseline-grep'
+  | 'baseline-fullfile'
+  | 'codragraph-graph-only'
+  | 'codragraph-graph-compress'
+  | 'codragraph-harness-tuned'
+  | 'codragraph-swarm-tuned'
+  | 'codragraph-recipe-cached';
 
-export type ProviderName = "anthropic" | "openai" | "vllm" | "ollama" | "tgi";
+export type ProviderName = 'anthropic' | 'openai' | 'vllm' | 'ollama' | 'tgi';
 
 export interface ModelSpec {
   /** Internal id used in CLI flags + result filenames. */
@@ -54,7 +54,7 @@ export interface TaskResult {
   answer: string;
   expectedAnswer: string;
   correct: boolean;
-  judgeMethod: "exact" | "substring" | "llm-judge" | "harness-error" | "test-pass";
+  judgeMethod: 'exact' | 'substring' | 'llm-judge' | 'harness-error' | 'test-pass';
   judgeNote?: string;
   costUsd: number;
   errorReason?: string;
@@ -128,7 +128,7 @@ export interface BenchEnv {
     }>;
   };
   inferenceServer?: {
-    kind: "vllm" | "ollama" | "tgi" | "llamacpp";
+    kind: 'vllm' | 'ollama' | 'tgi' | 'llamacpp';
     version: string;
     args: string;
   };

@@ -322,7 +322,12 @@ async function installClaudeCodeHooks(result: SetupResult): Promise<void> {
       }
     }
 
-    ensureHookEntry('PreToolUse', 'Grep|Glob|Bash', 10, 'Enriching with CodraGraph graph context...');
+    ensureHookEntry(
+      'PreToolUse',
+      'Grep|Glob|Bash',
+      10,
+      'Enriching with CodraGraph graph context...',
+    );
     ensureHookEntry('PostToolUse', 'Bash', 10, 'Checking CodraGraph index freshness...');
 
     await writeJsonFile(settingsPath, existing);

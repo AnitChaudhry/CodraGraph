@@ -409,7 +409,12 @@ describe('CLI end-to-end', () => {
         // (e.g. a future refactor that accidentally drops one of the
         // three `console.log` lines, or swaps `entry.path` for
         // `entry.name` in the output).
-        const r2 = runCliWithEnv(['remove', 'alias-a'], parentA, { CODRAGRAPH_HOME: gnHome }, 15000);
+        const r2 = runCliWithEnv(
+          ['remove', 'alias-a'],
+          parentA,
+          { CODRAGRAPH_HOME: gnHome },
+          15000,
+        );
         if (r2.status === null) return;
         expect(r2.status).toBe(0);
         const r2Output = `${r2.stdout}${r2.stderr}`;
@@ -451,7 +456,12 @@ describe('CLI end-to-end', () => {
 
         // Idempotent: removing the same alias AGAIN must exit 0 with a
         // warning (so `remove X && analyze Y` keeps working in scripts).
-        const r4 = runCliWithEnv(['remove', 'alias-a'], parentA, { CODRAGRAPH_HOME: gnHome }, 15000);
+        const r4 = runCliWithEnv(
+          ['remove', 'alias-a'],
+          parentA,
+          { CODRAGRAPH_HOME: gnHome },
+          15000,
+        );
         if (r4.status === null) return;
         expect(r4.status).toBe(0);
         expect(`${r4.stdout}${r4.stderr}`).toMatch(/Nothing to remove/i);
@@ -636,7 +646,9 @@ describe('CLI end-to-end', () => {
         // guard aborts BEFORE fs.rm. This is the whole point of the
         // test: the working tree is not allowed to disappear.
         expect(fs.existsSync(repo), 'repo working tree must survive').toBe(true);
-        expect(fs.existsSync(path.join(repo, '.codragraph')), 'storage dir must survive').toBe(true);
+        expect(fs.existsSync(path.join(repo, '.codragraph')), 'storage dir must survive').toBe(
+          true,
+        );
         expect(fs.existsSync(path.join(repo, '.git')), '.git must survive').toBe(true);
 
         // Registry unchanged — no partial mutation.

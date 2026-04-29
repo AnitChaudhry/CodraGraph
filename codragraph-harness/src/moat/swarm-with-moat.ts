@@ -10,15 +10,15 @@
 // The wrapper is intentionally additive — no changes to swarmSearch
 // itself — so callers that don't need the moat keep working.
 
-import { swarmSearch, type SwarmSearchOptions } from "../swarm/algorithm.js";
-import type { SwarmSearchResult } from "../swarm/interface.js";
-import type { ParetoPoint } from "../pareto.js";
-import type { CandidateMetadata } from "../filesystem.js";
-import type { RecipeStore } from "./recipe-store.js";
-import type { Recipe, RecipeSearchSource } from "./types.js";
-import { findReusableRecipes, type GraphstoreDiffer } from "./lookup.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
+import { swarmSearch, type SwarmSearchOptions } from '../swarm/algorithm.js';
+import type { SwarmSearchResult } from '../swarm/interface.js';
+import type { ParetoPoint } from '../pareto.js';
+import type { CandidateMetadata } from '../filesystem.js';
+import type { RecipeStore } from './recipe-store.js';
+import type { Recipe, RecipeSearchSource } from './types.js';
+import { findReusableRecipes, type GraphstoreDiffer } from './lookup.js';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 
 export interface SwarmSearchWithMoatOptions extends SwarmSearchOptions {
   /** Recipe store — typically FsRecipeStore over `<repo>/.codragraph/recipes`. */
@@ -92,7 +92,7 @@ export const swarmSearchWithMoat = async (
       totalEvaluated: 0,
       totalCriticRejected: 0,
       totalLoadRejected: 0,
-      terminatedAt: { iteration: 0, reason: "cache-hit" },
+      terminatedAt: { iteration: 0, reason: 'cache-hit' },
       perRole: {},
       scoredCandidates: [],
     };
@@ -107,7 +107,7 @@ export const swarmSearchWithMoat = async (
     snapshotId: opts.snapshotId,
     taskFamily: opts.taskFamily,
     persistTopK: opts.persistTopK ?? 5,
-    searchSource: "swarm",
+    searchSource: 'swarm',
   });
 
   return {
@@ -143,9 +143,7 @@ interface PersistFrontierOptions {
  * persistence step. Errors are swallowed so the swarm result is still
  * returned cleanly.
  */
-const persistFrontierAsRecipes = async (
-  opts: PersistFrontierOptions,
-): Promise<Recipe[]> => {
+const persistFrontierAsRecipes = async (opts: PersistFrontierOptions): Promise<Recipe[]> => {
   const persisted: Recipe[] = [];
   const ranked = [...opts.result.frontier]
     .sort((a, b) => b.accuracy - a.accuracy)
@@ -180,19 +178,17 @@ interface PointToRecipeOptions {
   readonly result: SwarmSearchResult;
 }
 
-const pointToRecipe = async (
-  opts: PointToRecipeOptions,
-): Promise<Omit<Recipe, "id"> | null> => {
+const pointToRecipe = async (opts: PointToRecipeOptions): Promise<Omit<Recipe, 'id'> | null> => {
   const candidateDir = path.join(opts.storeRoot, opts.point.id);
   let metadata: CandidateMetadata;
   try {
-    const raw = await fs.readFile(path.join(candidateDir, "metadata.json"), "utf-8");
+    const raw = await fs.readFile(path.join(candidateDir, 'metadata.json'), 'utf-8');
     metadata = JSON.parse(raw) as CandidateMetadata;
   } catch {
     return null;
   }
 
-  const sourceDir = path.join(candidateDir, "source");
+  const sourceDir = path.join(candidateDir, 'source');
   let files;
   try {
     files = await readSourceFiles(sourceDir);
@@ -204,7 +200,7 @@ const pointToRecipe = async (
   // Best-effort rationale read.
   let rationale: string | undefined;
   try {
-    rationale = await fs.readFile(path.join(candidateDir, "rationale.md"), "utf-8");
+    rationale = await fs.readFile(path.join(candidateDir, 'rationale.md'), 'utf-8');
   } catch {
     /* not all candidates have rationale */
   }
@@ -251,13 +247,13 @@ const readSourceFiles = async (
   for (const entry of entries) {
     if (!entry.isFile()) continue;
     const full = path.join(sourceDir, entry.name);
-    const content = await fs.readFile(full, "utf-8");
+    const content = await fs.readFile(full, 'utf-8');
     out.push({ path: entry.name, content });
   }
   return out;
 };
 
-const recipesToFrontier = (recipes: Recipe[]): SwarmSearchResult["frontier"] => {
+const recipesToFrontier = (recipes: Recipe[]): SwarmSearchResult['frontier'] => {
   return recipes
     .map((r) => ({
       id: r.id,

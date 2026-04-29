@@ -5,7 +5,7 @@
 // We normalize, do a cheap path/symbol substring check, then fall back to a
 // judge model for paraphrases.
 
-import type { InferenceProvider } from "../inference/interface.js";
+import type { InferenceProvider } from '../inference/interface.js';
 
 export interface JudgeResult {
   correct: boolean;
@@ -36,16 +36,16 @@ export async function scoreAnswer(
   for (const cand of candidates) {
     const normCand = normalize(cand);
     if (normActual === normCand) {
-      return { correct: true, method: "exact-match" };
+      return { correct: true, method: 'exact-match' };
     }
     if (normActual.includes(normCand) || normCand.includes(normActual)) {
-      return { correct: true, method: "substring" };
+      return { correct: true, method: 'substring' };
     }
   }
 
   // Stage 2: LLM judge (optional).
   if (!options.judge) {
-    return { correct: false, method: "exact-match", note: "no judge configured" };
+    return { correct: false, method: 'exact-match', note: 'no judge configured' };
   }
 
   try {
@@ -55,7 +55,7 @@ export async function scoreAnswer(
         'You are a strict but fair grader. Decide if a candidate answer is semantically equivalent to the reference for the given question. Reply with ONLY a JSON object: {"correct": true|false, "note": "<short reason>"}. Do not include any other text.',
       messages: [
         {
-          role: "user",
+          role: 'user',
           content: `Question: ${question}\nReference answer: ${expected}\nCandidate answer: ${actual}`,
         },
       ],
@@ -65,7 +65,7 @@ export async function scoreAnswer(
 
     const parsed = parseJudgeJson(result.content);
     if (!parsed) {
-      return { correct: false, method: "judge-error", note: "could not parse judge output" };
+      return { correct: false, method: 'judge-error', note: 'could not parse judge output' };
     }
     return {
       correct: parsed.correct,
@@ -75,7 +75,7 @@ export async function scoreAnswer(
   } catch (err: unknown) {
     return {
       correct: false,
-      method: "judge-error",
+      method: 'judge-error',
       note: err instanceof Error ? err.message : String(err),
     };
   }
@@ -84,8 +84,8 @@ export async function scoreAnswer(
 function normalize(s: string): string {
   return s
     .toLowerCase()
-    .replace(/[\s\n\r\t]+/g, " ")
-    .replace(/[`'"*_]/g, "")
+    .replace(/[\s\n\r\t]+/g, ' ')
+    .replace(/[`'"*_]/g, '')
     .trim();
 }
 
@@ -95,10 +95,10 @@ function parseJudgeJson(s: string): { correct: boolean; note?: string } | null {
   if (!match) return null;
   try {
     const obj = JSON.parse(match[0]) as { correct?: unknown; note?: unknown };
-    if (typeof obj.correct !== "boolean") return null;
+    if (typeof obj.correct !== 'boolean') return null;
     return {
       correct: obj.correct,
-      note: typeof obj.note === "string" ? obj.note : undefined,
+      note: typeof obj.note === 'string' ? obj.note : undefined,
     };
   } catch {
     return null;

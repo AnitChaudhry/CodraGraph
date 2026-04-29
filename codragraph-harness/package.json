@@ -1,7 +1,7 @@
 {
   "name": "codragraph-harness",
   "version": "0.1.0",
-  "description": "Auto-tuned harnesses for AI agents \u2014 Meta-Harness algorithm with Pareto search over (accuracy, tokens, latency)",
+  "description": "Auto-tuned harnesses for AI agents — Meta-Harness algorithm with Pareto search over (accuracy, tokens, latency)",
   "author": {
     "name": "Anit Chaudhary",
     "email": "getintouch.anit@gmail.com",

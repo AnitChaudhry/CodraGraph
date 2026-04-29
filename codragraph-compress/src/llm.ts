@@ -8,37 +8,41 @@
 // Provider-agnostic: takes any InferenceProvider from codragraph-harness.
 // Embedding similarity is opt-in (off by default to avoid extra API calls).
 
-import type { InferenceProvider } from "codragraph-harness/inference/interface";
+import type { InferenceProvider } from 'codragraph-harness/inference/interface';
 import type {
   Compressor,
   CompressOptions,
   CompressResult,
   DecompressOptions,
   DecompressResult,
-} from "./types.js";
+} from './types.js';
 import {
   COMPRESSION_PROMPT,
   DECOMPRESSION_PROMPT,
   MAX_LEVEL_SUFFIX,
   MIN_LEVEL_SUFFIX,
-} from "./prompts.js";
-import { cosineSimilarity, estimateTokens, isProse, splitSentences } from "./utils.js";
+} from './prompts.js';
+import { cosineSimilarity, estimateTokens, isProse, splitSentences } from './utils.js';
 
 const DEFAULT_THRESHOLD = 1500;
 
 export class LlmCompressor implements Compressor {
-  readonly name = "llm";
+  readonly name = 'llm';
 
   async compress(text: string, options: CompressOptions): Promise<CompressResult> {
-    const level = options.level ?? "balanced";
-    const strategy = options.strategy ?? "auto";
+    const level = options.level ?? 'balanced';
+    const strategy = options.strategy ?? 'auto';
     const threshold = options.sentenceSplitThreshold ?? DEFAULT_THRESHOLD;
 
     const systemPrompt = buildSystemPrompt(level);
     let compressed: string;
-    let metadata: Record<string, unknown> = { level, strategy };
+    const metadata: Record<string, unknown> = { level, strategy };
 
-    if (strategy === "single-call" || (strategy === "auto" && text.length <= threshold) || !isProse(text)) {
+    if (
+      strategy === 'single-call' ||
+      (strategy === 'auto' && text.length <= threshold) ||
+      !isProse(text)
+    ) {
       compressed = await compressOnce(options.inference, text, systemPrompt, options.model);
       metadata.sentenceCount = 1;
     } else {
@@ -49,7 +53,7 @@ export class LlmCompressor implements Compressor {
         if (!s.trim()) continue;
         out.push(await compressOnce(options.inference, s, systemPrompt, options.model));
       }
-      compressed = out.join(" ");
+      compressed = out.join(' ');
     }
 
     const originalTokens = estimateTokens(text);
@@ -77,17 +81,14 @@ export class LlmCompressor implements Compressor {
     };
   }
 
-  async decompress(
-    compressed: string,
-    options: DecompressOptions,
-  ): Promise<DecompressResult> {
+  async decompress(compressed: string, options: DecompressOptions): Promise<DecompressResult> {
     const result = await options.inference.complete({
       model: options.model,
-      systemPrompt: "You are an expert at expanding compressed text.",
+      systemPrompt: 'You are an expert at expanding compressed text.',
       messages: [
         {
-          role: "user",
-          content: DECOMPRESSION_PROMPT.replace("{text}", compressed),
+          role: 'user',
+          content: DECOMPRESSION_PROMPT.replace('{text}', compressed),
         },
       ],
       temperature: 0.3,
@@ -100,9 +101,9 @@ export class LlmCompressor implements Compressor {
   }
 }
 
-function buildSystemPrompt(level: "min" | "balanced" | "max"): string {
-  if (level === "max") return COMPRESSION_PROMPT + MAX_LEVEL_SUFFIX;
-  if (level === "min") return COMPRESSION_PROMPT + MIN_LEVEL_SUFFIX;
+function buildSystemPrompt(level: 'min' | 'balanced' | 'max'): string {
+  if (level === 'max') return COMPRESSION_PROMPT + MAX_LEVEL_SUFFIX;
+  if (level === 'min') return COMPRESSION_PROMPT + MIN_LEVEL_SUFFIX;
   return COMPRESSION_PROMPT;
 }
 
@@ -115,11 +116,11 @@ async function compressOnce(
   const result = await inference.complete({
     model,
     systemPrompt:
-      "You are an expert at codragraph compression. Always compress the provided text, never ask for clarification.",
+      'You are an expert at codragraph compression. Always compress the provided text, never ask for clarification.',
     messages: [
       {
-        role: "user",
-        content: systemPrompt.replace("{text}", text),
+        role: 'user',
+        content: systemPrompt.replace('{text}', text),
       },
     ],
     temperature: 0.3,
@@ -143,10 +144,10 @@ async function computeSimilarity(
 ): Promise<number> {
   const result = await inference.complete({
     systemPrompt:
-      "Rate semantic similarity of two passages. Reply ONLY with a number from 0 to 1 (1 = identical meaning). No other text.",
+      'Rate semantic similarity of two passages. Reply ONLY with a number from 0 to 1 (1 = identical meaning). No other text.',
     messages: [
       {
-        role: "user",
+        role: 'user',
         content: `Original:\n${original}\n\nCompressed:\n${compressed}\n\nSimilarity (0..1):`,
       },
     ],

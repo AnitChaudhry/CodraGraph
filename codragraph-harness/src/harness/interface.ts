@@ -4,8 +4,8 @@ import type {
   ResolvedBudget,
   TaskInput,
   TraceWriter,
-} from "../types.js";
-import type { InferenceProvider } from "../inference/interface.js";
+} from '../types.js';
+import type { InferenceProvider } from '../inference/interface.js';
 
 /**
  * Harness — the unit of optimization.
@@ -31,8 +31,8 @@ export interface Harness {
 }
 
 export type HarnessOrigin =
-  | { kind: "seed" }
-  | { kind: "proposer"; proposer: string; iteration: number; parents?: string[] };
+  | { kind: 'seed' }
+  | { kind: 'proposer'; proposer: string; iteration: number; parents?: string[] };
 
 /**
  * Resources passed to every harness invocation. Harnesses must not import

@@ -577,7 +577,11 @@ Returns the Pareto frontier plus per-role attribution stats (which role contribu
           default: 'claude',
           enum: ['claude', 'openai', 'opencode'],
         },
-        seeds: { type: 'string', description: 'Comma-separated seed names or "all".', default: 'all' },
+        seeds: {
+          type: 'string',
+          description: 'Comma-separated seed names or "all".',
+          default: 'all',
+        },
         output: { type: 'string', description: 'Run directory.' },
         repo: { type: 'string', description: 'Indexed repo for graph queries.' },
         // ── Phase 4 × Phase 3 moat ──────────────────────────────────
@@ -649,7 +653,11 @@ WHEN TO USE: before kicking off a swarm. If exact matches exist, you can skip th
           type: 'string',
           description: 'Recipe store root. Defaults to <cwd>/.codragraph/recipes.',
         },
-        limit: { type: 'number', description: 'Max entries per match kind (default 10).', default: 10 },
+        limit: {
+          type: 'number',
+          description: 'Max entries per match kind (default 10).',
+          default: 10,
+        },
       },
       required: ['task_family', 'snapshot_id'],
     },
@@ -670,7 +678,8 @@ NOTE (Phase 1): handler is registered out-of-process by codragraph-harness; the 
       properties: {
         task: {
           type: 'string',
-          description: 'Path to a task-set JSON file (see codragraph-harness/test/fixtures/qa-test-set.json for the format).',
+          description:
+            'Path to a task-set JSON file (see codragraph-harness/test/fixtures/qa-test-set.json for the format).',
         },
         iterations: {
           type: 'number',
@@ -799,7 +808,11 @@ In conflict mode, no snapshot is written and the target branch is unchanged. The
         source: { type: 'string', description: 'Branch / commit id to merge in.' },
         into: { type: 'string', description: 'Target branch (defaults to current HEAD).' },
         message: { type: 'string', description: 'Override the default merge commit message.' },
-        dryRun: { type: 'boolean', description: 'Compute the merge without advancing the ref.', default: false },
+        dryRun: {
+          type: 'boolean',
+          description: 'Compute the merge without advancing the ref.',
+          default: false,
+        },
       },
       required: ['source'],
     },
@@ -815,7 +828,11 @@ Not safe to run concurrently with \`codragraph analyze\` on the same repo — de
       type: 'object',
       properties: {
         repo: { type: 'string', description: 'Indexed repo (omit if only one).' },
-        dryRun: { type: 'boolean', description: 'Compute what would be swept without deleting.', default: false },
+        dryRun: {
+          type: 'boolean',
+          description: 'Compute what would be swept without deleting.',
+          default: false,
+        },
       },
       required: [],
     },
@@ -834,9 +851,14 @@ Pair with codragraph_context first to get the symbol's stable id (e.g. \`fn:src/
         symbolId: { type: 'string', description: 'Stable symbol id (PK in the lbug node table).' },
         table: {
           type: 'string',
-          description: 'Optional table hint to narrow the search (Function, Class, Method, Interface, …).',
+          description:
+            'Optional table hint to narrow the search (Function, Class, Method, Interface, …).',
         },
-        limit: { type: 'number', description: 'Max transition entries (default: 20).', default: 20 },
+        limit: {
+          type: 'number',
+          description: 'Max transition entries (default: 20).',
+          default: 20,
+        },
       },
       required: ['symbolId'],
     },

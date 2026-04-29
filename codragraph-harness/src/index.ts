@@ -11,4 +11,4 @@
 //   - moat:      ./moat/*  (Phase 4 × Phase 3 — versioned recipe memory)
 //   - cli:       ./cli/main (binary entry — not re-exported here)
 
-export * from "./moat/index.js";
+export * from './moat/index.js';

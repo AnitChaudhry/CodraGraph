@@ -717,7 +717,8 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
         return;
       }
       const { handleGraphstoreLog } = await import('../mcp/local/graphstore-handler.js');
-      const limitParam = typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit, 10) : undefined;
+      const limitParam =
+        typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit, 10) : undefined;
       const result = await handleGraphstoreLog({
         storagePath: entry.storagePath,
         from: typeof req.query.from === 'string' ? (req.query.from as string) : undefined,
@@ -754,7 +755,9 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
       const from = typeof req.query.from === 'string' ? req.query.from : '';
       const to = typeof req.query.to === 'string' ? req.query.to : '';
       if (!from || !to) {
-        res.status(400).json({ error: 'graphstore diff requires both `from` and `to` query params' });
+        res
+          .status(400)
+          .json({ error: 'graphstore diff requires both `from` and `to` query params' });
         return;
       }
       const { handleGraphstoreDiff } = await import('../mcp/local/graphstore-handler.js');
@@ -783,9 +786,7 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
         });
         return;
       }
-      const { handleGraphstoreSemanticDiff } = await import(
-        '../mcp/local/graphstore-handler.js'
-      );
+      const { handleGraphstoreSemanticDiff } = await import('../mcp/local/graphstore-handler.js');
       const result = await handleGraphstoreSemanticDiff({
         storagePath: entry.storagePath,
         from,
@@ -828,7 +829,8 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
         res.status(404).json({ error: 'Repository not found' });
         return;
       }
-      const limitParam = typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit, 10) : undefined;
+      const limitParam =
+        typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit, 10) : undefined;
       const handler = await importRecipeHandler('handleHarnessRecipesList');
       const result = await handler({
         recipe_store: path.join(entry.storagePath, 'recipes'),
@@ -862,7 +864,8 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
         recipe_store: path.join(entry.storagePath, 'recipes'),
         task_family: taskFamily,
         snapshot_id: snapshotId,
-        limit: typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit, 10) : undefined,
+        limit:
+          typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit, 10) : undefined,
       });
       res.json(result);
     } catch (err: any) {

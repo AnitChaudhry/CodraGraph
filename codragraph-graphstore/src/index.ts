@@ -24,7 +24,7 @@ export {
   DEFAULT_BRANCH,
   type GraphDiff,
   type ModifiedSymbol,
-} from "./types.js";
+} from './types.js';
 
 // CAS
 export {
@@ -33,8 +33,8 @@ export {
   putJson,
   getJson,
   canonicalJsonStringify,
-} from "./cas/interface.js";
-export { FsCAS, type FsCASOptions } from "./cas/fs-cas.js";
+} from './cas/interface.js';
+export { FsCAS, type FsCASOptions } from './cas/fs-cas.js';
 
 // Snapshot
 export {
@@ -42,18 +42,18 @@ export {
   type RowSink,
   type GraphRow,
   synthesizeEdgeId,
-} from "./snapshot/row-source.js";
+} from './snapshot/row-source.js';
 export {
   serializeSnapshot,
   type SerializeSnapshotOptions,
   type SerializeSnapshotResult,
   type SnapshotStats,
-} from "./snapshot/serializer.js";
+} from './snapshot/serializer.js';
 export {
   materializeSnapshot,
   type MaterializeSnapshotOptions,
   type MaterializeSnapshotResult,
-} from "./snapshot/materializer.js";
+} from './snapshot/materializer.js';
 
 // History
 export {
@@ -61,7 +61,7 @@ export {
   readCommit,
   type CreateCommitOptions,
   type CreateCommitResult,
-} from "./history/commit.js";
+} from './history/commit.js';
 export {
   createBranch,
   deleteBranch,
@@ -74,19 +74,16 @@ export {
   resolveHeadCommit,
   type HeadState,
   type BranchRefsOptions,
-} from "./history/branch.js";
+} from './history/branch.js';
 export {
   walkCommits,
   findLowestCommonAncestor,
   type WalkCommitsOptions,
   type CommitLogEntry,
-} from "./history/log.js";
+} from './history/log.js';
 
 // Diff
-export {
-  diffSnapshots,
-  type DiffSnapshotsOptions,
-} from "./diff/structural.js";
+export { diffSnapshots, type DiffSnapshotsOptions } from './diff/structural.js';
 export {
   diffSemantic,
   type SemanticDiff,
@@ -94,7 +91,7 @@ export {
   type ClassifiedModification,
   type SemanticChangeKind,
   type SignatureChange,
-} from "./diff/semantic.js";
+} from './diff/semantic.js';
 
 // Merge
 export {
@@ -104,7 +101,7 @@ export {
   type MergeConflict,
   type MergeStats,
   type ConflictReason,
-} from "./merge/three-way.js";
+} from './merge/three-way.js';
 
 // GC
 export {
@@ -113,4 +110,4 @@ export {
   type GcOptions,
   type GcResult,
   type CollectReachableOptions,
-} from "./gc/sweep.js";
+} from './gc/sweep.js';

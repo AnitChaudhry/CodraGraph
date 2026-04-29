@@ -8,7 +8,7 @@
  * recorded for this run" rather than breaking unrelated paths.
  */
 
-import path from "node:path";
+import path from 'node:path';
 import {
   FsCAS,
   serializeSnapshot,
@@ -20,11 +20,11 @@ import {
   type ObjectId,
   type Snapshot,
   type SnapshotStats,
-} from "codragraph-graphstore";
-import { createLbugRowSource } from "./lbug-row-source.js";
+} from 'codragraph-graphstore';
+import { createLbugRowSource } from './lbug-row-source.js';
 
 /** Subdirectory of `<repo>/.codragraph` that holds versioning artifacts. */
-export const GRAPHSTORE_SUBDIR = "graphstore";
+export const GRAPHSTORE_SUBDIR = 'graphstore';
 
 export interface RecordAnalysisSnapshotOptions {
   /** Absolute path of the repo's `.codragraph/` storage directory. */
@@ -72,7 +72,7 @@ export const recordAnalysisSnapshot = async (
       indexedRepoCommit: opts.indexedRepoCommit,
     });
   } catch (err) {
-    opts.onSkipTable?.("<serialize>", err);
+    opts.onSkipTable?.('<serialize>', err);
     return null;
   }
 
@@ -89,11 +89,10 @@ export const recordAnalysisSnapshot = async (
     snapshot: serialized.snapshotId,
     parents,
     author: opts.author ?? {
-      name: "codragraph",
-      email: "noreply@codragraph.local",
+      name: 'codragraph',
+      email: 'noreply@codragraph.local',
     },
-    message:
-      opts.message ?? `analyze ${new Date().toISOString()}`,
+    message: opts.message ?? `analyze ${new Date().toISOString()}`,
   });
 
   await setHead({ root, branch, commit: commit.commitId });
@@ -117,8 +116,8 @@ const resolveCurrentBranch = async (opts: { root: string }): Promise<string> => 
   // branch; the CLI/MCP layer will introduce explicit `branch` /
   // `checkout` commands later. If HEAD is unborn (first analyze ever)
   // we default to DEFAULT_BRANCH.
-  const { readHead } = await import("codragraph-graphstore");
+  const { readHead } = await import('codragraph-graphstore');
   const head = await readHead(opts);
-  if (head.kind === "branch") return head.branch;
+  if (head.kind === 'branch') return head.branch;
   return DEFAULT_BRANCH;
 };

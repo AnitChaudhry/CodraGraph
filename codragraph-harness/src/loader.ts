@@ -14,11 +14,11 @@
 // `import type { Harness } from "codragraph-harness/harness"` without
 // pulling the whole library into the bundle.
 
-import { build, type Plugin } from "esbuild";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-import type { Harness } from "./harness/interface.js";
+import { build, type Plugin } from 'esbuild';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import type { Harness } from './harness/interface.js';
 
 export interface LoaderOptions {
   /** Cache-bust each load — useful in long-lived dev sessions. Default true. */
@@ -28,12 +28,12 @@ export interface LoaderOptions {
 }
 
 const DEFAULT_EXTERNAL = [
-  "codragraph",
-  "codragraph-shared",
-  "codragraph-harness",
-  "@anthropic-ai/sdk",
-  "openai",
-  "@modelcontextprotocol/sdk",
+  'codragraph',
+  'codragraph-shared',
+  'codragraph-harness',
+  '@anthropic-ai/sdk',
+  'openai',
+  '@modelcontextprotocol/sdk',
 ];
 
 /**
@@ -47,9 +47,9 @@ export async function compileAndLoadCandidate(
   candidateDir: string,
   options: LoaderOptions = {},
 ): Promise<Harness> {
-  const sourceTs = path.join(candidateDir, "source", "index.ts");
-  const compiledDir = path.join(candidateDir, "source", "_compiled");
-  const compiledJs = path.join(compiledDir, "index.js");
+  const sourceTs = path.join(candidateDir, 'source', 'index.ts');
+  const compiledDir = path.join(candidateDir, 'source', '_compiled');
+  const compiledJs = path.join(compiledDir, 'index.js');
 
   if (!(await isUpToDate(sourceTs, compiledJs))) {
     await fs.mkdir(compiledDir, { recursive: true });
@@ -57,21 +57,21 @@ export async function compileAndLoadCandidate(
       entryPoints: [sourceTs],
       outfile: compiledJs,
       bundle: true,
-      platform: "node",
-      format: "esm",
-      target: options.target ?? "node20",
+      platform: 'node',
+      format: 'esm',
+      target: options.target ?? 'node20',
       external: DEFAULT_EXTERNAL,
-      sourcemap: "inline",
-      logLevel: "silent",
+      sourcemap: 'inline',
+      logLevel: 'silent',
       plugins: [externalizeBareImports()],
     });
   }
 
-  const cacheBuster = options.cacheBust === false ? "" : `?t=${Date.now()}`;
+  const cacheBuster = options.cacheBust === false ? '' : `?t=${Date.now()}`;
   const url = pathToFileURL(compiledJs).href + cacheBuster;
   const mod = (await import(url)) as Record<string, unknown>;
   const harness = (mod.default ?? mod.harness) as Harness | undefined;
-  if (!harness || typeof harness.run !== "function") {
+  if (!harness || typeof harness.run !== 'function') {
     throw new Error(`Candidate at ${sourceTs} does not default-export a Harness`);
   }
   return harness;
@@ -94,11 +94,11 @@ async function isUpToDate(src: string, dst: string): Promise<boolean> {
  */
 function externalizeBareImports(): Plugin {
   return {
-    name: "externalize-bare-imports",
+    name: 'externalize-bare-imports',
     setup(b) {
       b.onResolve({ filter: /^[^./]/ }, (args) => {
         // Don't externalize built-in node modules — esbuild handles those.
-        if (args.path.startsWith("node:")) return { path: args.path, external: true };
+        if (args.path.startsWith('node:')) return { path: args.path, external: true };
         return { path: args.path, external: true };
       });
     },

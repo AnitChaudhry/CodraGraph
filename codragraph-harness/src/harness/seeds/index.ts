@@ -4,15 +4,15 @@
 // `Harness`, then add it here. The proposer reads these to understand the
 // baseline behavior before mutating.
 
-export { zeroShot } from "./zero-shot.js";
-export { fewShot } from "./few-shot.js";
-export { graphAware } from "./graph-aware.js";
+export { zeroShot } from './zero-shot.js';
+export { fewShot } from './few-shot.js';
+export { graphAware } from './graph-aware.js';
 
-import { zeroShot } from "./zero-shot.js";
-import { fewShot } from "./few-shot.js";
-import { graphAware } from "./graph-aware.js";
+import { zeroShot } from './zero-shot.js';
+import { fewShot } from './few-shot.js';
+import { graphAware } from './graph-aware.js';
 
-import type { Harness } from "../interface.js";
+import type { Harness } from '../interface.js';
 
 /** All seeds, in canonical order. */
 export const ALL_SEEDS: Harness[] = [zeroShot, fewShot, graphAware];

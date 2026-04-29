@@ -11,15 +11,15 @@
 //
 // Phase 1's search() stays unchanged — single-proposer use cases still work.
 
-import type { Harness } from "../harness/interface.js";
-import type { TokenBudget, TaskInput, GraphClient } from "../types.js";
-import { resolveBudget } from "../types.js";
-import type { InferenceProvider } from "../inference/interface.js";
-import type { Evaluator } from "../evaluator/runner.js";
-import type { Scores } from "../evaluator/score.js";
-import { CandidateStore } from "../filesystem.js";
-import { ParetoFrontier, type ParetoPoint } from "../pareto.js";
-import { firstFiring } from "./termination.js";
+import type { Harness } from '../harness/interface.js';
+import type { TokenBudget, TaskInput, GraphClient } from '../types.js';
+import { resolveBudget } from '../types.js';
+import type { InferenceProvider } from '../inference/interface.js';
+import type { Evaluator } from '../evaluator/runner.js';
+import type { Scores } from '../evaluator/score.js';
+import { CandidateStore } from '../filesystem.js';
+import { ParetoFrontier, type ParetoPoint } from '../pareto.js';
+import { firstFiring } from './termination.js';
 import type {
   ProposingRole,
   CriticRole,
@@ -28,8 +28,8 @@ import type {
   SwarmSearchResult,
   SwarmState,
   TerminationPredicate,
-} from "./interface.js";
-import { DefaultSwarmCoordinator } from "./coordinator.js";
+} from './interface.js';
+import { DefaultSwarmCoordinator } from './coordinator.js';
 
 export interface SwarmSearchOptions {
   /** Search-set 𝒳. */
@@ -74,24 +74,30 @@ export interface SwarmSearchOptions {
 }
 
 export type SwarmProgressEvent =
-  | { type: "init"; seedCount: number; predicates: string[] }
-  | { type: "seed-evaluated"; id: string; scores: Scores }
+  | { type: 'init'; seedCount: number; predicates: string[] }
+  | { type: 'seed-evaluated'; id: string; scores: Scores }
   | {
-      type: "iteration-start";
+      type: 'iteration-start';
       iteration: number;
       populationSize: number;
       frontierSize: number;
     }
   | {
-      type: "swarm-step-complete";
+      type: 'swarm-step-complete';
       iteration: number;
       proposed: number;
       criticAccepted: number;
       criticRejected: number;
     }
-  | { type: "candidate-rejected"; iteration: number; name: string; reason: string; stage: "critic" | "load" }
   | {
-      type: "candidate-evaluated";
+      type: 'candidate-rejected';
+      iteration: number;
+      name: string;
+      reason: string;
+      stage: 'critic' | 'load';
+    }
+  | {
+      type: 'candidate-evaluated';
       id: string;
       iteration: number;
       role: string;
@@ -99,7 +105,7 @@ export type SwarmProgressEvent =
       addedToFrontier: boolean;
     }
   | {
-      type: "complete";
+      type: 'complete';
       frontier: ParetoPoint[];
       terminatedAt: { iteration: number; reason: string };
       perRole: Record<string, RoleStats>;
@@ -113,7 +119,7 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
 
   await options.store.init();
   onProgress({
-    type: "init",
+    type: 'init',
     seedCount: options.seeds.length,
     predicates: options.termination.map((p) => p.name),
   });
@@ -121,7 +127,7 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
   // Trackers.
   const startedAtMs = Date.now();
   const frontier = new ParetoFrontier();
-  const scoredCandidates: SwarmSearchResult["scoredCandidates"] = [];
+  const scoredCandidates: SwarmSearchResult['scoredCandidates'] = [];
   const perRole: Record<string, RoleStats> = {
     seed: { proposed: 0, acceptedByCritic: 0, frontierHits: 0, meanTokens: 0 },
     explorer: { proposed: 0, acceptedByCritic: 0, frontierHits: 0, meanTokens: 0 },
@@ -141,13 +147,13 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
       origin: seed.origin,
       files: [
         {
-          path: "SEED.md",
+          path: 'SEED.md',
           content: `# Seed harness\n\nName: ${seed.name}\nVersion: ${seed.version}\n`,
         },
       ],
     });
     const scores = await runEvaluate(options, seed, id);
-    scoredCandidates.push({ id, role: "seed", scores });
+    scoredCandidates.push({ id, role: 'seed', scores });
     totalTokens += scores.tokens * scores.taskCount;
     totalEvaluated++;
     perRole.seed!.proposed++;
@@ -163,16 +169,16 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
       perRole.seed!.frontierHits++;
       iterationsSinceFrontierChange = 0;
     }
-    onProgress({ type: "seed-evaluated", id, scores });
+    onProgress({ type: 'seed-evaluated', id, scores });
   }
 
   // Step 2: outer swarm loop.
   let iteration = 0;
-  let terminationReason = "<no-termination>";
+  let terminationReason = '<no-termination>';
   while (true) {
     iteration++;
     onProgress({
-      type: "iteration-start",
+      type: 'iteration-start',
       iteration,
       populationSize: (await options.store.listCandidates()).length,
       frontierSize: frontier.size(),
@@ -188,9 +194,7 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
     }
     scored.sort((a, b) => b.scores.accuracy - a.scores.accuracy);
     const topFrontierIds = scored.slice(0, 5).map((s) => s.id);
-    const bottomQuartileIds = scored
-      .slice(Math.floor(scored.length * 0.75))
-      .map((s) => s.id);
+    const bottomQuartileIds = scored.slice(Math.floor(scored.length * 0.75)).map((s) => s.id);
 
     // One swarm step (Explorer || Exploiter, then Critic gate).
     const stepResult = await coordinator.step({
@@ -202,7 +206,7 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
     });
 
     onProgress({
-      type: "swarm-step-complete",
+      type: 'swarm-step-complete',
       iteration,
       proposed: stepResult.accepted.length + stepResult.criticRejected.length,
       criticAccepted: stepResult.accepted.length,
@@ -221,11 +225,11 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
     // Handle critic rejections.
     for (const cr of stepResult.criticRejected) {
       onProgress({
-        type: "candidate-rejected",
+        type: 'candidate-rejected',
         iteration,
         name: cr.source.name,
         reason: cr.reason,
-        stage: "critic",
+        stage: 'critic',
       });
     }
     totalCriticRejected += stepResult.criticRejected.length;
@@ -235,9 +239,9 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
     for (const a of stepResult.accepted) {
       const id = await options.store.addCandidate({
         name: a.source.name,
-        version: "0.1.0",
+        version: '0.1.0',
         origin: {
-          kind: "proposer",
+          kind: 'proposer',
           proposer: a.proposingRole,
           iteration,
           parents: a.source.parents,
@@ -253,11 +257,11 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
       } catch (err: unknown) {
         const reason = err instanceof Error ? err.message : String(err);
         onProgress({
-          type: "candidate-rejected",
+          type: 'candidate-rejected',
           iteration,
           name: a.source.name,
           reason,
-          stage: "load",
+          stage: 'load',
         });
         totalLoadRejected++;
         continue;
@@ -281,7 +285,7 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
         frontierChangedThisIter = true;
       }
       onProgress({
-        type: "candidate-evaluated",
+        type: 'candidate-evaluated',
         id,
         iteration,
         role: a.proposingRole,
@@ -289,9 +293,7 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
         addedToFrontier: r.added,
       });
     }
-    iterationsSinceFrontierChange = frontierChangedThisIter
-      ? 0
-      : iterationsSinceFrontierChange + 1;
+    iterationsSinceFrontierChange = frontierChangedThisIter ? 0 : iterationsSinceFrontierChange + 1;
 
     // Check termination predicates AFTER the iteration completes.
     const state: SwarmState = {
@@ -314,14 +316,13 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
   for (const [name, role] of Object.entries(perRole)) {
     const matching = scoredCandidates.filter((sc) => sc.role === name);
     if (matching.length > 0) {
-      role.meanTokens =
-        matching.reduce((sum, m) => sum + m.scores.tokens, 0) / matching.length;
+      role.meanTokens = matching.reduce((sum, m) => sum + m.scores.tokens, 0) / matching.length;
     }
   }
 
   const sortedFrontier = frontier.getAll().sort((a, b) => b.accuracy - a.accuracy);
   onProgress({
-    type: "complete",
+    type: 'complete',
     frontier: sortedFrontier,
     terminatedAt: { iteration, reason: terminationReason },
     perRole,
@@ -341,7 +342,7 @@ export async function swarmSearch(options: SwarmSearchOptions): Promise<SwarmSea
 function buildDefaultCoordinator(options: SwarmSearchOptions): SwarmCoordinator {
   if (!options.explorer || !options.exploiter || !options.critic) {
     throw new Error(
-      "swarmSearch: must provide explorer + exploiter + critic, or a custom coordinator",
+      'swarmSearch: must provide explorer + exploiter + critic, or a custom coordinator',
     );
   }
   return new DefaultSwarmCoordinator({

@@ -157,9 +157,7 @@ export const CommandPalette = ({
                   }}
                 >
                   <GitCommit className="text-accent" />
-                  <span className="font-mono text-xs text-text-secondary">
-                    {c.short}
-                  </span>
+                  <span className="font-mono text-xs text-text-secondary">{c.short}</span>
                   <span className="truncate">{c.message}</span>
                 </CommandItem>
               ))}
@@ -182,9 +180,7 @@ export const CommandPalette = ({
                 >
                   <Sparkles className="text-accent" />
                   <span>{r.harnessName}</span>
-                  <span className="ml-auto text-[10px] text-text-muted">
-                    {r.taskFamily}
-                  </span>
+                  <span className="ml-auto text-[10px] text-text-muted">{r.taskFamily}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

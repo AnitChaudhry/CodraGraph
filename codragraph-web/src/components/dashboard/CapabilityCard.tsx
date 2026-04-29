@@ -35,10 +35,7 @@ const STATUS_LABEL: Record<CapabilityCardProps['status'], string> = {
   idle: 'not yet wired',
 };
 
-const STATUS_VARIANT: Record<
-  CapabilityCardProps['status'],
-  'success' | 'default' | 'secondary'
-> = {
+const STATUS_VARIANT: Record<CapabilityCardProps['status'], 'success' | 'default' | 'secondary'> = {
   active: 'success',
   ready: 'default',
   idle: 'secondary',
@@ -67,13 +64,11 @@ export const CapabilityCard = ({
     <CardContent className="flex-1">
       <Badge variant={STATUS_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
       {metric !== undefined && (
-        <div className="mt-3 font-mono text-2xl font-semibold tabular-nums text-text-primary">
+        <div className="mt-3 font-mono text-2xl font-semibold text-text-primary tabular-nums">
           {metric}
         </div>
       )}
-      {detail !== undefined && (
-        <p className="mt-1 text-xs text-text-secondary">{detail}</p>
-      )}
+      {detail !== undefined && <p className="mt-1 text-xs text-text-secondary">{detail}</p>}
     </CardContent>
     {cta && (
       <div className="border-t border-border-subtle p-3">
