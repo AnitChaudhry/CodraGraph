@@ -97,9 +97,11 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Build publishable packages
+        # Same dep-order rationale as the typecheck job:
+        # shared → graphstore → codragraph → harness → compress → sdk → org
         run: |
           set -e
-          for pkg in codragraph-shared codragraph-graphstore codragraph-harness codragraph-compress codragraph-sdk codragraph; do
+          for pkg in codragraph-shared codragraph-graphstore codragraph codragraph-harness codragraph-compress codragraph-sdk codragraph-org; do
             echo "::group::build $pkg"
             npm run build --workspace "$pkg"
             echo "::endgroup::"
@@ -107,7 +109,7 @@ jobs:
       - name: Pack (dry run — exercises publishConfig + files allow-list)
         run: |
           set -e
-          for pkg in codragraph-graphstore codragraph-harness codragraph-compress codragraph-sdk codragraph; do
+          for pkg in codragraph-shared codragraph-graphstore codragraph codragraph-harness codragraph-compress codragraph-sdk codragraph-org; do
             echo "::group::npm pack --dry-run $pkg"
             npm pack --workspace "$pkg" --dry-run
             echo "::endgroup::"
