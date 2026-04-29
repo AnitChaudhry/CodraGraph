@@ -68,9 +68,9 @@
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.5",
     "typescript": "^5.4.5",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.5"
   },
   "engines": {
     "node": ">=20.0.0"
