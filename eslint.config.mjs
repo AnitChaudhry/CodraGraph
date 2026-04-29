@@ -11,9 +11,12 @@ export default [
       '**/dist/**',
       '**/node_modules/**',
       '**/coverage/**',
-      '@codragraph/cli/vendor/**',
+      // On-disk DIRECTORY paths — workspace dirs stay as `codragraph/`,
+      // `codragraph-web/`, etc. on disk even though packages publish
+      // under `@codragraph/<short>` npm names.
+      'codragraph/vendor/**',
       'codragraph-web/src/vendor/**',
-      '@codragraph/cli/test/fixtures/**',
+      'codragraph/test/fixtures/**',
       'codragraph-web/playwright-report/**',
       'codragraph-web/test-results/**',
       '**/*.d.ts',
@@ -60,7 +63,7 @@ export default [
 
   // CLI package — allow console.log (it's a CLI tool)
   {
-    files: ['@codragraph/cli/src/cli/**/*.ts', '@codragraph/cli/src/server/**/*.ts'],
+    files: ['codragraph/src/cli/**/*.ts', 'codragraph/src/server/**/*.ts'],
     rules: {
       'no-console': 'off',
     },
