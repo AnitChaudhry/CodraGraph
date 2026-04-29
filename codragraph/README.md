@@ -18,12 +18,12 @@ AI coding tools don't understand your codebase structure. They edit a function w
 
 ```bash
 # Index your repo (run from repo root)
-npx codragraph analyze
+npx @codragraph/cli analyze
 ```
 
 That's it. This indexes the codebase, installs agent skills, registers Claude Code hooks, and creates `AGENTS.md` / `CLAUDE.md` context files — all in one command.
 
-To configure MCP for your editor, run `npx codragraph setup` once — or set it up manually below.
+To configure MCP for your editor, run `npx @codragraph/cli setup` once — or set it up manually below.
 
 `codragraph setup` auto-detects your editors and writes the correct global MCP config. You only need to run it once.
 
@@ -53,16 +53,16 @@ If you prefer to configure manually instead of using `codragraph setup`:
 
 ```bash
 # macOS / Linux
-claude mcp add codragraph -- npx -y codragraph@latest mcp
+claude mcp add codragraph -- npx -y @codragraph/cli@latest mcp
 
 # Windows
-claude mcp add codragraph -- cmd /c npx -y codragraph@latest mcp
+claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@latest mcp
 ```
 
 ### Codex (full support — MCP + skills)
 
 ```bash
-codex mcp add codragraph -- npx -y codragraph@latest mcp
+codex mcp add codragraph -- npx -y @codragraph/cli@latest mcp
 ```
 
 ### Cursor / Windsurf
@@ -74,7 +74,7 @@ Add to `~/.cursor/mcp.json` (global — works for all projects):
   "mcpServers": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "codragraph@latest", "mcp"]
+      "args": ["-y", "@codragraph/cli@latest", "mcp"]
     }
   }
 }
@@ -89,7 +89,7 @@ Add to `~/.config/opencode/config.json`:
   "mcp": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "codragraph@latest", "mcp"]
+      "args": ["-y", "@codragraph/cli@latest", "mcp"]
     }
   }
 }
@@ -244,9 +244,9 @@ merges are skipped.)
 
 ```bash
 # Try the latest release candidate (pre-stable — may change at any time)
-npm install -g codragraph@rc
+npm install -g @codragraph/cli@rc
 # — or —
-npx codragraph@rc analyze
+npx @codragraph/cli@rc analyze
 ```
 
 Release-candidate versions follow the standard semver prerelease format
@@ -265,9 +265,9 @@ certain npm/arborist versions ([npm/cli#8126](https://github.com/npm/cli/issues/
 It is fixed in **codragraph v1.6.2+**. Upgrade to the latest version:
 
 ```bash
-npx codragraph@latest analyze          # always uses the newest release
+npx @codragraph/cli@latest analyze          # always uses the newest release
 # — or —
-npm install -g codragraph@latest       # upgrade a global install
+npm install -g @codragraph/cli@latest       # upgrade a global install
 ```
 
 If you still hit npm install issues after upgrading, these generic workarounds
@@ -282,7 +282,7 @@ npm cache clean --force              # clear a possibly corrupt cache
 
 Some optional language grammars (Dart, Kotlin, Swift) require native compilation. If they fail, CodraGraph still works — those languages will be skipped.
 
-If `npm install -g codragraph` fails on native modules:
+If `npm install -g @codragraph/cli` fails on native modules:
 
 ```bash
 # Ensure build tools are available (Linux/macOS)
@@ -290,7 +290,7 @@ If `npm install -g codragraph` fails on native modules:
 # macOS: xcode-select --install
 
 # Retry installation
-npm install -g codragraph
+npm install -g @codragraph/cli
 ```
 
 ### Analysis runs out of memory
@@ -299,7 +299,7 @@ For very large repositories:
 
 ```bash
 # Increase Node.js heap size
-NODE_OPTIONS="--max-old-space-size=16384" npx codragraph analyze
+NODE_OPTIONS="--max-old-space-size=16384" npx @codragraph/cli analyze
 
 # Exclude large directories
 echo "vendor/" >> .codragraphignore
@@ -312,11 +312,11 @@ By default the walker skips files larger than **512 KB** (see log line `Skipped 
 
 ```bash
 # CLI flag (takes precedence over the env var)
-npx codragraph analyze --max-file-size 2048     # skip only files > 2 MB
+npx @codragraph/cli analyze --max-file-size 2048     # skip only files > 2 MB
 
 # Environment variable (persists across commands)
 export CODRAGRAPH_MAX_FILE_SIZE=2048
-npx codragraph analyze
+npx @codragraph/cli analyze
 ```
 
 Values above **32768 KB (32 MB)** are clamped to the tree-sitter parser ceiling; invalid values fall back to the 512 KB default with a one-time warning. When an override is active, `analyze` prints the effective threshold in its startup banner (e.g. `CODRAGRAPH_MAX_FILE_SIZE: effective threshold 2048KB (default 512KB)`).

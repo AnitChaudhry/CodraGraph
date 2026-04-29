@@ -25,7 +25,6 @@ export const RightPanel = () => {
     // LLM / chat state
     chatMessages,
     isChatLoading,
-    currentToolCalls,
     agentError,
     isAgentReady,
     isAgentInitializing,

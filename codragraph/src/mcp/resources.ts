@@ -388,7 +388,7 @@ async function getContextResource(backend: LocalBackend, repoName?: string): Pro
   lines.push('  - cypher: Raw graph queries');
   lines.push('  - list_repos: Discover all indexed repositories');
   lines.push('');
-  lines.push('re_index: Run `npx codragraph analyze` in terminal if data is stale');
+  lines.push('re_index: Run `npx @codragraph/cli analyze` in terminal if data is stale');
   lines.push('');
   lines.push('resources_available:');
   lines.push('  - codragraph://repos: All indexed repositories');
@@ -629,7 +629,7 @@ async function getSetupResource(backend: LocalBackend): Promise<string> {
   const repos = await backend.listRepos();
 
   if (repos.length === 0) {
-    return '# CodraGraph\n\nNo repositories indexed. Run: `npx codragraph analyze` in a repository.';
+    return '# CodraGraph\n\nNo repositories indexed. Run: `npx @codragraph/cli analyze` in a repository.';
   }
 
   const sections: string[] = [];

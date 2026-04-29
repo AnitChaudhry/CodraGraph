@@ -2,7 +2,7 @@
   "mcpServers": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "codragraph@latest", "mcp"]
+      "args": ["-y", "@codragraph/cli@latest", "mcp"]
     }
   }
 }

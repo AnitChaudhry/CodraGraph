@@ -63,7 +63,7 @@ Commands and gotchas live under **Repo reference** below and in **[CONTRIBUTING.
 
 Indexed as **CodraGraph** (4325 symbols, 10556 relationships, 300 execution flows). Use MCP tools to understand code, assess impact, and navigate safely.
 
-> If any tool warns the index is stale, run `npx codragraph analyze` first.
+> If any tool warns the index is stale, run `npx @codragraph/cli analyze` first.
 
 ## Always Do
 
@@ -148,8 +148,8 @@ Indexed as **CodraGraph** (4325 symbols, 10556 relationships, 300 execution flow
 ## Keeping the Index Fresh
 
 ```bash
-npx codragraph analyze              # basic refresh
-npx codragraph analyze --embeddings # preserve embeddings
+npx @codragraph/cli analyze              # basic refresh
+npx @codragraph/cli analyze --embeddings # preserve embeddings
 ```
 
 Check `.codragraph/meta.json` `stats.embeddings` (0 = none). Running without `--embeddings` deletes existing vectors.
@@ -187,7 +187,7 @@ Check `.codragraph/meta.json` `stats.embeddings` (0 = none). Running without `--
 ```bash
 cd codragraph && npm run dev                 # CLI: tsx watch mode
 cd codragraph-web && npm run dev             # Web UI: Vite on port 5173
-npx codragraph serve                         # HTTP API on port 4747 (from any indexed repo)
+npx @codragraph/cli serve                         # HTTP API on port 4747 (from any indexed repo)
 ```
 
 ### Testing

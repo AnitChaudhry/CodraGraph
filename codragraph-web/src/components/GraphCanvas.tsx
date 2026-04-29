@@ -36,7 +36,6 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle>((_, ref) => {
     openCodePanel,
     depthFilter,
     highlightedNodeIds,
-    setHighlightedNodeIds,
     aiCitationHighlightedNodeIds,
     aiToolHighlightedNodeIds,
     blastRadiusNodeIds,
@@ -117,6 +116,10 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle>((_, ref) => {
       setSigmaSelectedNode(null);
     }
     toggleAIHighlights();
+    // setSigmaSelectedNode is destructured from useSigma below — listing it
+    // in deps would create a TDZ reference. It's a stable setter from a custom
+    // hook, so omitting it is safe.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isAIHighlightsEnabled,
     clearAIToolHighlights,

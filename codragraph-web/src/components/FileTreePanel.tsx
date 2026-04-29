@@ -235,13 +235,16 @@ export const FileTreePanel = ({ onFocusNode }: FileTreePanelProps) => {
     return buildFileTree(graph.nodes);
   }, [graph]);
 
-  // Auto-expand first level on initial load
+  // Auto-expand first level on initial load — fires ONLY when the tree first
+  // appears, not whenever the user expands/collapses (mutates expandedPaths)
+  // or when the tree refs change.
   useEffect(() => {
     if (fileTree.length > 0 && expandedPaths.size === 0) {
       const firstLevel = new Set(fileTree.map((n) => n.path));
       setExpandedPaths(firstLevel);
     }
-  }, [fileTree.length]); // Only run when tree first loads
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fileTree.length]);
 
   // Auto-expand to selected file when selectedNode changes (e.g., from graph click)
   useEffect(() => {
@@ -266,7 +269,10 @@ export const FileTreePanel = ({ onFocusNode }: FileTreePanelProps) => {
         return next;
       });
     }
-  }, [selectedNode?.id]); // Trigger when selected node changes
+    // Keyed on node identity, not filePath value: filePath can change in place
+    // when the same node reloads, which would re-trigger this spuriously.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode?.id]);
 
   const toggleExpanded = useCallback((path: string) => {
     setExpandedPaths((prev) => {

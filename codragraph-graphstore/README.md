@@ -1,4 +1,4 @@
-# codragraph-graphstore
+# @codragraph/graphstore
 
 Dolt-like content-addressed versioning for the CodraGraph knowledge graph.
 
@@ -46,10 +46,10 @@ src/
 ## Quick start
 
 ```ts
-import { FsCAS } from "codragraph-graphstore/cas";
-import { serializeSnapshot, materializeSnapshot } from "codragraph-graphstore/snapshot";
-import { createCommit, getHead, setHead } from "codragraph-graphstore/history";
-import { diffSnapshots } from "codragraph-graphstore/diff";
+import { FsCAS } from "@codragraph/graphstore/cas";
+import { serializeSnapshot, materializeSnapshot } from "@codragraph/graphstore/snapshot";
+import { createCommit, getHead, setHead } from "@codragraph/graphstore/history";
+import { diffSnapshots } from "@codragraph/graphstore/diff";
 
 const cas = new FsCAS({ root: ".codragraph/graphstore" });
 

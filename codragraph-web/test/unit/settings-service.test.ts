@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   loadSettings,
   saveSettings,
@@ -35,9 +35,15 @@ describe('loadSettings', () => {
   });
 
   it('returns defaults on corrupted JSON', () => {
+    // Suppress the expected `Failed to parse LLM settings` warning — the
+    // function logs it for end users on real corrupt storage, but here we
+    // intentionally feed bad JSON to exercise the recovery path.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     sessionStorage.setItem('codragraph-llm-settings', 'not-json{{{');
     const settings = loadSettings();
     expect(settings.activeProvider).toBeDefined();
+    expect(warnSpy).toHaveBeenCalledWith('Failed to parse LLM settings:', expect.any(SyntaxError));
+    warnSpy.mockRestore();
   });
 
   it('migrates legacy localStorage to sessionStorage', () => {

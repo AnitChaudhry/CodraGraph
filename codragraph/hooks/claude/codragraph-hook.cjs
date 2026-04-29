@@ -133,8 +133,18 @@ function runCodraGraphCli(cliPath, args, cwd, timeout) {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   }
-  // On Windows, invoke npx.cmd directly (no shell needed)
-  return spawnSync(isWin ? 'npx.cmd' : 'npx', ['-y', '@codragraph/cli', ...args], {
+  // npx fallback: on Windows, Node 22's spawn refuses to launch `npx.cmd`
+  // directly (returns EINVAL), so route through `cmd /c` and let PATHEXT
+  // resolve the shim. POSIX direct-spawn is fine.
+  if (isWin) {
+    return spawnSync('cmd', ['/c', 'npx', '-y', '@codragraph/cli', ...args], {
+      encoding: 'utf-8',
+      timeout: timeout + 5000,
+      cwd,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  }
+  return spawnSync('npx', ['-y', '@codragraph/cli', ...args], {
     encoding: 'utf-8',
     timeout: timeout + 5000,
     cwd,
@@ -239,7 +249,7 @@ function handlePostToolUse(input) {
   // If HEAD matches last indexed commit, no reindex needed
   if (currentHead && currentHead === lastCommit) return;
 
-  const analyzeCmd = `npx codragraph analyze${hadEmbeddings ? ' --embeddings' : ''}`;
+  const analyzeCmd = `npx @codragraph/cli analyze${hadEmbeddings ? ' --embeddings' : ''}`;
   sendHookResponse(
     'PostToolUse',
     `CodraGraph index is stale (last indexed: ${lastCommit ? lastCommit.slice(0, 7) : 'never'}). ` +

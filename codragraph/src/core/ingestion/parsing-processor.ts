@@ -377,7 +377,7 @@ const processParsingSequential = async (
       tree = parser.parse(parseContent, undefined, {
         bufferSize: getTreeSitterBufferSize(parseContent.length),
       });
-    } catch (parseError) {
+    } catch (_parseError) {
       console.warn(`Skipping unparseable file: ${file.path}`);
       continue;
     }

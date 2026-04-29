@@ -41,7 +41,7 @@ Four capabilities ship together:
 ## Install
 
 ```sh
-npm install -g codragraph
+npm install -g @codragraph/cli
 codragraph setup
 codragraph analyze .
 codragraph serve   # → http://localhost:4747

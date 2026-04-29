@@ -1,4 +1,4 @@
-# codragraph-claude-plugin
+# @codragraph/claude-plugin
 
 Claude Code plugin that gives Claude **graph-aware** context for every edit.
 Before each Grep / Glob / Bash invocation, the CodraGraph hook surfaces
@@ -9,7 +9,7 @@ is about to touch — so Claude doesn't have to grep blindly.
 
 ```sh
 # Install the codragraph CLI first
-npm install -g codragraph
+npm install -g @codragraph/cli
 codragraph setup
 
 # Then add the plugin to Claude Code

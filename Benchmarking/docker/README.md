@@ -24,7 +24,7 @@ docker compose logs -f vllm
 # Wait for "Application startup complete"
 
 # 4. Index the target repo
-docker compose run --rm codragraph npx codragraph analyze /workspace/repo
+docker compose run --rm codragraph codragraph analyze /workspace/repo
 
 # 5. (Optional) Run a swarm to populate recipe cache for the test workload
 docker compose run --rm bench npm run swarm-tune -- \

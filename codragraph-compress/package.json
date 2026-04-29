@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/compress",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lossless semantic compression for LLM contexts — strip grammar, keep facts, save tokens.",
   "author": {
     "name": "Anit Chaudhary",
@@ -45,8 +45,8 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "@codragraph/harness": "*",
-    "@codragraph/shared": "*"
+    "@codragraph/harness": "^0.1.1",
+    "@codragraph/shared": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

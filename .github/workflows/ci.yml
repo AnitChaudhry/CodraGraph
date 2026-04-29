@@ -90,6 +90,22 @@ jobs:
         run: npm test --workspace @codragraph/graphstore
       - name: harness tests
         run: npm test --workspace @codragraph/harness
+      - name: org tests
+        run: npm test --workspace @codragraph/org
+      - name: codragraph-web tests
+        run: npm test --workspace codragraph-web
+      # CLI tests use vitest 4, which has a known native-module segfault on
+      # Windows (STATUS_ACCESS_VIOLATION / exit 0xC0000005). Skip there until
+      # vitest 4 ships a fix. Linux + macOS still gate the build.
+      - name: CLI unit tests
+        if: runner.os != 'Windows'
+        run: npm test --workspace @codragraph/cli -- test/unit
+      # Integration tests cover hook e2e + setup-skills wiring — exactly the
+      # surfaces where installer/hook regressions hide. Skip Windows (same
+      # vitest 4 segfault) but gate Linux + macOS on these passing.
+      - name: CLI integration tests
+        if: runner.os != 'Windows'
+        run: npm test --workspace @codragraph/cli -- test/integration
 
   # ── Build all publishable packages → ensures `npm publish` works ──
   build:

@@ -22,7 +22,7 @@ description: "Use when the user wants to rename, extract, split, move, or restru
 4. Plan update order: interfaces â†’ implementations â†’ callers â†’ tests
 ```
 
-> If "Index is stale" â†’ run `npx codragraph analyze` in terminal.
+> If "Index is stale" â†’ run `npx @codragraph/cli analyze` in terminal.
 
 ## Checklists
 

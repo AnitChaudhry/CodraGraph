@@ -21,7 +21,7 @@ description: Trace bugs through call chains using knowledge graph
 4. codragraph_cypher({query: "MATCH path..."})                 â†’ Custom traces if needed
 ```
 
-> If "Index is stale" â†’ run `npx codragraph analyze` in terminal.
+> If "Index is stale" â†’ run `npx @codragraph/cli analyze` in terminal.
 
 ## Checklist
 

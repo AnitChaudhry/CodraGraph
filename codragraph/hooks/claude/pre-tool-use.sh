@@ -64,7 +64,12 @@ fi
 
 # Run codragraph augment — must be fast (<500ms target)
 # augment writes to stderr (KuzuDB captures stdout at OS level), so capture stderr and discard stdout
-RESULT=$(cd "$CWD" && npx -y codragraph augment "$PATTERN" 2>&1 1>/dev/null)
+# Prefer the global bin if present; fall back to npx (npm package is @codragraph/cli, bin is `codragraph`)
+if command -v codragraph >/dev/null 2>&1; then
+  RESULT=$(cd "$CWD" && codragraph augment "$PATTERN" 2>&1 1>/dev/null)
+else
+  RESULT=$(cd "$CWD" && npx -y @codragraph/cli augment "$PATTERN" 2>&1 1>/dev/null)
+fi
 
 if [ -n "$RESULT" ]; then
   ESCAPED=$(echo "$RESULT" | jq -Rs .)

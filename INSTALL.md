@@ -12,11 +12,15 @@ that matches your use case.
 
 ```sh
 # CLI + MCP server + web dashboard
-npm install -g codragraph
+npm install -g @codragraph/cli
 codragraph setup
 codragraph analyze .
 codragraph serve   # → http://localhost:4747
 ```
+
+> The package on npm is `@codragraph/cli`; the binary it installs is
+> `codragraph`. Use the scoped name when installing, the short name
+> when invoking.
 
 That gives you the analyzer, the MCP server, the local HTTP API, and
 the bundled web dashboard. Everything else is optional.
@@ -25,37 +29,37 @@ the bundled web dashboard. Everything else is optional.
 
 | Package | What you get | Install command |
 |---|---|---|
-| **`codragraph`** | CLI, MCP server, HTTP API, indexer | `npm install -g codragraph` |
-| **`codragraph-sdk`** | Programmatic API (no CLI) — graph, harness, graphstore, recipes, compress | `npm install codragraph-sdk` |
-| **`codragraph-graphstore`** | Just the versioned-graph store (snapshots / branches / diffs / merge) | `npm install codragraph-graphstore` |
-| **`codragraph-harness`** | Auto-tuned harness search + swarm + recipe memory | `npm install codragraph-harness` |
-| **`codragraph-compress`** | Graph-aware compression library | `npm install codragraph-compress` |
+| **`@codragraph/cli`** | CLI, MCP server, HTTP API, indexer | `npm install -g @codragraph/cli` |
+| **`@codragraph/sdk`** | Programmatic API (no CLI) — graph, harness, graphstore, recipes, compress | `npm install @codragraph/sdk` |
+| **`@codragraph/graphstore`** | Just the versioned-graph store (snapshots / branches / diffs / merge) | `npm install @codragraph/graphstore` |
+| **`@codragraph/harness`** | Auto-tuned harness search + swarm + recipe memory | `npm install @codragraph/harness` |
+| **`@codragraph/compress`** | Graph-aware compression library | `npm install @codragraph/compress` |
 
-> `codragraph-shared` is internal-only (TypeScript types).
+> `@codragraph/shared` is internal-only (TypeScript types).
 
 ## AI-IDE plugins
 
 | IDE | Package | Install |
 |---|---|---|
-| **Claude Code** | `codragraph-claude-plugin` | `claude plugins install codragraph` *(once published to Anthropic's marketplace)* — or `claude plugins install file://path/to/codragraph-claude-plugin` |
+| **Claude Code** | `@codragraph/claude-plugin` | `claude plugins install codragraph` *(once published to Anthropic's marketplace)* — or `claude plugins install file://path/to/codragraph-claude-plugin` |
 | **Cursor** | `codragraph-cursor-integration` | Drop the directory into `.cursor/` of your repo; hooks register automatically |
-| **OpenAI Codex CLI** | `codragraph-codex-integration` | `npm install -g codragraph-codex-integration` then merge `codex.config.template.json` into `~/.codex/config.json` |
+| **OpenAI Codex CLI** | `@codragraph/codex` | `npm install -g @codragraph/codex` then run `codragraph-codex` to wire the hooks + MCP server into `~/.codex/config.json` |
 
 All three plugins are thin glue — they delegate to the `codragraph` CLI
-+ MCP server. You need `codragraph` installed first.
++ MCP server. You need `@codragraph/cli` installed first.
 
 ## Decision tree
 
-- **I want an AI agent to use CodraGraph for my repo** → install `codragraph` + the plugin matching your IDE.
-- **I'm building my own agent / tool / dashboard on top** → install `codragraph-sdk`. Sub-namespaces let you depend on only what you use:
-  - `import { graph } from 'codragraph-sdk/graph'`
-  - `import { graphstore } from 'codragraph-sdk/graphstore'`
-  - `import { harness } from 'codragraph-sdk/harness'`
-  - `import { recipes } from 'codragraph-sdk/recipes'`
-  - `import { compress } from 'codragraph-sdk/compress'`
-- **I just need versioning over a property graph (no AI / no CLI)** → install `codragraph-graphstore` directly.
-- **I want to auto-tune harnesses for my own task family** → install `codragraph-harness`. It carries its own CLI: `codragraph-harness swarm-search …`
-- **I want token-savings compression for an LLM pipeline** → install `codragraph-compress`.
+- **I want an AI agent to use CodraGraph for my repo** → install `@codragraph/cli` + the plugin matching your IDE.
+- **I'm building my own agent / tool / dashboard on top** → install `@codragraph/sdk`. Sub-namespaces let you depend on only what you use:
+  - `import { graph } from '@codragraph/sdk/graph'`
+  - `import { graphstore } from '@codragraph/sdk/graphstore'`
+  - `import { harness } from '@codragraph/sdk/harness'`
+  - `import { recipes } from '@codragraph/sdk/recipes'`
+  - `import { compress } from '@codragraph/sdk/compress'`
+- **I just need versioning over a property graph (no AI / no CLI)** → install `@codragraph/graphstore` directly.
+- **I want to auto-tune harnesses for my own task family** → install `@codragraph/harness`. It carries its own CLI: `codragraph-harness swarm-search …`
+- **I want token-savings compression for an LLM pipeline** → install `@codragraph/compress`.
 
 ## API keys (BYO)
 

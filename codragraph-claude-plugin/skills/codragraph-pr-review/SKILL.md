@@ -26,7 +26,7 @@ description: "Use when the user wants to review a pull request, understand what 
 6. Summarize findings with risk assessment
 ```
 
-> If "Index is stale" â†’ run `npx codragraph analyze` in terminal before reviewing.
+> If "Index is stale" â†’ run `npx @codragraph/cli analyze` in terminal before reviewing.
 
 ## Checklist
 

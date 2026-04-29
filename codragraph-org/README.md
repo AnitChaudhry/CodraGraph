@@ -1,4 +1,4 @@
-# codragraph-org
+# @codragraph/org
 
 Multi-tenant orgs, SSO, RBAC, and tamper-evident audit logging for the
 CodraGraph platform.
@@ -14,13 +14,13 @@ multiple teams or customers under one server. It is unblocked by the
 |---|---|
 | `tenancy` | `withTenant` / `requireTenant` AsyncLocalStorage scoping. Path helpers that refuse to escape the org root. |
 | `rbac` | `viewer < member < admin < owner`. Default policy covers the core CodraGraph resources; integrators extend by composing additional entries. |
-| `audit` | Append-only, tamper-evident log. Each event is a content-addressed object (sha256 of canonical JSON = the id). Re-hashing verifies. Re-uses `codragraph-graphstore`'s CAS for storage. |
+| `audit` | Append-only, tamper-evident log. Each event is a content-addressed object (sha256 of canonical JSON = the id). Re-hashing verifies. Re-uses `@codragraph/graphstore`'s CAS for storage. |
 | `auth` | Provider-agnostic `SsoProvider` interface. Includes `InMemorySsoProvider` for tests. OIDC and SAML reference impls land in follow-ups. |
 
 ## Install
 
 ```bash
-npm install codragraph-org
+npm install @codragraph/org
 ```
 
 ## Quick start
@@ -33,8 +33,8 @@ import {
   makeOrgId,
   makeUserId,
   withTenant,
-} from "codragraph-org";
-import { FsCAS } from "codragraph-graphstore/dist/cas/fs-cas.js";
+} from "@codragraph/org";
+import { FsCAS } from "@codragraph/graphstore/dist/cas/fs-cas.js";
 
 const cas = new FsCAS({ root: "/var/codragraph/cas" });
 const audit = new CasAuditLogger(cas, "/var/codragraph/audit");

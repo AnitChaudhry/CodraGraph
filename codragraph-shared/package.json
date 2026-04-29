@@ -1,7 +1,6 @@
 {
   "name": "@codragraph/shared",
-  "version": "1.0.0",
-  "private": true,
+  "version": "1.0.1",
   "description": "Shared type definitions for CodraGraph CLI and web",
   "author": {
     "name": "Anit Chaudhary",
@@ -19,7 +18,8 @@
     }
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepack": "tsc"
   },
   "files": [
     "dist",
@@ -27,5 +27,9 @@
   ],
   "devDependencies": {
     "typescript": "^6.0.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

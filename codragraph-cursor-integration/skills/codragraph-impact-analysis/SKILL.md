@@ -22,7 +22,7 @@ description: Analyze blast radius before making code changes
 4. Assess risk and report to user
 ```
 
-> If "Index is stale" â†’ run `npx codragraph analyze` in terminal.
+> If "Index is stale" â†’ run `npx @codragraph/cli analyze` in terminal.
 
 ## Checklist
 

@@ -23,7 +23,7 @@ description: "Use when the user asks how code works, wants to understand archite
 5. READ codragraph://repo/{name}/process/{name}      → Trace full execution flow
 ```
 
-> If step 2 says "Index is stale" → run `npx codragraph analyze` in terminal.
+> If step 2 says "Index is stale" → run `npx @codragraph/cli analyze` in terminal.
 
 ## Checklist
 

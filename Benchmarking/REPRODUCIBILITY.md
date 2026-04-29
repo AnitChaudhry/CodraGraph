@@ -119,10 +119,10 @@ docker compose up -d vllm
 
 # 4. Re-index against the same target repo SHA
 cd /workspace/repo && git checkout def456
-docker compose run --rm codragraph npx codragraph analyze .
+docker compose run --rm codragraph codragraph analyze .
 
 # 5. (Phase 4) Restore the graph snapshot
-docker compose run --rm codragraph npx codragraph checkout sha256:def456...
+docker compose run --rm codragraph codragraph checkout sha256:def456...
 
 # 6. Re-run with the same seeds
 cd Benchmarking/scripts

@@ -1,4 +1,4 @@
-# codragraph-codex-integration
+# @codragraph/codex
 
 OpenAI Codex CLI integration for CodraGraph. Enriches every Codex tool
 call with graph-aware context (callers, impact, process participation)
@@ -8,16 +8,23 @@ so Codex doesn't blindly grep its way through the codebase.
 
 ```sh
 # 1) Install the codragraph CLI
-npm install -g codragraph
+npm install -g @codragraph/cli
 codragraph setup
 
 # 2) Install this integration globally
-npm install -g codragraph-codex-integration
+npm install -g @codragraph/codex
 
-# 3) Merge codex.config.template.json into your Codex config
-#    (Codex picks up hooks + MCP servers from there)
-codragraph-codex-integration install
+# 3) Wire it into Codex. Merges the bundled hooks into ~/.codex/config.json
+#    (substituting the absolute install path so Codex finds the hook script)
+#    and registers an mcpServer entry whose launcher is platform-correct:
+#    `codragraph mcp` on macOS/Linux, `cmd /c codragraph mcp` on Windows
+#    (Node 22's spawn can't launch `.cmd` shims directly).
+codragraph-codex
 ```
+
+> The `codragraph-codex` command is idempotent — re-run it after upgrades.
+> A sidecar `~/.codex/.codragraph-managed.json` tracks which entries the
+> installer owns, so user-managed hooks/mcpServers are never overwritten.
 
 ## What it does
 
@@ -26,8 +33,9 @@ codragraph-codex-integration install
   context to Codex's next prompt.
 - **Post-edit hook**: after Edit / Write, runs `codragraph detect-changes`
   to flag whether the index needs refreshing.
-- **MCP server**: registers `codragraph mcp` as a Codex MCP server so
-  Codex can query/cypher/impact directly.
+- **MCP server**: registers a `codragraph` Codex MCP server (launching
+  `codragraph mcp`, or `cmd /c codragraph mcp` on Windows) so Codex can
+  call query / context / impact / cypher directly.
 
 ## Configuration
 

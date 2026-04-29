@@ -498,6 +498,10 @@ export const useSigma = (options: UseSigmaOptions = {}): UseSigmaReturn => {
       sigmaRef.current = null;
       graphRef.current = null;
     };
+    // Mount-only effect: sigma is initialized once per container and torn down
+    // on unmount. Adding `options` (fresh object per render) or `setSelectedNode`
+    // to deps would tear down + recreate sigma on every parent re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Run ForceAtlas2 layout

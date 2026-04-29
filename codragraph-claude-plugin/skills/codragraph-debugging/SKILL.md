@@ -22,7 +22,7 @@ description: "Use when the user is debugging a bug, tracing an error, or asking 
 4. codragraph_cypher({query: "MATCH path..."})                 â†’ Custom traces if needed
 ```
 
-> If "Index is stale" â†’ run `npx codragraph analyze` in terminal.
+> If "Index is stale" â†’ run `npx @codragraph/cli analyze` in terminal.
 
 ## Checklist
 

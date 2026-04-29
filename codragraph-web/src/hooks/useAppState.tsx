@@ -268,7 +268,7 @@ const AppStateProviderInner = ({ children }: { children: ReactNode }) => {
   const clearQueryHighlights = useCallback(() => {
     setHighlightedNodeIds(new Set());
     setQueryResult(null);
-  }, []);
+  }, [setHighlightedNodeIds]);
 
   // Node animations (for MCP tool visual feedback)
   const [animatedNodes, setAnimatedNodes] = useState<Map<string, NodeAnimation>>(new Map());
@@ -1050,7 +1050,7 @@ const AppStateProviderInner = ({ children }: { children: ReactNode }) => {
       setCodePanelOpen(false);
       setCodeReferenceFocus(null);
 
-      let connectedRepo: BackendRepo | undefined;
+      let _connectedRepo: BackendRepo | undefined;
       let pNameStr = repoName || 'server-project';
 
       try {
@@ -1098,7 +1098,7 @@ const AppStateProviderInner = ({ children }: { children: ReactNode }) => {
         setProjectName(pName);
         repoRef.current = pName;
 
-        connectedRepo = result.repoInfo;
+        _connectedRepo = result.repoInfo;
         pNameStr = pName;
 
         const newGraph = createKnowledgeGraph();

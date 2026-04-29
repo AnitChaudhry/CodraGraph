@@ -379,7 +379,7 @@ export const loadGraphToLbug = async (
 
     try {
       await conn.query(copyQuery);
-    } catch (err) {
+    } catch (_err) {
       try {
         const retryQuery = copyQuery.replace(
           'auto_detect=false)',
@@ -428,7 +428,7 @@ export const loadGraphToLbug = async (
 
       try {
         await conn.query(copyQuery);
-      } catch (err) {
+      } catch (_err) {
         try {
           const retryQuery = copyQuery.replace(
             'auto_detect=false)',
@@ -746,7 +746,7 @@ export const batchInsertNodesToLbug = async (
 
         await tempConn.query(query);
         inserted++;
-      } catch (e: any) {
+      } catch (_e: any) {
         // Don't console.error here - it corrupts MCP JSON-RPC on stderr
         failed++;
       }
@@ -1106,7 +1106,7 @@ export const deleteNodesForFile = async (
           );
           deletedNodes += count;
         }
-      } catch (e) {
+      } catch (_e) {
         // Some tables may not support this query, skip
       }
     }

@@ -232,7 +232,7 @@ describe('setupOpenCode — JSONC preservation', () => {
 
     expect(config.mcp.codragraph).toEqual({
       type: 'local',
-      command: ['npx', '-y', 'codragraph@latest', 'mcp'],
+      command: ['npx', '-y', '@codragraph/cli@latest', 'mcp'],
     });
   });
 
@@ -245,7 +245,7 @@ describe('setupOpenCode — JSONC preservation', () => {
 
     const raw = await fs.readFile(opencodeJsonPath(), 'utf-8');
     expect(raw).toContain('\t"model"');
-    expect(raw).toContain('\t"@codragraph/cli"');
+    expect(raw).toContain('\t"codragraph"');
   });
 
   it('preserves 4-space indentation in existing file', async () => {
@@ -258,7 +258,7 @@ describe('setupOpenCode — JSONC preservation', () => {
     await setupCommand();
 
     const raw = await fs.readFile(opencodeJsonPath(), 'utf-8');
-    const mcpLine = raw.split('\n').find((l) => l.includes('"@codragraph/cli"'));
+    const mcpLine = raw.split('\n').find((l) => l.includes('"codragraph"'));
     expect(mcpLine).toMatch(/^    /);
   });
 

@@ -14,7 +14,7 @@ npm install
 npm run build
 ```
 
-Use `npx codragraph …` from any path after global/published install, or `node dist/cli/index.js …` when developing from `codragraph/` with a local build.
+Use `npx @codragraph/cli …` from any path after global/published install, or `node dist/cli/index.js …` when developing from `codragraph/` with a local build.
 
 ---
 
@@ -25,25 +25,25 @@ Use `npx codragraph …` from any path after global/published install, or `node 
 **Fix (from the target repo root):**
 
 ```bash
-npx codragraph analyze
+npx @codragraph/cli analyze
 ```
 
 **Force full rebuild** (same commit but suspect corruption or changed ignore rules):
 
 ```bash
-npx codragraph analyze --force
+npx @codragraph/cli analyze --force
 ```
 
 **Check status:**
 
 ```bash
-npx codragraph status
+npx @codragraph/cli status
 ```
 
 **List what MCP knows about:**
 
 ```bash
-npx codragraph list
+npx @codragraph/cli list
 ```
 
 ---
@@ -53,7 +53,7 @@ npx codragraph list
 **First time with vectors** (slower, more disk/RAM):
 
 ```bash
-npx codragraph analyze --embeddings
+npx @codragraph/cli analyze --embeddings
 ```
 
 **Important:** If you already had embeddings, **always** pass `--embeddings` on later analyzes, or they can be dropped. See `stats.embeddings` in `.codragraph/meta.json` (0 means none).
@@ -70,7 +70,7 @@ npx codragraph analyze --embeddings
 
 ```bash
 cd /path/to/repo
-npx codragraph analyze
+npx @codragraph/cli analyze
 ```
 
 Restart the editor MCP session if needed. The server **refreshes the registry lazily**; new analyzes are picked up without necessarily reinstalling MCP.
@@ -84,22 +84,22 @@ Restart the editor MCP session if needed. The server **refreshes the registry la
 **Current repo only** (prompts for confirmation):
 
 ```bash
-npx codragraph clean
+npx @codragraph/cli clean
 ```
 
 **Skip confirmation:**
 
 ```bash
-npx codragraph clean --force
+npx @codragraph/cli clean --force
 ```
 
 **All registered repos:**
 
 ```bash
-npx codragraph clean --all --force
+npx @codragraph/cli clean --all --force
 ```
 
-Then re-run `npx codragraph analyze` (and `--embeddings` if you need vectors).
+Then re-run `npx @codragraph/cli analyze` (and `--embeddings` if you need vectors).
 
 ---
 
@@ -107,7 +107,7 @@ Then re-run `npx codragraph analyze` (and `--embeddings` if you need vectors).
 
 ```bash
 cd codragraph
-npx codragraph serve
+npx @codragraph/cli serve
 # default http://127.0.0.1:4747 — see serve --help for port/host
 ```
 
@@ -121,10 +121,10 @@ Useful for debugging without an editor:
 
 ```bash
 cd codragraph
-npx codragraph query "authentication flow" --repo MyRepo
-npx codragraph context SomeSymbol --repo MyRepo
-npx codragraph impact SomeSymbol --direction upstream --repo MyRepo
-npx codragraph cypher "MATCH (n) RETURN count(n) LIMIT 1" --repo MyRepo
+npx @codragraph/cli query "authentication flow" --repo MyRepo
+npx @codragraph/cli context SomeSymbol --repo MyRepo
+npx @codragraph/cli impact SomeSymbol --direction upstream --repo MyRepo
+npx @codragraph/cli cypher "MATCH (n) RETURN count(n) LIMIT 1" --repo MyRepo
 ```
 
 ---

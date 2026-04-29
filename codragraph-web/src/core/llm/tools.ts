@@ -860,7 +860,7 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
       }
       const relTypeFilter = activeRelTypes.map((t) => `'${t.replace(/'/g, "''")}'`).join(', ');
 
-      const directionLabel =
+      const _directionLabel =
         direction === 'upstream'
           ? 'Files that DEPEND ON this (breakage risk)'
           : 'Dependencies this RELIES ON';

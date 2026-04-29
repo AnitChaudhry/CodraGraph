@@ -232,7 +232,7 @@ const checkOllamaStatus = async (
     }
 
     return { ok: true, error: null };
-  } catch (error) {
+  } catch (_error) {
     return {
       ok: false,
       error: "Cannot connect to Ollama. Make sure it's running with `ollama serve`",

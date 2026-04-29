@@ -118,7 +118,7 @@ function generateCodraGraphContent(
 
 This project is indexed by CodraGraph as **${projectName}**${noStats ? '' : ` (${stats.nodes || 0} symbols, ${stats.edges || 0} relationships, ${stats.processes || 0} execution flows)`}. Use the CodraGraph MCP tools to understand code, assess impact, and navigate safely.
 
-> If any CodraGraph tool warns the index is stale, run \`npx codragraph analyze\` in terminal first.
+> If any CodraGraph tool warns the index is stale, run \`npx @codragraph/cli analyze\` in terminal first.
 
 ## Always Do
 
@@ -148,7 +148,7 @@ ${
   groupNames && groupNames.length > 0
     ? `## Cross-Repo Groups
 
-This repository is listed under CodraGraph **group(s): ${groupNames.join(', ')}** (see \`~/.codragraph/groups/\`). For cross-repo analysis, use MCP tools \`impact\`, \`query\`, and \`context\` with \`repo\` set to \`@<groupName>\` or \`@<groupName>/<memberPath>\` (paths match keys in that group’s \`group.yaml\`). Use \`group_list\` / \`group_sync\` for membership and sync. From the terminal: \`npx codragraph group list\`, \`npx codragraph group sync <name>\`, \`npx codragraph group impact <name> --target <symbol> --repo <group-path>\`.
+This repository is listed under CodraGraph **group(s): ${groupNames.join(', ')}** (see \`~/.codragraph/groups/\`). For cross-repo analysis, use MCP tools \`impact\`, \`query\`, and \`context\` with \`repo\` set to \`@<groupName>\` or \`@<groupName>/<memberPath>\` (paths match keys in that group’s \`group.yaml\`). Use \`group_list\` / \`group_sync\` for membership and sync. From the terminal: \`npx @codragraph/cli group list\`, \`npx @codragraph/cli group sync <name>\`, \`npx @codragraph/cli group impact <name> --target <symbol> --repo <group-path>\`.
 
 `
     : ''

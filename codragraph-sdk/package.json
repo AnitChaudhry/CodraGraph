@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "One-import surface for the CodraGraph platform — graph intelligence, dynamic harness, compression. Works with Claude Code, Codex, OpenCode, any inference.",
   "author": {
     "name": "Anit Chaudhary",
@@ -64,10 +64,10 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "@codragraph/cli": "*",
-    "@codragraph/harness": "*",
-    "@codragraph/compress": "*",
-    "@codragraph/graphstore": "*"
+    "@codragraph/cli": "^1.6.3",
+    "@codragraph/harness": "^0.1.1",
+    "@codragraph/compress": "^0.1.1",
+    "@codragraph/graphstore": "^0.1.1"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

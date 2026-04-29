@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/cli",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "description": "Graph-powered code intelligence for AI agents. Index any codebase, query via MCP or CLI.",
   "author": {
     "name": "Anit Chaudhary",
@@ -59,7 +59,7 @@
     "@huggingface/transformers": "^4.1.0",
     "@ladybugdb/core": "^0.15.2",
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@codragraph/graphstore": "*",
+    "@codragraph/graphstore": "^0.1.1",
     "@scarf/scarf": "^1.4.0",
     "cli-progress": "^3.12.0",
     "commander": "^14.0.3",

@@ -57,7 +57,7 @@ afterAll(() => {
 
 // ─── Tests ──────────────────────────────────────────────────────────
 
-describe.each(HOOKS)('hooks e2e ($name)', ({ name, path: hookPath }) => {
+describe.each(HOOKS)('hooks e2e ($name)', ({ path: hookPath }) => {
   describe('PostToolUse staleness detection', () => {
     it('detects stale index when meta.json lastCommit differs from HEAD', () => {
       // Write meta.json with an old commit hash
@@ -77,7 +77,7 @@ describe.each(HOOKS)('hooks e2e ($name)', ({ name, path: hookPath }) => {
       const output = parseHookOutput(result.stdout);
       expect(output).not.toBeNull();
       expect(output!.additionalContext).toContain('stale');
-      expect(output!.additionalContext).toContain('npx codragraph analyze');
+      expect(output!.additionalContext).toContain('npx @codragraph/cli analyze');
     });
 
     it('stays silent when meta.json lastCommit matches HEAD', () => {

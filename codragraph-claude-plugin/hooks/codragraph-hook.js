@@ -107,14 +107,24 @@ function extractPattern(toolName, toolInput) {
  *
  * SECURITY: Never use shell: true with user-controlled arguments.
  * On Windows, invoke codragraph.cmd directly (no shell needed).
+ *
+ * Note: the npm package is `@codragraph/cli`, but the executable it installs
+ * is `codragraph`. PATH lookup must use the bin name; npx still uses the
+ * scoped package name.
  */
 function runCodraGraphCli(args, cwd, timeout) {
   const isWin = process.platform === 'win32';
 
-  // Detect whether '@codragraph/cli' is on PATH (cheap check, no execution)
+  // Windows: direct spawn of `codragraph.cmd` / `npx.cmd` returns EINVAL on
+  // Node 22 because Node refuses to spawn .cmd files outside a shell. Use
+  // `cmd /c <bin> ...` and let cmd resolve via PATHEXT. This works whether
+  // `codragraph` is installed as `.cmd` shim, `.exe`, or via pnpm/yarn.
+  // (Direct spawn is fine on POSIX; .cmd workaround is Windows-only.)
+
+  // Detect whether 'codragraph' is on PATH (cheap check, no execution)
   let useDirectBinary = false;
   try {
-    const which = spawnSync(isWin ? 'where' : 'which', ['@codragraph/cli'], {
+    const which = spawnSync(isWin ? 'where' : 'which', ['codragraph'], {
       encoding: 'utf-8',
       timeout: 3000,
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -125,15 +135,31 @@ function runCodraGraphCli(args, cwd, timeout) {
   }
 
   if (useDirectBinary) {
-    return spawnSync(isWin ? 'codragraph.cmd' : '@codragraph/cli', args, {
+    if (isWin) {
+      return spawnSync('cmd', ['/c', 'codragraph', ...args], {
+        encoding: 'utf-8',
+        timeout,
+        cwd,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    }
+    return spawnSync('codragraph', args, {
       encoding: 'utf-8',
       timeout,
       cwd,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   }
-  // npx fallback needs shell on Windows since npx is a .cmd script
-  return spawnSync(isWin ? 'npx.cmd' : 'npx', ['-y', '@codragraph/cli', ...args], {
+  // npx fallback — also routed through `cmd /c` on Windows for the same reason.
+  if (isWin) {
+    return spawnSync('cmd', ['/c', 'npx', '-y', '@codragraph/cli', ...args], {
+      encoding: 'utf-8',
+      timeout: timeout + 5000,
+      cwd,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  }
+  return spawnSync('npx', ['-y', '@codragraph/cli', ...args], {
     encoding: 'utf-8',
     timeout: timeout + 5000,
     cwd,
@@ -237,7 +263,7 @@ function handlePostToolUse(input) {
   // If HEAD matches last indexed commit, no reindex needed
   if (currentHead && currentHead === lastCommit) return;
 
-  const analyzeCmd = `npx codragraph analyze${hadEmbeddings ? ' --embeddings' : ''}`;
+  const analyzeCmd = `npx @codragraph/cli analyze${hadEmbeddings ? ' --embeddings' : ''}`;
   sendHookResponse(
     'PostToolUse',
     `CodraGraph index is stale (last indexed: ${lastCommit ? lastCommit.slice(0, 7) : 'never'}). ` +

@@ -22,7 +22,7 @@ description: Navigate unfamiliar code using CodraGraph knowledge graph
 5. READ codragraph://repo/{name}/process/{name}      â†’ Trace full execution flow
 ```
 
-> If step 2 says "Index is stale" â†’ run `npx codragraph analyze` in terminal.
+> If step 2 says "Index is stale" â†’ run `npx @codragraph/cli analyze` in terminal.
 
 ## Checklist
 

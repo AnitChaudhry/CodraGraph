@@ -27,20 +27,39 @@ interface SetupResult {
 }
 
 /**
- * Resolve the absolute path to the `@codragraph/cli` binary if it's installed
+ * Resolve the absolute path to the `codragraph` binary if it's installed
  * globally (or via npm -g / yarn global). Returns null when not found.
+ *
+ * Note: the npm package is `@codragraph/cli`, but the executable it installs
+ * is `codragraph` (see package.json `bin`). PATH lookup must use the bin name.
+ *
+ * Windows specifics: `where codragraph` returns every PATH entry, in order:
+ * the extensionless Unix shim npm creates first (a sh script — Node's
+ * spawn/execFile cannot launch it on Windows), then `codragraph.cmd`,
+ * then `codragraph.ps1`. We must pick the .cmd / .exe / .bat entry; writing
+ * the extensionless path into a downstream MCP config produces a launcher
+ * that fails on every spawn.
  */
 function resolveCodragraphBin(): string | null {
   try {
     const cmd = process.platform === 'win32' ? 'where' : 'which';
-    const resolved = execFileSync(cmd, ['@codragraph/cli'], {
+    const stdout = execFileSync(cmd, ['codragraph'], {
       encoding: 'utf-8',
       timeout: 5000,
       stdio: ['ignore', 'pipe', 'ignore'],
-    })
-      .split('\n')[0]
-      .trim();
-    return resolved || null;
+    });
+    const lines = stdout
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    if (process.platform === 'win32') {
+      // Prefer a Windows-executable shim. If none is on PATH, return null so
+      // the caller falls through to the `cmd /c npx -y @codragraph/cli` path.
+      const exe = lines.find((l) => /\.(cmd|exe|bat)$/i.test(l));
+      return exe ?? null;
+    }
+    return lines[0] ?? null;
   } catch {
     return null;
   }
@@ -49,17 +68,27 @@ function resolveCodragraphBin(): string | null {
 /**
  * The MCP server entry for all editors.
  *
- * Prefers the globally-installed `@codragraph/cli` binary (starts in ~1 s) over
- * `npx -y codragraph@latest` (cold-cache install of native deps can take
+ * Prefers the globally-installed `codragraph` binary (starts in ~1 s) over
+ * `npx -y @codragraph/cli@latest` (cold-cache install of native deps can take
  * >60 s, exceeding Claude Code's 30 s MCP connection timeout).
  *
  * Falls back to npx when the binary isn't on PATH — e.g. first-time
- * users who ran `npx codragraph analyze` but haven't done `npm i -g`.
+ * users who ran `npx @codragraph/cli analyze` but haven't done `npm i -g`.
+ *
+ * Windows note: even when the bin is on PATH, we launch via `cmd /c codragraph
+ * mcp` rather than writing the resolved path. Reason: `where codragraph`
+ * returns the extensionless Unix shim before `codragraph.cmd`, and Node's
+ * spawn/execFile cannot launch the extensionless shim on Windows. Letting
+ * cmd resolve via PATHEXT is the only reliable path that works for npm-,
+ * pnpm-, and yarn-installed shims alike.
  */
 function getMcpEntry() {
   const bin = resolveCodragraphBin();
 
   if (bin) {
+    if (process.platform === 'win32') {
+      return { command: 'cmd', args: ['/c', 'codragraph', 'mcp'] };
+    }
     return { command: bin, args: ['mcp'] };
   }
 
@@ -67,12 +96,12 @@ function getMcpEntry() {
   if (process.platform === 'win32') {
     return {
       command: 'cmd',
-      args: ['/c', 'npx', '-y', 'codragraph@latest', 'mcp'],
+      args: ['/c', 'npx', '-y', '@codragraph/cli@latest', 'mcp'],
     };
   }
   return {
     command: 'npx',
-    args: ['-y', 'codragraph@latest', 'mcp'],
+    args: ['-y', '@codragraph/cli@latest', 'mcp'],
   };
 }
 
@@ -84,13 +113,19 @@ function getOpenCodeMcpEntry() {
   const bin = resolveCodragraphBin();
 
   if (bin) {
+    if (process.platform === 'win32') {
+      return { type: 'local', command: ['cmd', '/c', 'codragraph', 'mcp'] };
+    }
     return { type: 'local', command: [bin, 'mcp'] };
   }
 
   if (process.platform === 'win32') {
-    return { type: 'local', command: ['cmd', '/c', 'npx', '-y', 'codragraph@latest', 'mcp'] };
+    return {
+      type: 'local',
+      command: ['cmd', '/c', 'npx', '-y', '@codragraph/cli@latest', 'mcp'],
+    };
   }
-  return { type: 'local', command: ['npx', '-y', 'codragraph@latest', 'mcp'] };
+  return { type: 'local', command: ['npx', '-y', '@codragraph/cli@latest', 'mcp'] };
 }
 
 /**
@@ -267,7 +302,7 @@ async function installClaudeCodeHooks(result: SetupResult): Promise<void> {
   const pluginHooksPath = path.join(__dirname, '..', '..', 'hooks', 'claude');
 
   // Copy unified hook script to ~/.claude/hooks/codragraph/
-  const destHooksDir = path.join(claudeDir, 'hooks', '@codragraph/cli');
+  const destHooksDir = path.join(claudeDir, 'hooks', 'codragraph');
 
   try {
     await fs.mkdir(destHooksDir, { recursive: true });
@@ -346,7 +381,7 @@ async function setupOpenCode(result: SetupResult): Promise<void> {
 
   const configPath = path.join(opencodeDir, 'opencode.json');
   try {
-    const ok = await mergeJsoncFile(configPath, ['mcp', '@codragraph/cli'], getOpenCodeMcpEntry());
+    const ok = await mergeJsoncFile(configPath, ['mcp', 'codragraph'], getOpenCodeMcpEntry());
     if (ok) {
       result.configured.push('OpenCode');
     } else {
@@ -400,13 +435,10 @@ async function setupCodex(result: SetupResult): Promise<void> {
 
   try {
     const entry = getMcpEntry();
-    await execFileAsync(
-      'codex',
-      ['mcp', 'add', '@codragraph/cli', '--', entry.command, ...entry.args],
-      {
-        shell: process.platform === 'win32',
-      },
-    );
+    // On Windows, npm-installed CLIs ship as .cmd shims that Node's execFile
+    // can only invoke when the file extension is explicit (no PATHEXT lookup).
+    const codexBin = process.platform === 'win32' ? 'codex.cmd' : 'codex';
+    await execFileAsync(codexBin, ['mcp', 'add', 'codragraph', '--', entry.command, ...entry.args]);
     result.configured.push('Codex');
     return;
   } catch {

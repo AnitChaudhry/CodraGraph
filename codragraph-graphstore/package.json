@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/graphstore",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Dolt-like content-addressed versioning for the CodraGraph knowledge graph — snapshots, branches, diffs, three-way merge.",
   "author": {
     "name": "Anit Chaudhary",
@@ -63,7 +63,7 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "@codragraph/shared": "*"
+    "@codragraph/shared": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

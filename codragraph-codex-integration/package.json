@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/codex",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OpenAI Codex CLI integration for CodraGraph — graph-aware context for Codex commands via codex.config.json hooks.",
   "author": {
     "name": "Anit Chaudhary",
@@ -16,7 +16,11 @@
     "knowledge-graph",
     "ai-agent"
   ],
+  "bin": {
+    "codragraph-codex": "bin/install.mjs"
+  },
   "files": [
+    "bin",
     "codex.config.template.json",
     "hooks",
     "README.md"

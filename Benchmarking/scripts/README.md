@@ -43,7 +43,7 @@ Should complete in 30–60 seconds. If `correct/total` is sane, the wiring works
 
 ### B) Headline open-source sweep
 
-Pre-req: vLLM running (`cd ../docker && docker compose up -d vllm`) and the target repo indexed (`docker compose run --rm codragraph npx codragraph analyze /workspace/repo`).
+Pre-req: vLLM running (`cd ../docker && docker compose up -d vllm`) and the target repo indexed (`docker compose run --rm codragraph codragraph analyze /workspace/repo`).
 
 ```bash
 npm run benchmark -- \

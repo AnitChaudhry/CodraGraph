@@ -75,7 +75,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'cmd',
-      args: ['/c', 'npx', '-y', 'codragraph@latest', 'mcp'],
+      args: ['/c', 'npx', '-y', '@codragraph/cli@latest', 'mcp'],
     });
   });
 
@@ -90,7 +90,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'npx',
-      args: ['-y', 'codragraph@latest', 'mcp'],
+      args: ['-y', '@codragraph/cli@latest', 'mcp'],
     });
   });
 
@@ -188,7 +188,52 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'npx',
-      args: ['-y', 'codragraph@latest', 'mcp'],
+      args: ['-y', '@codragraph/cli@latest', 'mcp'],
+    });
+  });
+
+  it('on Windows, uses cmd /c codragraph mcp when bin is on PATH (any shim)', async () => {
+    setPlatform('win32');
+    // `where codragraph` typically returns the extensionless Unix shim before
+    // `codragraph.cmd` when both are on PATH (e.g. node_modules/.bin). Node's
+    // spawn cannot launch the extensionless shim on Windows. Writing the .cmd
+    // path directly is also brittle (depends on which shims are present);
+    // letting `cmd /c` resolve via PATHEXT works regardless of installer.
+    execFileSyncMock.mockReturnValueOnce(
+      [
+        'C:\\path\\to\\node_modules\\.bin\\codragraph',
+        'C:\\path\\to\\node_modules\\.bin\\codragraph.cmd',
+        'C:\\path\\to\\node_modules\\.bin\\codragraph.ps1',
+      ].join('\r\n') + '\r\n',
+    );
+
+    const { setupCommand } = await import('../../src/cli/setup.js');
+    await setupCommand();
+
+    const raw = await fs.readFile(path.join(tempHome, '.claude.json'), 'utf-8');
+    const config = JSON.parse(raw);
+
+    expect(config.mcpServers.codragraph).toEqual({
+      command: 'cmd',
+      args: ['/c', 'codragraph', 'mcp'],
+    });
+  });
+
+  it('on Windows, falls back to npx when only the extensionless shim is on PATH', async () => {
+    setPlatform('win32');
+    // Edge case: a partial install left only the Unix shim. resolveCodragraphBin
+    // refuses it; falls through to the cmd /c npx fallback instead.
+    execFileSyncMock.mockReturnValueOnce('C:\\path\\to\\node_modules\\.bin\\codragraph\n');
+
+    const { setupCommand } = await import('../../src/cli/setup.js');
+    await setupCommand();
+
+    const raw = await fs.readFile(path.join(tempHome, '.claude.json'), 'utf-8');
+    const config = JSON.parse(raw);
+
+    expect(config.mcpServers.codragraph).toEqual({
+      command: 'cmd',
+      args: ['/c', 'npx', '-y', '@codragraph/cli@latest', 'mcp'],
     });
   });
 });

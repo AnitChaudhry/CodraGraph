@@ -56,20 +56,19 @@ describe('setupCommand codex execution', () => {
     await fs.rm(tempHome, { recursive: true, force: true });
   });
 
-  it('invokes codex mcp add with shell enabled on Windows', async () => {
+  it('invokes codex.cmd on Windows so .cmd shims resolve via execFile', async () => {
     const { setupCommand } = await import('../../src/cli/setup.js');
 
     await setupCommand();
 
     expect(execFileMock).toHaveBeenCalledWith(
-      'codex',
-      ['mcp', 'add', '@codragraph/cli', '--', 'cmd', '/c', 'npx', '-y', 'codragraph@latest', 'mcp'],
-      { shell: true },
+      'codex.cmd',
+      ['mcp', 'add', 'codragraph', '--', 'cmd', '/c', 'npx', '-y', '@codragraph/cli@latest', 'mcp'],
       expect.any(Function),
     );
   });
 
-  it('invokes codex mcp add without shell on non-Windows and does not write fallback config', async () => {
+  it('invokes codex (no .cmd) on non-Windows and does not write fallback config', async () => {
     setPlatform('darwin');
 
     const { setupCommand } = await import('../../src/cli/setup.js');
@@ -78,8 +77,7 @@ describe('setupCommand codex execution', () => {
 
     expect(execFileMock).toHaveBeenCalledWith(
       'codex',
-      ['mcp', 'add', '@codragraph/cli', '--', 'npx', '-y', 'codragraph@latest', 'mcp'],
-      { shell: false },
+      ['mcp', 'add', 'codragraph', '--', 'npx', '-y', '@codragraph/cli@latest', 'mcp'],
       expect.any(Function),
     );
 

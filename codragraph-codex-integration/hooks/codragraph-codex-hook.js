@@ -14,6 +14,15 @@
 const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 
+// On Windows, npm-installed bins are .cmd shims. Node 22's spawn refuses
+// to launch .cmd files directly (returns EINVAL); routing through `cmd /c`
+// lets PATHEXT resolve to the right shim. POSIX direct-spawn is fine.
+const IS_WIN = process.platform === 'win32';
+const runCli = (args, opts) =>
+  IS_WIN
+    ? spawnSync('cmd', ['/c', 'codragraph', ...args], opts)
+    : spawnSync('codragraph', args, opts);
+
 const main = async () => {
   const isPost = process.argv.includes('--post');
   let input = '';
@@ -31,7 +40,7 @@ const main = async () => {
 
   if (isPost) {
     // Post-edit: ask codragraph whether the index is now stale.
-    const result = spawnSync('@codragraph/cli', ['detect-changes', '--scope=unstaged'], {
+    const result = runCli(['detect-changes', '--scope=unstaged'], {
       cwd: payload.repoRoot ?? process.cwd(),
       encoding: 'utf-8',
       timeout: 8000,
@@ -51,7 +60,7 @@ const main = async () => {
     process.stdout.write(JSON.stringify({ context: '', blocked: false }));
     return;
   }
-  const result = spawnSync('@codragraph/cli', ['augment', String(target)], {
+  const result = runCli(['augment', String(target)], {
     cwd: payload.repoRoot ?? process.cwd(),
     encoding: 'utf-8',
     timeout: 8000,

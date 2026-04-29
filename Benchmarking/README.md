@@ -70,7 +70,7 @@ cp .env.example .env
 docker compose up -d vllm
 
 # 4. Index a target repo (we'll use codragraph itself as the corpus)
-docker compose run --rm codragraph npx codragraph analyze /workspace/repo
+docker compose run --rm codragraph codragraph analyze /workspace/repo
 
 # 5. Run the full benchmark sweep
 docker compose run --rm bench npm run benchmark -- \

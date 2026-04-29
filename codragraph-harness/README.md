@@ -1,8 +1,8 @@
-# codragraph-harness
+# @codragraph/harness
 
 Auto-tuned harnesses for AI agents — Meta-Harness Algorithm 1 with Pareto search over (accuracy, tokens, latency).
 
-Built on top of [`codragraph`](../codragraph/) MCP tools (graph-aware code intelligence) and works with any inference provider (Claude, Codex, OpenCode, OpenAI, Anthropic, Gemini, ...).
+Built on top of [`@codragraph/cli`](../codragraph/) MCP tools (graph-aware code intelligence) and works with any inference provider (Claude, Codex, OpenCode, OpenAI, Anthropic, Gemini, ...).
 
 ## Status
 
@@ -39,7 +39,7 @@ codragraph-harness search \
 ```
 
 ```ts
-import { search } from "codragraph-harness";
+import { search } from "@codragraph/harness";
 
 const frontier = await search({
   taskSet: "./tasks/codebase-qa/",
@@ -48,4 +48,4 @@ const frontier = await search({
 });
 ```
 
-Also exposed as a [`harness_run` MCP tool](../codragraph/) and via [`codragraph-sdk`](../codragraph-sdk/).
+Also exposed as a [`harness_run` MCP tool](../codragraph/) and via [`@codragraph/sdk`](../codragraph-sdk/).

@@ -386,8 +386,8 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
       console.error('  Suggestions:');
       console.error('    1. Clear the npm cache:    npm cache clean --force');
       console.error('    2. Update npm:             npm install -g npm@latest');
-      console.error('    3. Reinstall codragraph:     npm install -g codragraph@latest');
-      console.error('    4. Or try npx directly:    npx codragraph@latest analyze');
+      console.error('    3. Reinstall codragraph:     npm install -g @codragraph/cli@latest');
+      console.error('    4. Or try npx directly:    npx @codragraph/cli@latest analyze');
       console.error('');
     } else if (
       msg.includes('MODULE_NOT_FOUND') ||
@@ -396,8 +396,10 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
     ) {
       console.error('  A required module could not be loaded. The installation may be corrupt.');
       console.error('  Suggestions:');
-      console.error('    1. Reinstall:   npm install -g codragraph@latest');
-      console.error('    2. Clear cache: npm cache clean --force && npx codragraph@latest analyze');
+      console.error('    1. Reinstall:   npm install -g @codragraph/cli@latest');
+      console.error(
+        '    2. Clear cache: npm cache clean --force && npx @codragraph/cli@latest analyze',
+      );
       console.error('');
     }
 

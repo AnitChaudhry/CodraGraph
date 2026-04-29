@@ -36,8 +36,12 @@ if [ -z "$PATTERN" ] || [ ${#PATTERN} -lt 3 ]; then
   exit 0
 fi
 
-# Run codragraph augment
-RESULT=$(npx -y codragraph augment "$PATTERN" 2>/dev/null)
+# Run codragraph augment (prefer the global bin if present; fall back to npx)
+if command -v codragraph >/dev/null 2>&1; then
+  RESULT=$(codragraph augment "$PATTERN" 2>/dev/null)
+else
+  RESULT=$(npx -y @codragraph/cli augment "$PATTERN" 2>/dev/null)
+fi
 
 if [ -n "$RESULT" ]; then
   # Escape for JSON

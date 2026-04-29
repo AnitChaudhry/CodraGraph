@@ -33,7 +33,7 @@ export interface ProcessData {
  * Generate Mermaid flowchart from process data
  */
 export function generateProcessMermaid(process: ProcessData): string {
-  const { steps, edges, clusters } = process;
+  const { steps, edges } = process;
 
   if (!steps || steps.length === 0) {
     return 'graph TD\n  A[No steps found]';
@@ -97,7 +97,7 @@ export function generateProcessMermaid(process: ProcessData): string {
 
   if (useClusters) {
     // Generate subgraphs for each cluster
-    let clusterIndex = 0;
+    let _clusterIndex = 0;
 
     for (const [clusterName, clusterSteps] of clusterGroups) {
       lines.push(
@@ -112,7 +112,7 @@ export function generateProcessMermaid(process: ProcessData): string {
         lines.push(`    ${id}["${label}<br/><small>${file}</small>"]:::${className}`);
       }
       lines.push('  end');
-      clusterIndex++;
+      _clusterIndex++;
     }
 
     // Add unclustered steps

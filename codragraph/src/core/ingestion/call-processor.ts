@@ -772,7 +772,7 @@ export const processCalls = async (
         tree = parser.parse(file.content, undefined, {
           bufferSize: getTreeSitterBufferSize(file.content.length),
         });
-      } catch (parseError) {
+      } catch (_parseError) {
         continue;
       }
       astCache.set(file.path, tree);
@@ -862,7 +862,7 @@ export const processCalls = async (
   // loop above, so verifyConstructorBindings sees all provider bindings
   // regardless of file processing order.
   for (let i = 0; i < prepared.length; i++) {
-    const { file, language, provider, tree, matches, parentMap, typeEnv } = prepared[i];
+    const { file, language, provider, tree: _tree, matches, parentMap, typeEnv } = prepared[i];
 
     enclosingFnExtractCache.clear();
     onProgress?.(i + 1, files.length);

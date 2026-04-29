@@ -55,7 +55,16 @@ export const GraphStateProvider = ({ children }: { children: ReactNode }) => {
       highlightedNodeIds,
       setHighlightedNodeIds,
     }),
-    [graph, selectedNode, visibleLabels, visibleEdgeTypes, depthFilter, highlightedNodeIds],
+    [
+      graph,
+      selectedNode,
+      visibleLabels,
+      toggleLabelVisibility,
+      visibleEdgeTypes,
+      toggleEdgeVisibility,
+      depthFilter,
+      highlightedNodeIds,
+    ],
   );
 
   return <GraphStateContext.Provider value={value}>{children}</GraphStateContext.Provider>;

@@ -1,4 +1,6 @@
-# Codragraph CLI image — builds the workspace, exposes `npx codragraph`.
+# Codragraph CLI image — builds the workspace, exposes `codragraph` (the bin
+# from `@codragraph/cli`). Inside the container the bin is symlinked into
+# /usr/local/bin so you can call it directly: `docker compose run … codragraph …`.
 
 FROM node:22-bookworm-slim AS builder
 

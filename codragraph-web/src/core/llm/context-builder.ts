@@ -29,15 +29,23 @@ export interface Hotspot {
 }
 
 /**
- * Folder info for tree rendering
+ * Folder info for tree rendering — exposed for consumers building their own
+ * tree views on top of the structured tree shape.
  */
-interface FolderInfo {
+export interface FolderInfo {
   path: string;
   name: string;
   depth: number;
   fileCount: number;
   children: FolderInfo[];
 }
+
+/**
+ * Tree rendering style.
+ *   `indented` — TOON-style, indentation only (token-efficient; default).
+ *   `ascii`    — VS-Code-style with `├──`/`└──`/`│` box-drawing characters.
+ */
+export type TreeStyle = 'indented' | 'ascii';
 
 /**
  * Complete codebase context for prompt injection
@@ -145,12 +153,18 @@ export async function getHotspots(
 }
 
 /**
- * Build folder tree structure from file paths
- * Returns ASCII tree format with smart truncation for readability
+ * Build folder tree structure from file paths.
+ *
+ * Two render styles are wired in:
+ *   - `indented` (default): TOON-style, indentation only — token-efficient,
+ *     preferred for prompt injection.
+ *   - `ascii`: VS-Code-style box-drawing tree — more readable in human-facing
+ *     output (e.g. dashboards, debug dumps).
  */
 export async function getFolderTree(
   executeQuery: (cypher: string) => Promise<any[]>,
   maxDepth: number = 10,
+  style: TreeStyle = 'indented',
 ): Promise<string> {
   try {
     // Get all file paths
@@ -166,7 +180,10 @@ export async function getFolderTree(
 
     if (paths.length === 0) return '';
 
-    // Use hybrid ASCII format: clear hierarchy with smart truncation
+    if (style === 'ascii') {
+      const tree = buildTreeFromPaths(paths, maxDepth);
+      return formatTreeAsAscii(tree, '', true);
+    }
     return formatAsHybridAscii(paths, maxDepth);
   } catch (error) {
     console.error('Failed to get folder tree:', error);
@@ -241,7 +258,7 @@ function formatAsHybridAscii(paths: string[], maxDepth: number): string {
         lines.push(`${indent}${name}`);
       } else {
         // Directory
-        const childCount = childNode.children.size;
+        const _childCount = childNode.children.size;
         const fileCount = childNode.fileCount;
 
         // Only collapse if beyond maxDepth
@@ -261,9 +278,10 @@ function formatAsHybridAscii(paths: string[], maxDepth: number): string {
 }
 
 /**
- * Build a tree structure from file paths
+ * Build a tree structure from file paths. Used by the `ascii` render style
+ * in `getFolderTree`. Exported so callers can build their own renderers.
  */
-function buildTreeFromPaths(paths: string[], maxDepth: number): Map<string, any> {
+export function buildTreeFromPaths(paths: string[], maxDepth: number): Map<string, any> {
   const root = new Map<string, any>();
 
   for (const fullPath of paths) {
@@ -295,9 +313,14 @@ function buildTreeFromPaths(paths: string[], maxDepth: number): Map<string, any>
 }
 
 /**
- * Format tree as ASCII (like VS Code sidebar)
+ * Format tree as ASCII (like VS Code sidebar). Wired into `getFolderTree`
+ * via `style: 'ascii'`. Exported so callers can render their own trees.
  */
-function formatTreeAsAscii(tree: Map<string, any>, prefix: string, isLast: boolean = true): string {
+export function formatTreeAsAscii(
+  tree: Map<string, any>,
+  prefix: string,
+  _isLast: boolean = true,
+): string {
   const lines: string[] = [];
   const entries = Array.from(tree.entries());
 
@@ -348,17 +371,19 @@ function countItems(tree: Map<string, any>): number {
 }
 
 /**
- * Build complete codebase context
+ * Build complete codebase context. `treeStyle` controls how the folder tree
+ * renders — `indented` (default, token-efficient) or `ascii` (box-drawing).
  */
 export async function buildCodebaseContext(
   executeQuery: (cypher: string) => Promise<any[]>,
   projectName: string,
+  treeStyle: TreeStyle = 'indented',
 ): Promise<CodebaseContext> {
   // Run all queries in parallel for speed
   const [stats, hotspots, folderTree] = await Promise.all([
     getCodebaseStats(executeQuery, projectName),
     getHotspots(executeQuery),
-    getFolderTree(executeQuery),
+    getFolderTree(executeQuery, 10, treeStyle),
   ]);
 
   return {
