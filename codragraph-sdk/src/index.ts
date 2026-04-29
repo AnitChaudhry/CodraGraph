@@ -35,4 +35,4 @@ export type {
   GraphContextResult,
   GraphImpactInput,
   GraphImpactResult,
-} from "codragraph-harness/dist/types.js";
+} from "codragraph-harness/types";

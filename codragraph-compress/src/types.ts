@@ -1,6 +1,6 @@
 // Public contracts for codragraph-compress.
 
-import type { InferenceProvider } from "codragraph-harness/dist/inference/interface.js";
+import type { InferenceProvider } from "codragraph-harness/inference/interface";
 
 /** Compression aggressiveness; affects the prompt and target token-reduction ratio. */
 export type CompressionLevel = "min" | "balanced" | "max";

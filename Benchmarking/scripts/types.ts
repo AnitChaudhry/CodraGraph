@@ -1,6 +1,6 @@
 // Shared types across the bench scripts.
 
-import type { Scores } from "codragraph-harness/dist/evaluator/score.js";
+import type { Scores } from "codragraph-harness/evaluator/score";
 
 export type TreatmentTag =
   | "baseline-grep"

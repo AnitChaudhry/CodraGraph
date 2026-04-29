@@ -4,11 +4,11 @@ export {
   swarmSearch,
   type SwarmSearchOptions,
   type SwarmProgressEvent,
-} from "codragraph-harness/dist/swarm/algorithm.js";
+} from "codragraph-harness/swarm/algorithm";
 
-export { ExplorerRole, type ExplorerOptions } from "codragraph-harness/dist/swarm/explorer.js";
-export { ExploiterRole, type ExploiterOptions } from "codragraph-harness/dist/swarm/exploiter.js";
-export { LlmCriticRole, type CriticOptions } from "codragraph-harness/dist/swarm/critic.js";
+export { ExplorerRole, type ExplorerOptions } from "codragraph-harness/swarm/explorer";
+export { ExploiterRole, type ExploiterOptions } from "codragraph-harness/swarm/exploiter";
+export { LlmCriticRole, type CriticOptions } from "codragraph-harness/swarm/critic";
 
 export {
   maxIterations,
@@ -18,12 +18,12 @@ export {
   costBudget,
   anyOf,
   firstFiring,
-} from "codragraph-harness/dist/swarm/termination.js";
+} from "codragraph-harness/swarm/termination";
 
 export {
   DefaultSwarmCoordinator,
   type DefaultSwarmCoordinatorOptions,
-} from "codragraph-harness/dist/swarm/coordinator.js";
+} from "codragraph-harness/swarm/coordinator";
 
 export type {
   Role,
@@ -39,4 +39,4 @@ export type {
   SwarmStepInput,
   SwarmStepResult,
   SwarmSearchResult,
-} from "codragraph-harness/dist/swarm/interface.js";
+} from "codragraph-harness/swarm/interface";

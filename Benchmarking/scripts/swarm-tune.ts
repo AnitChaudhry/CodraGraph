@@ -16,25 +16,25 @@ import { Command } from "commander";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { swarmSearch } from "codragraph-harness/dist/swarm/algorithm.js";
-import { ExplorerRole } from "codragraph-harness/dist/swarm/explorer.js";
-import { ExploiterRole } from "codragraph-harness/dist/swarm/exploiter.js";
-import { LlmCriticRole } from "codragraph-harness/dist/swarm/critic.js";
+import { swarmSearch } from "codragraph-harness/swarm/algorithm";
+import { ExplorerRole } from "codragraph-harness/swarm/explorer";
+import { ExploiterRole } from "codragraph-harness/swarm/exploiter";
+import { LlmCriticRole } from "codragraph-harness/swarm/critic";
 import {
   costBudget,
   maxIterations,
   paretoPlateau,
   timeBudget,
   tokenBudget,
-} from "codragraph-harness/dist/swarm/termination.js";
-import type { TerminationPredicate } from "codragraph-harness/dist/swarm/interface.js";
-import { CandidateStore } from "codragraph-harness/dist/filesystem.js";
-import { CodebaseQAEvaluator } from "codragraph-harness/dist/evaluator/impl.js";
-import { ALL_SEEDS } from "codragraph-harness/dist/harness/seeds/index.js";
-import { compileAndLoadCandidate } from "codragraph-harness/dist/loader.js";
-import { LocalGraphClient } from "codragraph-harness/dist/graph/local-client.js";
-import { OpenAIInferenceProvider } from "codragraph-harness/dist/inference/openai.js";
-import { ClaudeInferenceProvider } from "codragraph-harness/dist/inference/claude.js";
+} from "codragraph-harness/swarm/termination";
+import type { TerminationPredicate } from "codragraph-harness/swarm/interface";
+import { CandidateStore } from "codragraph-harness/filesystem";
+import { CodebaseQAEvaluator } from "codragraph-harness/evaluator/impl";
+import { ALL_SEEDS } from "codragraph-harness/harness/seeds/index";
+import { compileAndLoadCandidate } from "codragraph-harness/loader";
+import { LocalGraphClient } from "codragraph-harness/graph/local-client";
+import { OpenAIInferenceProvider } from "codragraph-harness/inference/openai";
+import { ClaudeInferenceProvider } from "codragraph-harness/inference/claude";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -113,7 +113,7 @@ async function runSwarmTune(opts: TuneOpts): Promise<void> {
   const criticInference =
     opts.criticInference === "claude" ? new ClaudeInferenceProvider() : new OpenAIInferenceProvider();
 
-  const { LocalBackend } = await import("codragraph/dist/mcp/local/local-backend.js");
+  const { LocalBackend } = await import("codragraph/mcp/local/local-backend");
   const backend = new LocalBackend();
   const graph = new LocalGraphClient({ backend, defaultRepo: opts.repo });
 

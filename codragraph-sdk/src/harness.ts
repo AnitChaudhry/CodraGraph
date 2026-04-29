@@ -5,7 +5,7 @@ export {
   type SearchOptions,
   type SearchResult,
   type ProgressEvent,
-} from "codragraph-harness/dist/algorithm.js";
+} from "codragraph-harness/algorithm";
 
 export {
   ALL_SEEDS,
@@ -13,22 +13,22 @@ export {
   zeroShot,
   fewShot,
   graphAware,
-} from "codragraph-harness/dist/harness/seeds/index.js";
+} from "codragraph-harness/harness/seeds/index";
 
 export type {
   Harness,
   HarnessContext,
   HarnessOrigin,
-} from "codragraph-harness/dist/harness/interface.js";
+} from "codragraph-harness/harness/interface";
 
 export type {
   Proposer,
   ProposeInput,
   HarnessSource,
   SourceFile,
-} from "codragraph-harness/dist/proposer/interface.js";
+} from "codragraph-harness/proposer/interface";
 
-export { ClaudeCodeProposer } from "codragraph-harness/dist/proposer/claude-code.js";
+export { ClaudeCodeProposer } from "codragraph-harness/proposer/claude-code";
 
 export type {
   InferenceProvider,
@@ -36,7 +36,7 @@ export type {
   CompletionResult,
   ToolDefinition,
   ToolCall,
-} from "codragraph-harness/dist/inference/interface.js";
+} from "codragraph-harness/inference/interface";
 
 export {
   ClaudeInferenceProvider,
@@ -44,28 +44,28 @@ export {
   OpenCodeInferenceProvider,
   makeInferenceProvider,
   type ProviderName,
-} from "codragraph-harness/dist/inference/index.js";
+} from "codragraph-harness/inference/index";
 
 export {
   CandidateStore,
   type CandidateSummary,
   type CandidateMetadata,
   type TraceRecord,
-} from "codragraph-harness/dist/filesystem.js";
+} from "codragraph-harness/filesystem";
 
 export {
   ParetoFrontier,
   type ParetoPoint,
   type AddResult,
-} from "codragraph-harness/dist/pareto.js";
+} from "codragraph-harness/pareto";
 
 export {
   CodebaseQAEvaluator,
   type CodebaseQATask,
   type CodebaseQAEvaluatorOptions,
-} from "codragraph-harness/dist/evaluator/impl.js";
+} from "codragraph-harness/evaluator/impl";
 
 export type {
   Scores,
   PerTaskScore,
-} from "codragraph-harness/dist/evaluator/score.js";
+} from "codragraph-harness/evaluator/score";

@@ -25,4 +25,4 @@ export {
   swarmSearchWithMoat,
   type SwarmSearchWithMoatOptions,
   type SwarmSearchWithMoatResult,
-} from "codragraph-harness/dist/moat/index.js";
+} from "codragraph-harness/moat/index";

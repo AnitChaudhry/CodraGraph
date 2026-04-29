@@ -7,7 +7,7 @@
 // as a hard runtime dep of codragraph.
 //
 // Phase 1 wiring in codragraph: import { handleHarnessRun } from
-// "codragraph-harness/dist/mcp/handler.js" and register it in the local
+// "codragraph-harness/mcp/handler" and register it in the local
 // handler dispatcher. (RFC.md spells out the exact integration point.)
 
 import path from "node:path";
@@ -134,7 +134,7 @@ export async function handleHarnessRun(
   const inference = await makeInferenceProvider((input.inference ?? "claude") as ProviderName);
 
   // In-process graph client via codragraph's LocalBackend.
-  const { LocalBackend } = await import("codragraph/dist/mcp/local/local-backend.js");
+  const { LocalBackend } = await import("codragraph/mcp/local/local-backend");
   const backend = new LocalBackend();
   const graph = new LocalGraphClient({ backend, defaultRepo: input.repo });
 
@@ -205,7 +205,7 @@ export async function handleHarnessSwarmRun(
     (input.critic_inference ?? input.inference ?? "claude") as ProviderName,
   );
 
-  const { LocalBackend } = await import("codragraph/dist/mcp/local/local-backend.js");
+  const { LocalBackend } = await import("codragraph/mcp/local/local-backend");
   const backend = new LocalBackend();
   const graph = new LocalGraphClient({ backend, defaultRepo: input.repo });
 

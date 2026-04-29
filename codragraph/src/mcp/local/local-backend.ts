@@ -680,7 +680,7 @@ export class LocalBackend {
       case 'harness_swarm_run': {
         // Same lazy-import dance as harness_run (see comments below) — keeps
         // codragraph-harness optional and avoids a circular build-time dep.
-        const harnessModuleId: string = 'codragraph-harness/dist/mcp/handler.js';
+        const harnessModuleId: string = 'codragraph-harness/mcp/handler';
         const dynImport = (id: string): Promise<unknown> =>
           import(/* @vite-ignore */ id);
         let handler: ((p: unknown) => Promise<unknown>) | undefined;
@@ -775,7 +775,7 @@ export class LocalBackend {
       case 'harness_recipes_lookup': {
         // Phase 4 × Phase 3 moat tools — same lazy-import dance as the
         // other harness handlers so codragraph-harness stays optional.
-        const harnessModuleId: string = 'codragraph-harness/dist/mcp/handler.js';
+        const harnessModuleId: string = 'codragraph-harness/mcp/handler';
         const dynImport = (id: string): Promise<unknown> =>
           import(/* @vite-ignore */ id);
         let mod: {
@@ -809,7 +809,7 @@ export class LocalBackend {
         // not try to resolve the path at compile time — the harness package's
         // .d.ts files do not exist while codragraph itself is being built
         // for the first time during workspace install.
-        const harnessModuleId: string = 'codragraph-harness/dist/mcp/handler.js';
+        const harnessModuleId: string = 'codragraph-harness/mcp/handler';
         const dynImport = (id: string): Promise<unknown> =>
           import(/* @vite-ignore */ id);
         let handler: ((p: unknown) => Promise<unknown>) | undefined;

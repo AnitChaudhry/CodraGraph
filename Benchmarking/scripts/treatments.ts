@@ -4,20 +4,20 @@
 // responsible for: setting up the agent's tools, running the per-task loop,
 // invoking the judge, accumulating tokens/latency/cost.
 
-import { CodebaseQAEvaluator } from "codragraph-harness/dist/evaluator/impl.js";
-import { scoreAnswer } from "codragraph-harness/dist/evaluator/judge.js";
-import { LlmCompressor } from "codragraph-compress/dist/index.js";
+import { CodebaseQAEvaluator } from "codragraph-harness/evaluator/impl";
+import { scoreAnswer } from "codragraph-harness/evaluator/judge";
+import { LlmCompressor } from "codragraph-compress/index";
 import {
   zeroShot,
   fewShot,
   graphAware,
-} from "codragraph-harness/dist/harness/seeds/index.js";
-import { LocalGraphClient } from "codragraph-harness/dist/graph/local-client.js";
-import { InMemoryTraceWriter } from "codragraph-harness/dist/trace.js";
-import { resolveBudget } from "codragraph-harness/dist/types.js";
-import type { InferenceProvider } from "codragraph-harness/dist/inference/interface.js";
-import type { Harness, HarnessContext } from "codragraph-harness/dist/harness/interface.js";
-import type { GraphClient } from "codragraph-harness/dist/types.js";
+} from "codragraph-harness/harness/seeds/index";
+import { LocalGraphClient } from "codragraph-harness/graph/local-client";
+import { InMemoryTraceWriter } from "codragraph-harness/trace";
+import { resolveBudget } from "codragraph-harness/types";
+import type { InferenceProvider } from "codragraph-harness/inference/interface";
+import type { Harness, HarnessContext } from "codragraph-harness/harness/interface";
+import type { GraphClient } from "codragraph-harness/types";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { ModelSpec, TaskInput, TaskResult, TreatmentTag } from "./types.js";
@@ -316,7 +316,7 @@ async function runGraphCompress(input: RunTreatmentInput): Promise<TaskResult[]>
 async function buildGraphClient(repoPath: string): Promise<GraphClient> {
   // Use codragraph's LocalBackend in-process. Requires the repo to have been
   // analyzed (`codragraph analyze`) before the bench runs.
-  const { LocalBackend } = await import("codragraph/dist/mcp/local/local-backend.js");
+  const { LocalBackend } = await import("codragraph/mcp/local/local-backend");
   const backend = new LocalBackend();
   return new LocalGraphClient({ backend, defaultRepo: repoPath });
 }

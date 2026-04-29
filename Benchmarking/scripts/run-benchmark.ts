@@ -18,10 +18,10 @@ import yaml from "yaml";
 import {
   makeInferenceProvider,
   type ProviderName,
-} from "codragraph-harness/dist/inference/index.js";
-import { OpenAIInferenceProvider } from "codragraph-harness/dist/inference/openai.js";
-import { ClaudeInferenceProvider } from "codragraph-harness/dist/inference/claude.js";
-import type { InferenceProvider } from "codragraph-harness/dist/inference/interface.js";
+} from "codragraph-harness/inference/index";
+import { OpenAIInferenceProvider } from "codragraph-harness/inference/openai";
+import { ClaudeInferenceProvider } from "codragraph-harness/inference/claude";
+import type { InferenceProvider } from "codragraph-harness/inference/interface";
 import type {
   CellResult,
   ModelSpec,

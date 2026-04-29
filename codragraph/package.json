@@ -22,6 +22,16 @@
     "codebase-indexing"
   ],
   "type": "module",
+  "exports": {
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    },
+    "./*.js": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
   "bin": {
     "codragraph": "dist/cli/index.js"
   },

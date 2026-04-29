@@ -264,7 +264,7 @@ async function runSearch(opts: SearchCliOptions): Promise<void> {
   // In-process graph client. We construct codragraph's LocalBackend directly
   // — same monorepo, no HTTP hop. Out-of-process / hosted scenarios use a
   // future MCP-over-HTTP client (Phase 2).
-  const { LocalBackend } = await import("codragraph/dist/mcp/local/local-backend.js");
+  const { LocalBackend } = await import("codragraph/mcp/local/local-backend");
   const backend = new LocalBackend();
   const graph = new LocalGraphClient({ backend, defaultRepo: opts.repo });
 
@@ -410,7 +410,7 @@ async function runSwarmSearch(opts: SwarmCliOptions): Promise<void> {
     ? await makeInferenceProvider(opts.judge as ProviderName)
     : undefined;
 
-  const { LocalBackend } = await import("codragraph/dist/mcp/local/local-backend.js");
+  const { LocalBackend } = await import("codragraph/mcp/local/local-backend");
   const backend = new LocalBackend();
   const graph = new LocalGraphClient({ backend, defaultRepo: opts.repo });
 

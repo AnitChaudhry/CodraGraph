@@ -27,25 +27,13 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./algorithm": {
-      "types": "./dist/algorithm.d.ts",
-      "default": "./dist/algorithm.js"
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
     },
-    "./harness": {
-      "types": "./dist/harness/interface.d.ts",
-      "default": "./dist/harness/interface.js"
-    },
-    "./proposer": {
-      "types": "./dist/proposer/interface.d.ts",
-      "default": "./dist/proposer/interface.js"
-    },
-    "./inference": {
-      "types": "./dist/inference/interface.d.ts",
-      "default": "./dist/inference/interface.js"
-    },
-    "./dist/*": {
-      "types": "./dist/*",
-      "default": "./dist/*"
+    "./*.js": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
     }
   },
   "bin": {

@@ -111,7 +111,7 @@ function resolveCliPath() {
   let cliPath = path.resolve(__dirname, '..', '..', 'dist', 'cli', 'index.js');
   if (!fs.existsSync(cliPath)) {
     try {
-      cliPath = require.resolve('codragraph/dist/cli/index.js');
+      cliPath = require.resolve('codragraph/cli/index');
     } catch {
       cliPath = '';
     }
