@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund --include=optional
       - run: npm run format:check
       - run: npm run lint
 
@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund --include=optional
       - name: build + typecheck all packages
         # Packages MUST run in dependency order — downstream packages
         # need upstream `dist/` populated for type resolution to succeed.
@@ -79,7 +79,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund --include=optional
       - name: graphstore tests
         run: npm test --workspace @codragraph/graphstore
       - name: harness tests
@@ -95,7 +95,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund --include=optional
       - name: Build publishable packages
         # Same dep-order rationale as the typecheck job:
         # shared → graphstore → cli → harness → compress → sdk → org
