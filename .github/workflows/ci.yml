@@ -37,13 +37,26 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: tsc all packages
+      - name: build + typecheck all packages
+        # Packages MUST run in dependency order — downstream packages
+        # need upstream `dist/` populated for type resolution to succeed.
+        # `npm run build` per package writes dist (which doubles as a
+        # typecheck), so we don't need a separate `tsc --noEmit` pass.
+        # Order rationale:
+        #   shared  → no deps
+        #   graphstore → shared
+        #   codragraph → shared + graphstore
+        #   harness → codragraph + shared
+        #   compress → harness + shared
+        #   sdk → harness
+        #   org → graphstore + shared
+        #   web (app) → shared
         run: |
           set -e
-          for pkg in codragraph-shared codragraph-graphstore codragraph-harness codragraph-compress codragraph-sdk codragraph; do
-            if [ -f "$pkg/tsconfig.json" ]; then
-              echo "::group::tsc $pkg"
-              (cd "$pkg" && npx tsc --noEmit)
+          for pkg in codragraph-shared codragraph-graphstore codragraph codragraph-harness codragraph-compress codragraph-sdk codragraph-org; do
+            if [ -f "$pkg/package.json" ]; then
+              echo "::group::build $pkg"
+              (cd "$pkg" && npm run build)
               echo "::endgroup::"
             fi
           done
