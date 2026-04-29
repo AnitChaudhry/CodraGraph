@@ -1,0 +1,84 @@
+{
+  "name": "codragraph-sdk",
+  "version": "0.1.0",
+  "description": "One-import surface for the CodraGraph platform \u2014 graph intelligence, dynamic harness, compression. Works with Claude Code, Codex, OpenCode, any inference.",
+  "author": {
+    "name": "Anit Chaudhary",
+    "email": "getintouch.anit@gmail.com",
+    "url": "https://anit.upfyn.com"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "codragraph",
+    "ai-agent",
+    "mcp",
+    "claude-code",
+    "codex",
+    "opencode",
+    "code-intelligence",
+    "knowledge-graph",
+    "meta-harness",
+    "agentic-ai",
+    "token-savings"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./harness": {
+      "types": "./dist/harness.d.ts",
+      "default": "./dist/harness.js"
+    },
+    "./graph": {
+      "types": "./dist/graph.d.ts",
+      "default": "./dist/graph.js"
+    },
+    "./compress": {
+      "types": "./dist/compress.d.ts",
+      "default": "./dist/compress.js"
+    },
+    "./swarm": {
+      "types": "./dist/swarm.d.ts",
+      "default": "./dist/swarm.js"
+    },
+    "./graphstore": {
+      "types": "./dist/graphstore.d.ts",
+      "default": "./dist/graphstore.js"
+    },
+    "./recipes": {
+      "types": "./dist/recipes.d.ts",
+      "default": "./dist/recipes.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "prepack": "tsc"
+  },
+  "dependencies": {
+    "codragraph": "*",
+    "codragraph-harness": "*",
+    "codragraph-compress": "*",
+    "codragraph-graphstore": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.4.5",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

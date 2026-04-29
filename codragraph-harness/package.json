@@ -1,0 +1,90 @@
+{
+  "name": "codragraph-harness",
+  "version": "0.1.0",
+  "description": "Auto-tuned harnesses for AI agents \u2014 Meta-Harness algorithm with Pareto search over (accuracy, tokens, latency)",
+  "author": {
+    "name": "Anit Chaudhary",
+    "email": "getintouch.anit@gmail.com",
+    "url": "https://anit.upfyn.com"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "meta-harness",
+    "agentic-ai",
+    "claude-code",
+    "codex",
+    "opencode",
+    "mcp",
+    "codragraph",
+    "pareto-search",
+    "ai-agent"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./algorithm": {
+      "types": "./dist/algorithm.d.ts",
+      "default": "./dist/algorithm.js"
+    },
+    "./harness": {
+      "types": "./dist/harness/interface.d.ts",
+      "default": "./dist/harness/interface.js"
+    },
+    "./proposer": {
+      "types": "./dist/proposer/interface.d.ts",
+      "default": "./dist/proposer/interface.js"
+    },
+    "./inference": {
+      "types": "./dist/inference/interface.d.ts",
+      "default": "./dist/inference/interface.js"
+    },
+    "./dist/*": {
+      "types": "./dist/*",
+      "default": "./dist/*"
+    }
+  },
+  "bin": {
+    "codragraph-harness": "dist/cli/main.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "RFC.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/cli/main.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepack": "tsc"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "codragraph": "*",
+    "codragraph-shared": "*",
+    "commander": "^14.0.3",
+    "esbuild": "^0.24.0",
+    "openai": "^4.70.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.5",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

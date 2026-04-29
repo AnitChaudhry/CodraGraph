@@ -1,0 +1,8 @@
+﻿{
+  "mcpServers": {
+    "codragraph": {
+      "command": "npx",
+      "args": ["-y", "codragraph@latest", "mcp"]
+    }
+  }
+}

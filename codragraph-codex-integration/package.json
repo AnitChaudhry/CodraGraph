@@ -1,0 +1,34 @@
+{
+  "name": "codragraph-codex-integration",
+  "version": "0.1.0",
+  "description": "OpenAI Codex CLI integration for CodraGraph — graph-aware context for Codex commands via codex.config.json hooks.",
+  "author": {
+    "name": "Anit Chaudhary",
+    "email": "getintouch.anit@gmail.com",
+    "url": "https://anit.upfyn.com"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "codex",
+    "openai-codex",
+    "codragraph",
+    "code-intelligence",
+    "knowledge-graph",
+    "ai-agent"
+  ],
+  "files": [
+    "codex.config.template.json",
+    "hooks",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "peerDependencies": {
+    "codragraph": ">=1.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

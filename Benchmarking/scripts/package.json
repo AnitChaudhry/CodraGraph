@@ -1,0 +1,35 @@
+{
+  "name": "codragraph-bench",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Benchmark scripts for the Codragraph platform — runs treatment matrices, captures metrics, generates reports.",
+  "author": {
+    "name": "Anit Chaudhary",
+    "email": "getintouch.anit@gmail.com",
+    "url": "https://anit.upfyn.com"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "type": "module",
+  "scripts": {
+    "benchmark": "tsx run-benchmark.ts",
+    "swarm-tune": "tsx swarm-tune.ts",
+    "report": "tsx export-report.ts",
+    "compare": "tsx compare-baselines.ts"
+  },
+  "dependencies": {
+    "codragraph": "*",
+    "codragraph-harness": "*",
+    "codragraph-compress": "*",
+    "codragraph-sdk": "*",
+    "commander": "^14.0.3",
+    "yaml": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

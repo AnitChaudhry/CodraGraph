@@ -1,0 +1,114 @@
+# Pinned model registry for the bench. Keep in sync with Benchmarking/models/01-model-matrix.md.
+# Use `<sha>` placeholders until you've pinned actual revisions for a published run.
+
+models:
+  # === Tiny tier (1–4B) ===
+  qwen-coder-1_5b:
+    displayName: "Qwen2.5-Coder 1.5B (FP16)"
+    provider: vllm
+    modelId: Qwen/Qwen2.5-Coder-1.5B-Instruct
+    revision: <sha>
+    quantization: none
+    maxContext: 32768
+
+  llama-3_2-3b:
+    displayName: "Llama 3.2 3B (FP16)"
+    provider: vllm
+    modelId: meta-llama/Llama-3.2-3B-Instruct
+    revision: <sha>
+    quantization: none
+    maxContext: 131072
+
+  claude-haiku:
+    displayName: "Claude Haiku 4.5"
+    provider: anthropic
+    modelId: claude-haiku-4-5-20251001
+    quantization: none
+    maxContext: 200000
+
+  # === Small tier (7–9B) ===
+  qwen-coder-7b:
+    displayName: "Qwen2.5-Coder 7B (FP16)"
+    provider: vllm
+    modelId: Qwen/Qwen2.5-Coder-7B-Instruct
+    revision: <sha>
+    quantization: none
+    maxContext: 32768
+
+  qwen-coder-7b-awq:
+    displayName: "Qwen2.5-Coder 7B (AWQ-int4)"
+    provider: vllm
+    modelId: Qwen/Qwen2.5-Coder-7B-Instruct-AWQ
+    revision: <sha>
+    quantization: awq
+    maxContext: 32768
+
+  deepseek-coder-v2-lite:
+    displayName: "DeepSeek-Coder V2 Lite (16B MoE)"
+    provider: vllm
+    modelId: deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct
+    revision: <sha>
+    quantization: none
+    maxContext: 163840
+
+  gpt-4o-mini:
+    displayName: "GPT-4o-mini (2024-07-18)"
+    provider: openai
+    modelId: gpt-4o-mini-2024-07-18
+    quantization: none
+    maxContext: 128000
+
+  # === Mid tier (13–34B) ===
+  qwen-coder-32b-awq:
+    displayName: "Qwen2.5-Coder 32B (AWQ-int4)"
+    provider: vllm
+    modelId: Qwen/Qwen2.5-Coder-32B-Instruct-AWQ
+    revision: <sha>
+    quantization: awq
+    maxContext: 32768
+
+  codestral-22b:
+    displayName: "Codestral 22B (FP16)"
+    provider: vllm
+    modelId: mistralai/Codestral-22B-v0.1
+    revision: <sha>
+    quantization: none
+    maxContext: 32768
+
+  claude-sonnet:
+    displayName: "Claude Sonnet 4.6"
+    provider: anthropic
+    modelId: claude-sonnet-4-6
+    quantization: none
+    maxContext: 200000
+
+  # === Large tier (70B+) ===
+  llama-3_3-70b-awq:
+    displayName: "Llama 3.3 70B (AWQ-int4)"
+    provider: vllm
+    modelId: hugging-quants/Meta-Llama-3.3-70B-Instruct-AWQ-INT4
+    revision: <sha>
+    quantization: awq
+    maxContext: 131072
+
+  claude-opus:
+    displayName: "Claude Opus 4.7"
+    provider: anthropic
+    modelId: claude-opus-4-7
+    quantization: none
+    maxContext: 200000
+
+  gpt-4o:
+    displayName: "GPT-4o (2024-11-20)"
+    provider: openai
+    modelId: gpt-4o-2024-11-20
+    quantization: none
+    maxContext: 128000
+
+  # === Frontier tier (closed only) ===
+  gpt-5_5:
+    displayName: "GPT-5.5"
+    provider: openai
+    modelId: gpt-5-5  # placeholder; pin exact dated id once available
+    quantization: none
+    maxContext: 200000

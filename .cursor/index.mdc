@@ -1,0 +1,21 @@
+---
+alwaysApply: true
+---
+
+# CodraGraph — Cursor project rules
+
+Last reviewed: 2026-03-2
+
+Canonical agent instructions: **[AGENTS.md](../AGENTS.md)** (CodraGraph MCP rules, monorepo commands, Cursor Cloud notes). **[CLAUDE.md](../CLAUDE.md)** adds Claude Code-specific notes and points back to AGENTS.md for CodraGraph.
+
+## Non-negotiables (always apply)
+
+- NEVER edit a function/class/method without running `codragraph_impact` first.
+- NEVER rename symbols with find-and-replace — use `codragraph_rename`.
+- NEVER commit without running `codragraph_detect_changes()`.
+- NEVER ignore HIGH/CRITICAL risk warnings from impact analysis.
+- NEVER run `npx codragraph analyze` without `--embeddings` if `.codragraph/meta.json` shows stored embeddings.
+
+Full rules: **[AGENTS.md](../AGENTS.md)** (`codragraph:start` block, Cursor Cloud section).
+
+**Rule architecture:** Prefer this file plus optional `.cursor/rules/*.mdc` globs (YAML `globs` in frontmatter). Legacy `.cursorrules` is deprecated; content lives here.

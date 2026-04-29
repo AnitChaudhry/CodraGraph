@@ -1,0 +1,3 @@
+{
+  "installCommand": "cd ../codragraph-shared && npm install && npm run build && cd ../codragraph-web && npm install"
+}

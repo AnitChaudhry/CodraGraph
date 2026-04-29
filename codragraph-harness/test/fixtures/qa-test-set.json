@@ -1,0 +1,621 @@
+{
+  "name": "codebase-qa-codragraph-monorepo-v1",
+  "description": "105 hand-labeled Q&A tasks against the codragraph monorepo. Mix of: (a) what does X do, (b) where is Y called, (c) what breaks if Z changes, (d) which file defines W, (e) cross-package, (f) language-specific MRO and call-resolution, (g) protocol/format, (h) build/CI, (i) brand and product roadmap. Used as the search-set for codragraph-harness Phase 1.",
+  "createdAt": "2026-04-29",
+  "expandedAt": "2026-04-29",
+  "tasks": [
+    {
+      "id": "qa-001",
+      "question": "Where is the parse phase defined?",
+      "expectedAnswer": "codragraph/src/core/ingestion/pipeline-phases/parse.ts",
+      "acceptParaphrases": ["pipeline-phases/parse.ts"]
+    },
+    {
+      "id": "qa-002",
+      "question": "Which phase produces Section nodes from markdown files?",
+      "expectedAnswer": "markdown",
+      "acceptParaphrases": ["the markdown phase", "pipeline-phases/markdown.ts"]
+    },
+    {
+      "id": "qa-003",
+      "question": "What does the impact MCP tool return?",
+      "expectedAnswer": "Blast radius: a list of upstream/downstream symbols affected by changing the target, each with a depth and a risk level.",
+      "acceptParaphrases": ["upstream/downstream affected symbols with risk level"]
+    },
+    {
+      "id": "qa-004",
+      "question": "Which package owns the React UI?",
+      "expectedAnswer": "codragraph-web",
+      "acceptParaphrases": ["the codragraph-web package"]
+    },
+    {
+      "id": "qa-005",
+      "question": "What graph database does codragraph use for the indexed knowledge graph?",
+      "expectedAnswer": "LadybugDB",
+      "acceptParaphrases": ["lbug", "@ladybugdb/core"]
+    },
+    {
+      "id": "qa-006",
+      "question": "How many languages does codragraph index?",
+      "expectedAnswer": "16 languages"
+    },
+    {
+      "id": "qa-007",
+      "question": "What MRO strategy does Python use in codragraph?",
+      "expectedAnswer": "C3 linearization",
+      "acceptParaphrases": ["c3", "C3"]
+    },
+    {
+      "id": "qa-008",
+      "question": "Which embeddings model does codragraph use?",
+      "expectedAnswer": "Snowflake arctic-embed-xs (384D)",
+      "acceptParaphrases": ["snowflake arctic-embed-xs", "arctic-embed-xs"]
+    },
+    {
+      "id": "qa-009",
+      "question": "What HTTP port does codragraph serve listen on by default?",
+      "expectedAnswer": "4747"
+    },
+    {
+      "id": "qa-010",
+      "question": "Where is the call resolution DAG implemented?",
+      "expectedAnswer": "codragraph/src/core/ingestion/call-processor.ts",
+      "acceptParaphrases": ["call-processor.ts"]
+    },
+    {
+      "id": "qa-011",
+      "question": "What hook on LanguageProvider lets a language define implicit-self call rewriting?",
+      "expectedAnswer": "inferImplicitReceiver"
+    },
+    {
+      "id": "qa-012",
+      "question": "Which language is the only current implementer of inferImplicitReceiver?",
+      "expectedAnswer": "Ruby"
+    },
+    {
+      "id": "qa-013",
+      "question": "What is the search algorithm used by the query MCP tool?",
+      "expectedAnswer": "Hybrid BM25 + semantic vector merged via Reciprocal Rank Fusion (K=60)",
+      "acceptParaphrases": ["BM25 + vector RRF", "BM25 plus vector with reciprocal rank fusion"]
+    },
+    {
+      "id": "qa-014",
+      "question": "What suffix do node ids use for overloaded methods?",
+      "expectedAnswer": "#<paramCount> arity suffix; type-hash ~type1,type2 added on same-arity collision",
+      "acceptParaphrases": ["#<arity> with optional type-hash"]
+    },
+    {
+      "id": "qa-015",
+      "question": "Where is the Pareto frontier implementation in codragraph-harness?",
+      "expectedAnswer": "codragraph-harness/src/pareto.ts"
+    },
+    {
+      "id": "qa-016",
+      "question": "What three objectives does the codragraph-harness Pareto frontier optimize?",
+      "expectedAnswer": "accuracy (higher is better), tokens (lower is better), latencyMs (lower is better)",
+      "acceptParaphrases": ["accuracy, tokens, latency"]
+    },
+    {
+      "id": "qa-017",
+      "question": "Which file defines the Harness contract in codragraph-harness?",
+      "expectedAnswer": "codragraph-harness/src/harness/interface.ts"
+    },
+    {
+      "id": "qa-018",
+      "question": "Where is the global repo registry stored?",
+      "expectedAnswer": "~/.codragraph/registry.json"
+    },
+    {
+      "id": "qa-019",
+      "question": "Which scope-resolution languages are currently registry-primary?",
+      "expectedAnswer": "Python and C#",
+      "acceptParaphrases": ["python and csharp"]
+    },
+    {
+      "id": "qa-020",
+      "question": "What is the import-resolution confidence for tier-1 (same-file)?",
+      "expectedAnswer": "0.95"
+    },
+    {
+      "id": "qa-021",
+      "question": "How many MCP tools does the codragraph package expose?",
+      "expectedAnswer": "16",
+      "acceptParaphrases": ["sixteen", "13 tools plus 2 group resources is 13+2 — current count is 16 tools per AGENTS.md"]
+    },
+    {
+      "id": "qa-022",
+      "question": "What community-detection algorithm is used in the communities phase?",
+      "expectedAnswer": "Leiden algorithm",
+      "acceptParaphrases": ["leiden"]
+    },
+    {
+      "id": "qa-023",
+      "question": "Which file tracks the migrated-languages flag for the scope-resolution pipeline?",
+      "expectedAnswer": "codragraph/src/core/ingestion/registry-primary-flag.ts",
+      "acceptParaphrases": ["registry-primary-flag.ts"]
+    },
+    {
+      "id": "qa-024",
+      "question": "What is the byte-budget chunk size used by the parse phase?",
+      "expectedAnswer": "approximately 20 MB",
+      "acceptParaphrases": ["~20 MB", "20MB"]
+    },
+    {
+      "id": "qa-025",
+      "question": "What is the default proposer used by codragraph-harness Phase 1?",
+      "expectedAnswer": "Claude Code subprocess",
+      "acceptParaphrases": ["claude-code", "ClaudeCodeProposer"]
+    },
+    {
+      "id": "qa-026",
+      "question": "Which directory holds per-task execution traces under a candidate?",
+      "expectedAnswer": "candidates/<id>/traces/",
+      "acceptParaphrases": ["traces/ directory inside the candidate"]
+    },
+    {
+      "id": "qa-027",
+      "question": "What inference providers ship in codragraph-harness Phase 1?",
+      "expectedAnswer": "Claude (Anthropic), OpenAI (Codex), OpenCode",
+      "acceptParaphrases": ["claude, openai, opencode"]
+    },
+    {
+      "id": "qa-028",
+      "question": "What does the detect-changes MCP tool do?",
+      "expectedAnswer": "Maps git diff hunks to indexed symbols and affected execution flows.",
+      "acceptParaphrases": ["maps git diffs to affected symbols"]
+    },
+    {
+      "id": "qa-029",
+      "question": "What is the unified Harness contract entry point method?",
+      "expectedAnswer": "run(task, ctx)",
+      "acceptParaphrases": ["the run method"]
+    },
+    {
+      "id": "qa-030",
+      "question": "Which 4 capabilities does the unified codragraph product ship?",
+      "expectedAnswer": "Token savings, dynamic harness, versioned code graph, agent swarm collaboration",
+      "acceptParaphrases": ["compression, harness, dolt-like graph, swarm"]
+    },
+    {
+      "id": "qa-031",
+      "question": "Which file owns the cross-repo Contract Bridge for group impact?",
+      "expectedAnswer": "codragraph/src/core/group/cross-impact.ts",
+      "acceptParaphrases": ["cross-impact.ts"]
+    },
+    {
+      "id": "qa-032",
+      "question": "What format does group mode use for the repo parameter?",
+      "expectedAnswer": "@<groupName> for fan-out, @<groupName>/<memberPath> to scope to one member",
+      "acceptParaphrases": ["@groupName or @groupName/memberPath"]
+    },
+    {
+      "id": "qa-033",
+      "question": "Which MCP tools are group-aware?",
+      "expectedAnswer": "query, context, and impact",
+      "acceptParaphrases": ["query, context, impact"]
+    },
+    {
+      "id": "qa-034",
+      "question": "What rank-fusion constant K does the hybrid search use?",
+      "expectedAnswer": "K=60",
+      "acceptParaphrases": ["60"]
+    },
+    {
+      "id": "qa-035",
+      "question": "Which package consumes the codragraph-shared types directly?",
+      "expectedAnswer": "Both codragraph and codragraph-web depend on codragraph-shared via file: link",
+      "acceptParaphrases": ["codragraph and codragraph-web"]
+    },
+    {
+      "id": "qa-036",
+      "question": "What pre-commit framework does the monorepo use?",
+      "expectedAnswer": "husky with lint-staged (prettier + tsc only — tests run in CI)",
+      "acceptParaphrases": ["husky"]
+    },
+    {
+      "id": "qa-037",
+      "question": "Where does codragraph store its per-repo index data?",
+      "expectedAnswer": ".codragraph/ inside the indexed repo (lbug, lbug.wal, lbug.lock, meta.json)",
+      "acceptParaphrases": [".codragraph/lbug"]
+    },
+    {
+      "id": "qa-038",
+      "question": "What does staleness.ts in mcp/ check?",
+      "expectedAnswer": "Compares the indexed lastCommit to current git HEAD and surfaces a stale-index hint",
+      "acceptParaphrases": ["index staleness vs git HEAD"]
+    },
+    {
+      "id": "qa-039",
+      "question": "Which two scope-resolution languages have hooks beyond the base interface?",
+      "expectedAnswer": "Python and C# — C# uses populateNamespaceSiblings for cross-file namespace visibility",
+      "acceptParaphrases": ["python and csharp"]
+    },
+    {
+      "id": "qa-040",
+      "question": "What does the wildcard-synthesis pass do?",
+      "expectedAnswer": "Expands whole-module imports into the full set of synthesized bindings during the parse phase",
+      "acceptParaphrases": ["expands wildcard/whole-module imports"]
+    },
+    {
+      "id": "qa-041",
+      "question": "Which MCP tool would an agent use to find all consumers of an API route before changing it?",
+      "expectedAnswer": "api_impact",
+      "acceptParaphrases": ["the api_impact tool"]
+    },
+    {
+      "id": "qa-042",
+      "question": "What three confidence reasons can edges from the call-resolution DAG have?",
+      "expectedAnswer": "import-resolved, global, local-call (plus same-file, interface-dispatch, read, write across both pipelines)",
+      "acceptParaphrases": ["import-resolved, global, local-call"]
+    },
+    {
+      "id": "qa-043",
+      "question": "What does shape_check verify?",
+      "expectedAnswer": "Whether response shapes returned by an API route match the property accesses consumers do on it",
+      "acceptParaphrases": ["response shape vs consumer access mismatch"]
+    },
+    {
+      "id": "qa-044",
+      "question": "What is the hard memory ceiling that disables embedding generation?",
+      "expectedAnswer": "Embeddings are skipped when the graph has more than 50,000 nodes (per the analyze flow)",
+      "acceptParaphrases": [">50k nodes", "50000 nodes"]
+    },
+    {
+      "id": "qa-045",
+      "question": "Which strategy does the import resolver use for multi-strategy chains?",
+      "expectedAnswer": "First non-null result wins — strategies are composed via createImportResolver in resolver-factory.ts",
+      "acceptParaphrases": ["first non-null wins"]
+    },
+    {
+      "id": "qa-046",
+      "question": "What does the binding accumulator track?",
+      "expectedAnswer": "Cross-file type bindings; created in parse, disposed by crossFile in a finally block",
+      "acceptParaphrases": ["cross-file type bindings"]
+    },
+    {
+      "id": "qa-047",
+      "question": "What change made on 2026-04-19 affected the MCP tool surface?",
+      "expectedAnswer": "Cross-repo impact rolled out — group_query/group_contracts/group_status removed, replaced by codragraph://group/{name}/contracts and /status resources",
+      "acceptParaphrases": ["group tools collapsed into resources"]
+    },
+    {
+      "id": "qa-048",
+      "question": "Where do new pipeline phases plug in?",
+      "expectedAnswer": "Create pipeline-phases/<name>.ts implementing PipelinePhase, export from pipeline-phases/index.ts, add to buildPhaseList in pipeline.ts",
+      "acceptParaphrases": ["add to buildPhaseList in pipeline.ts"]
+    },
+    {
+      "id": "qa-049",
+      "question": "What's the difference between the parse phase and parse-impl.ts?",
+      "expectedAnswer": "parse.ts is the phase shell; parse-impl.ts holds the heavy implementation",
+      "acceptParaphrases": ["parse.ts is shell, parse-impl.ts is heavy"]
+    },
+    {
+      "id": "qa-050",
+      "question": "Which file holds the shared LanguageProvider hook signatures?",
+      "expectedAnswer": "codragraph/src/core/ingestion/language-provider.ts",
+      "acceptParaphrases": ["language-provider.ts"]
+    },
+    {
+      "id": "qa-051",
+      "question": "What dispatch primary value is used for typed-receiver method calls?",
+      "expectedAnswer": "owner-scoped (MRO walk from receiver's type)",
+      "acceptParaphrases": ["owner-scoped"]
+    },
+    {
+      "id": "qa-052",
+      "question": "What does the C++ const-qualified suffix look like in node ids?",
+      "expectedAnswer": "$const after the type-hash, e.g. Method:file:Container.begin#0$const",
+      "acceptParaphrases": ["$const"]
+    },
+    {
+      "id": "qa-053",
+      "question": "Which two phases run in parallel after structure?",
+      "expectedAnswer": "markdown and cobol",
+      "acceptParaphrases": ["[markdown, cobol]"]
+    },
+    {
+      "id": "qa-054",
+      "question": "What tree-sitter grammar is patched at postinstall?",
+      "expectedAnswer": "tree-sitter-swift (via patch-tree-sitter-swift.cjs)",
+      "acceptParaphrases": ["swift"]
+    },
+    {
+      "id": "qa-055",
+      "question": "What two protocols can the codragraph MCP server accept?",
+      "expectedAnswer": "stdio (default for Claude Code/Cursor) and StreamableHTTP (via codragraph serve)",
+      "acceptParaphrases": ["stdio and HTTP"]
+    },
+    {
+      "id": "qa-056",
+      "question": "Which test category does TESTING.md call out as flaky in containers?",
+      "expectedAnswer": "LadybugDB file-locking integration tests",
+      "acceptParaphrases": ["lbug file-locking", "ladybugdb file lock"]
+    },
+    {
+      "id": "qa-057",
+      "question": "What's the byte-budget chunk size used for parsing?",
+      "expectedAnswer": "approximately 20 MB",
+      "acceptParaphrases": ["~20 MB"]
+    },
+    {
+      "id": "qa-058",
+      "question": "Which two seed harnesses don't use the graph at all?",
+      "expectedAnswer": "zero-shot and few-shot",
+      "acceptParaphrases": ["zero-shot, few-shot"]
+    },
+    {
+      "id": "qa-059",
+      "question": "Which seed harness uses codragraph_query and codragraph_context?",
+      "expectedAnswer": "graph-aware",
+      "acceptParaphrases": ["the graph-aware seed"]
+    },
+    {
+      "id": "qa-060",
+      "question": "What happens when a candidate fails to load in the outer loop?",
+      "expectedAnswer": "It's recorded as candidate-rejected with the load error message, totalRejected increments, and the loop continues",
+      "acceptParaphrases": ["rejected, loop continues"]
+    },
+    {
+      "id": "qa-061",
+      "question": "Which file holds the Algorithm 1 outer loop?",
+      "expectedAnswer": "codragraph-harness/src/algorithm.ts"
+    },
+    {
+      "id": "qa-062",
+      "question": "What format is the per-task trace stored as?",
+      "expectedAnswer": "JSON, one file per taskId under candidates/<id>/traces/",
+      "acceptParaphrases": ["JSON files in candidates/<id>/traces/"]
+    },
+    {
+      "id": "qa-063",
+      "question": "What two things does the metadata.json hold per candidate?",
+      "expectedAnswer": "Identity (id, name, version, origin, parents) and a createdAt ISO timestamp",
+      "acceptParaphrases": ["id/name/origin and createdAt"]
+    },
+    {
+      "id": "qa-064",
+      "question": "Which Pareto axis goes UP for better?",
+      "expectedAnswer": "accuracy",
+      "acceptParaphrases": ["accuracy is maximized"]
+    },
+    {
+      "id": "qa-065",
+      "question": "Which two Pareto axes go DOWN for better?",
+      "expectedAnswer": "tokens and latencyMs",
+      "acceptParaphrases": ["tokens, latencyMs"]
+    },
+    {
+      "id": "qa-066",
+      "question": "What does ParetoFrontier.add return when the new point is dominated?",
+      "expectedAnswer": "{ added: false, removed: [] }"
+    },
+    {
+      "id": "qa-067",
+      "question": "What does the proposer write to stdout to signal end of run?",
+      "expectedAnswer": "<<<HARNESS_MANIFEST>>>{json}<<<END_HARNESS_MANIFEST>>>",
+      "acceptParaphrases": ["HARNESS_MANIFEST sentinel"]
+    },
+    {
+      "id": "qa-068",
+      "question": "What flag does ClaudeCodeProposer pass to claude by default?",
+      "expectedAnswer": "--dangerously-skip-permissions and -p (print mode)",
+      "acceptParaphrases": ["-p --dangerously-skip-permissions"]
+    },
+    {
+      "id": "qa-069",
+      "question": "Why is the MCP handler dispatch lazy-imported in local-backend.ts?",
+      "expectedAnswer": "To avoid a circular dep — codragraph-harness already depends on codragraph; static import here would create a cycle",
+      "acceptParaphrases": ["circular dep avoidance"]
+    },
+    {
+      "id": "qa-070",
+      "question": "What tool compiles harness candidates before dynamic-import?",
+      "expectedAnswer": "esbuild (in codragraph-harness/src/loader.ts)",
+      "acceptParaphrases": ["esbuild"]
+    },
+    {
+      "id": "qa-071",
+      "question": "What's the cache-busting strategy in compileAndLoadCandidate?",
+      "expectedAnswer": "?t=<timestamp> appended to the file:// URL on each import",
+      "acceptParaphrases": ["timestamp query string"]
+    },
+    {
+      "id": "qa-072",
+      "question": "What two scoring stages does CodebaseQAEvaluator run?",
+      "expectedAnswer": "Stage 1: normalized substring match. Stage 2 (optional): LLM-judge fallback",
+      "acceptParaphrases": ["substring then judge"]
+    },
+    {
+      "id": "qa-073",
+      "question": "What's the default per-task timeout in the evaluator?",
+      "expectedAnswer": "60_000 ms (60 seconds)",
+      "acceptParaphrases": ["60 seconds", "60000ms"]
+    },
+    {
+      "id": "qa-074",
+      "question": "What's the format of the JSON the LLM judge must return?",
+      "expectedAnswer": "{\"correct\": true|false, \"note\": \"<short reason>\"}",
+      "acceptParaphrases": ["correct and note"]
+    },
+    {
+      "id": "qa-075",
+      "question": "Which file holds the InMemoryTraceWriter?",
+      "expectedAnswer": "codragraph-harness/src/trace.ts"
+    },
+    {
+      "id": "qa-076",
+      "question": "What package re-exports both harness and graph namespaces?",
+      "expectedAnswer": "codragraph-sdk",
+      "acceptParaphrases": ["the codragraph-sdk package"]
+    },
+    {
+      "id": "qa-077",
+      "question": "Which provider name does OpenCode use under the hood?",
+      "expectedAnswer": "openai (OpenAI-compatible) — OpenCode subclasses OpenAIInferenceProvider with a different default baseURL",
+      "acceptParaphrases": ["OpenAI-compatible"]
+    },
+    {
+      "id": "qa-078",
+      "question": "What's the default OpenCode URL?",
+      "expectedAnswer": "http://localhost:4096/v1",
+      "acceptParaphrases": ["localhost:4096/v1"]
+    },
+    {
+      "id": "qa-079",
+      "question": "What env var does HttpGraphClient read for the codragraph URL?",
+      "expectedAnswer": "CODRAGRAPH_URL"
+    },
+    {
+      "id": "qa-080",
+      "question": "What env var configures Anthropic API key for ClaudeInferenceProvider?",
+      "expectedAnswer": "ANTHROPIC_API_KEY"
+    },
+    {
+      "id": "qa-081",
+      "question": "What env var configures OpenAI API key for OpenAIInferenceProvider?",
+      "expectedAnswer": "OPENAI_API_KEY"
+    },
+    {
+      "id": "qa-082",
+      "question": "Which dependency provides the MCP server SDK?",
+      "expectedAnswer": "@modelcontextprotocol/sdk",
+      "acceptParaphrases": ["modelcontextprotocol sdk"]
+    },
+    {
+      "id": "qa-083",
+      "question": "What workspace packages are listed in the top-level package.json?",
+      "expectedAnswer": "codragraph, codragraph-shared, codragraph-web, codragraph-harness, codragraph-sdk",
+      "acceptParaphrases": ["five packages including harness and sdk"]
+    },
+    {
+      "id": "qa-084",
+      "question": "What was the project's brand prior to the 2026-04-29 rename?",
+      "expectedAnswer": "Codra (now retired due to French Codra SAS trademark conflict)",
+      "acceptParaphrases": ["Codra"]
+    },
+    {
+      "id": "qa-085",
+      "question": "Which RFC is the scope-resolution pipeline associated with?",
+      "expectedAnswer": "RFC #909 Ring 3"
+    },
+    {
+      "id": "qa-086",
+      "question": "What's the default outer-loop iteration count in codragraph-harness CLI?",
+      "expectedAnswer": "20"
+    },
+    {
+      "id": "qa-087",
+      "question": "Which directory pattern do test-file detectors look for?",
+      "expectedAnswer": "Paths containing .test., .spec., __tests__/, __mocks__/, /test/, /tests/, /testing/, /fixtures/, /spec/ — plus _test.go, _test.py, _spec.rb endings",
+      "acceptParaphrases": [".test., .spec., __tests__"]
+    },
+    {
+      "id": "qa-088",
+      "question": "Which extension lives in codragraph-cursor-integration?",
+      "expectedAnswer": "Hooks and skills configuration for the Cursor editor",
+      "acceptParaphrases": ["hooks and skills"]
+    },
+    {
+      "id": "qa-089",
+      "question": "What does the prepare script in codragraph/package.json do?",
+      "expectedAnswer": "Runs node scripts/build.js to compile both codragraph-shared and codragraph",
+      "acceptParaphrases": ["compiles via scripts/build.js"]
+    },
+    {
+      "id": "qa-090",
+      "question": "Which postinstall script is required for tree-sitter-proto?",
+      "expectedAnswer": "node scripts/build-tree-sitter-proto.cjs",
+      "acceptParaphrases": ["build-tree-sitter-proto.cjs"]
+    },
+    {
+      "id": "qa-091",
+      "question": "How are node id collisions resolved when arity is the same?",
+      "expectedAnswer": "Type-hash suffix ~type1,type2 added when collision detected and type annotations are present",
+      "acceptParaphrases": ["type-hash suffix"]
+    },
+    {
+      "id": "qa-092",
+      "question": "When does C3 linearization apply in codragraph?",
+      "expectedAnswer": "Python's MRO uses C3 (per Python's runtime semantics); Ruby uses ruby-mixin; most others use first-wins",
+      "acceptParaphrases": ["python uses c3"]
+    },
+    {
+      "id": "qa-093",
+      "question": "What is GroupService used for?",
+      "expectedAnswer": "Cross-repo group tooling — fan-out queries, contract-bridge impact, manifest links",
+      "acceptParaphrases": ["cross-repo group tools"]
+    },
+    {
+      "id": "qa-094",
+      "question": "What licence does the codragraph monorepo use?",
+      "expectedAnswer": "PolyForm-Noncommercial-1.0.0"
+    },
+    {
+      "id": "qa-095",
+      "question": "Which seed harness adds 3 hand-written exemplars to its system prompt?",
+      "expectedAnswer": "few-shot",
+      "acceptParaphrases": ["few-shot.ts"]
+    },
+    {
+      "id": "qa-096",
+      "question": "How does ParetoFrontier handle two points equal on all 3 axes?",
+      "expectedAnswer": "Both coexist on the frontier — neither dominates the other",
+      "acceptParaphrases": ["both kept"]
+    },
+    {
+      "id": "qa-097",
+      "question": "Which file holds the harness_run MCP tool *definition*?",
+      "expectedAnswer": "codragraph/src/mcp/tools.ts (the CODRAGRAPH_TOOLS array)",
+      "acceptParaphrases": ["tools.ts"]
+    },
+    {
+      "id": "qa-098",
+      "question": "Which file holds the harness_run MCP tool *handler implementation*?",
+      "expectedAnswer": "codragraph-harness/src/mcp/handler.ts (handleHarnessRun)",
+      "acceptParaphrases": ["handler.ts"]
+    },
+    {
+      "id": "qa-099",
+      "question": "What's the default proposer in codragraph-harness Phase 1?",
+      "expectedAnswer": "ClaudeCodeProposer (Claude Code subprocess)",
+      "acceptParaphrases": ["claude-code"]
+    },
+    {
+      "id": "qa-100",
+      "question": "Which 5 phases come AFTER Phase 1 in the codragraph product roadmap?",
+      "expectedAnswer": "1.5 (compress TS port), 2 (dashboard MVP), 3 (swarm/parallel proposers), 4 (Dolt-like graph research), 5 (org features)",
+      "acceptParaphrases": ["compress, dashboard, swarm, dolt graph, org"]
+    },
+    {
+      "id": "qa-101",
+      "question": "Which package's package.json declares the bin field for the harness CLI?",
+      "expectedAnswer": "codragraph-harness — bin field maps codragraph-harness to dist/cli/main.js",
+      "acceptParaphrases": ["codragraph-harness"]
+    },
+    {
+      "id": "qa-102",
+      "question": "What is the fallback strategy for Ruby implicit-self calls that miss their owner's MRO?",
+      "expectedAnswer": "free-arity-narrowed — search free-call candidates by arity only",
+      "acceptParaphrases": ["free-arity-narrowed"]
+    },
+    {
+      "id": "qa-103",
+      "question": "Which function aggregates per-task scores into a Scores object?",
+      "expectedAnswer": "aggregateScores in codragraph-harness/src/evaluator/score.ts",
+      "acceptParaphrases": ["aggregateScores"]
+    },
+    {
+      "id": "qa-104",
+      "question": "What's the dispatcher pattern used by codragraph CLI for lazy-loaded subcommands?",
+      "expectedAnswer": "createLazyAction with a dynamic import — defers the heavy load until the command runs",
+      "acceptParaphrases": ["createLazyAction"]
+    },
+    {
+      "id": "qa-105",
+      "question": "What's the difference between IMPLEMENTS and METHOD_IMPLEMENTS edges?",
+      "expectedAnswer": "IMPLEMENTS is a class-to-interface declaration; METHOD_IMPLEMENTS is a per-method override-vs-interface match (with confidence tier 1.0 / 0.7)",
+      "acceptParaphrases": ["class vs method level"]
+    }
+  ]
+}
