@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # Pre-commit hook: format staged files + typecheck.
 # Tests run in CI (ci-tests.yml), not here.
 # Skip with: git commit --no-verify

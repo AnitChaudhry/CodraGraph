@@ -265,4 +265,4 @@ What's left is genuinely follow-up work, not Phase 4 gaps.
 | 3   | Swarm — multiple proposers in parallel       | Shipped (parallel session) |
 | 4   | **Dolt-like versioned graph (THIS RFC)**     | **Complete** — three-way merge + semantic diff + gc all shipped |
 | 2   | Dashboard MVP in `codragraph-web`            | Pending (consumes Phase 4 data model) |
-| 5   | Org features (multi-tenant, SSO, audit)      | Unblocked 2026-04-29 — monorepo relicensed to Apache-2.0 |
+| 5   | Org features (multi-tenant, SSO, audit)      | Scaffold landed 2026-04-29 — see codragraph-org/RFC.md |

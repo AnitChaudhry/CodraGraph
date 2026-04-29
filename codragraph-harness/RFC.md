@@ -370,4 +370,4 @@ Tracked, not blockers for Phase 1 sign-off.
 | 2 | Dashboard MVP in `codragraph-web` | Pending |
 | 3 | Swarm — multiple proposers in parallel | Pending |
 | 4 | Dolt-like versioned graph (research) | Pending |
-| 5 | Org features (multi-tenant, SSO, audit) | Unblocked 2026-04-29 — monorepo relicensed to Apache-2.0 |
+| 5 | Org features (multi-tenant, SSO, audit) | Scaffold landed 2026-04-29 — see codragraph-org/RFC.md |

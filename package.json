@@ -1,7 +1,7 @@
 {
   "name": "codragraph-monorepo",
   "private": true,
-  "description": "CodraGraph monorepo \u2014 code intelligence platform (CLI/MCP, web UI, shared types, plugins, harness, SDK)",
+  "description": "CodraGraph monorepo — code intelligence platform (CLI/MCP, web UI, shared types, plugins, harness, SDK)",
   "author": {
     "name": "Anit Chaudhary",
     "email": "getintouch.anit@gmail.com",
@@ -16,6 +16,7 @@
     "codragraph-compress",
     "codragraph-sdk",
     "codragraph-graphstore",
+    "codragraph-org",
     "codragraph-claude-plugin",
     "codragraph-codex-integration"
   ],
