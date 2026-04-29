@@ -54,9 +54,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",
-    "@modelcontextprotocol/sdk": "^1.0.0",
     "@codragraph/cli": "*",
     "@codragraph/shared": "*",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "commander": "^14.0.3",
     "esbuild": "^0.24.0",
     "openai": "^4.70.0"
@@ -65,7 +65,7 @@
     "@types/node": "^25.6.0",
     "@vitest/coverage-v8": "^4.0.18",
     "tsx": "^4.0.0",
-    "typescript": "^5.4.5",
+    "typescript": "^6.0.3",
     "vitest": "^4.0.18"
   },
   "engines": {

@@ -65,13 +65,13 @@
   },
   "dependencies": {
     "@codragraph/cli": "*",
-    "@codragraph/harness": "*",
     "@codragraph/compress": "*",
-    "@codragraph/graphstore": "*"
+    "@codragraph/graphstore": "*",
+    "@codragraph/harness": "*"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
-    "typescript": "^5.4.5",
+    "typescript": "^6.0.3",
     "vitest": "^4.0.18"
   },
   "engines": {
