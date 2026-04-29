@@ -96,6 +96,8 @@ codragraph/vendor/**/node_modules/
 .claude/helpers
 .claude/skills/
 !.claude/skills/codragraph/
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks/
 
 .history/
 
