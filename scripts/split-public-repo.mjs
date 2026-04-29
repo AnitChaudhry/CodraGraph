@@ -99,6 +99,7 @@ const NEVER_PUBLISH_SUBSTRINGS = [
   '/CLAUDE.md',
   '/DoD.md',
   '/GUARDRAILS.md',
+  '/private-ruleset.json',
   '/MIGRATION.md',
   '/RUNBOOK.md',
   '/TESTING.md',
