@@ -8,7 +8,7 @@
     "email": "getintouch.anit@gmail.com",
     "url": "https://anit.upfyn.com"
   },
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "benchmark": "tsx run-benchmark.ts",

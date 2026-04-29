@@ -129,4 +129,4 @@ Three commitments:
 
 ## License
 
-This benchmarking infrastructure inherits the monorepo's PolyForm-Noncommercial license.
+This benchmarking infrastructure inherits the monorepo's Apache-2.0 license.

@@ -70,4 +70,4 @@ const diff = await diffSnapshots({ cas, from: snapA.id, to: snapB.id });
 
 ## License
 
-PolyForm-Noncommercial-1.0.0
+Apache-2.0

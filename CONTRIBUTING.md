@@ -4,7 +4,7 @@ How to propose changes, run checks locally, and open pull requests.
 
 ## License
 
-This project uses the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/). By contributing, you agree your contributions are licensed under the same terms unless stated otherwise.
+This project uses the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). By contributing, you agree your contributions are licensed under the same terms unless stated otherwise.
 
 ## Where to discuss
 

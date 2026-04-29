@@ -66,7 +66,7 @@ Deferred (genuinely out of scope, not the same as "stubbed"):
 
 ```
 codragraph-graphstore/
-├── package.json                v0.1.0; author Anit Chaudhary; PolyForm-Noncommercial
+├── package.json                v0.1.0; author Anit Chaudhary; Apache-2.0
 ├── tsconfig.json               ESM, NodeNext, strict + noUncheckedIndexedAccess
 ├── vitest.config.ts            test runner config
 ├── README.md                   user-facing intro
@@ -265,4 +265,4 @@ What's left is genuinely follow-up work, not Phase 4 gaps.
 | 3   | Swarm — multiple proposers in parallel       | Shipped (parallel session) |
 | 4   | **Dolt-like versioned graph (THIS RFC)**     | **Complete** — three-way merge + semantic diff + gc all shipped |
 | 2   | Dashboard MVP in `codragraph-web`            | Pending (consumes Phase 4 data model) |
-| 5   | Org features (multi-tenant, SSO, audit)      | Pending; license decision required first |
+| 5   | Org features (multi-tenant, SSO, audit)      | Unblocked 2026-04-29 — monorepo relicensed to Apache-2.0 |

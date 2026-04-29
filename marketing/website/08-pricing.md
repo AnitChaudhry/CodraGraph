@@ -6,7 +6,7 @@
 
 ## Body
 
-Codragraph is open-source under PolyForm-Noncommercial. The full platform is free to download, run locally, and use for personal and non-commercial work.
+Codragraph is open-source under Apache-2.0. The full platform is free to download, run locally, and use for any purpose — personal, commercial, or anything in between.
 
 You bring your own LLM API key (Anthropic, OpenAI, etc.). **Your keys never touch our servers.** Your code never leaves your machine.
 
@@ -24,7 +24,7 @@ For solo developers, students, OSS maintainers, evaluators.
 - Local-first — your code never leaves your machine
 - Community support via GitHub Discussions
 
-**Limit:** non-commercial use only (per PolyForm-Noncommercial license). Internal use at your company is fine; reselling Codragraph or hosting it as a paid service is not.
+**Limit:** none. Apache-2.0 lets you use, modify, fork, embed, or even rehost Codragraph itself. The paid tiers below exist because they're more convenient than self-hosting, not because the OSS forbids commercial use.
 
 ---
 
@@ -74,12 +74,13 @@ This means:
 
 ## License clarification
 
-**PolyForm-Noncommercial-1.0.0** lets you:
-- ✅ Use Codragraph internally at your company (commercial or not)
-- ✅ Build OSS or commercial products that *use* Codragraph as a dependency for your own work
-- ❌ Resell or rehost Codragraph itself as a paid service
+**Apache License 2.0** lets you:
+- ✅ Use Codragraph internally at your company
+- ✅ Build OSS or commercial products that bundle Codragraph
+- ✅ Rehost Codragraph as a paid service (the license permits it)
+- ✅ Modify the source and ship your own fork
 
-For SaaS / hosted offerings of your own that bundle Codragraph, talk to us — we issue commercial licenses.
+There are no usage restrictions. The Team and Enterprise tiers are for teams who'd rather pay than self-host — not for anyone who needs to "unlock" the OSS.
 
 ## Designer brief
 

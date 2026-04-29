@@ -30,7 +30,7 @@ Result: 60–85% token reduction on typical agent workflows. Smaller models like
 
 Local-first. BYO API key. Works with Claude Code, Codex, OpenCode, Cursor, Aider, or any inference provider via the SDK.
 
-Open core under PolyForm-Noncommercial. Available soon on npm.
+Open source under Apache-2.0. Available soon on npm.
 
 If you're building agentic AI and tired of paying for context your model didn't even read — let's talk.
 

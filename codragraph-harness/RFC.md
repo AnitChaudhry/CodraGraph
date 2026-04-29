@@ -333,7 +333,7 @@ client.
 | Pareto, not scalarized score | User explicitly wants accuracy/tokens/latency as 3 headlines |
 | Substring + judge scoring | Substring is free and accurate for path/symbol questions; judge handles paraphrases |
 | Out-of-process MCP handler | codragraph-harness depends on codragraph, not the reverse |
-| All `codragraph-*` packages PolyForm-Noncommercial | Inherits monorepo license; SaaS gate decision deferred (per project memory) |
+| All `codragraph-*` packages Apache-2.0 | Inherits monorepo license; permissive OSS unblocks SaaS / org-tier features |
 
 ## 13. Open follow-ups
 
@@ -358,8 +358,8 @@ Tracked, not blockers for Phase 1 sign-off.
 6. **Codebase Q&A test set growth** — 30 tasks is the floor; target 100+
    before publishing benchmark numbers. Mix in cross-package, recursive
    reasoning, and "what breaks if X" questions.
-7. **License gate** — PolyForm-Noncommercial blocks SaaS. Phase 5 (org
-   features) needs a re-license decision; flag at planning, not now.
+7. ~~**License gate**~~ — RESOLVED 2026-04-29. Monorepo relicensed to
+   Apache-2.0; Phase 5 (org features) is unblocked.
 
 ## 14. Phase order
 
@@ -370,4 +370,4 @@ Tracked, not blockers for Phase 1 sign-off.
 | 2 | Dashboard MVP in `codragraph-web` | Pending |
 | 3 | Swarm — multiple proposers in parallel | Pending |
 | 4 | Dolt-like versioned graph (research) | Pending |
-| 5 | Org features (multi-tenant, SSO, audit) | Pending; license decision required |
+| 5 | Org features (multi-tenant, SSO, audit) | Unblocked 2026-04-29 — monorepo relicensed to Apache-2.0 |

@@ -75,7 +75,7 @@ Sixty seconds. Local-first. Bring your own key. No sign-up required.
 
 ## Brand line at the very bottom
 
-`© 2026 Codragraph. PolyForm-Noncommercial. Built by Anit Chaudhary.`
+`© 2026 Codragraph. Apache-2.0. Built by Anit Chaudhary.`
 
 ## Designer brief
 

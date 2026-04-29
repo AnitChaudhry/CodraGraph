@@ -63,7 +63,7 @@ Format: **Trigger → Instruction → Reason**. Append new Signs when the same m
 
 - **npm:** Do not publish from unreviewed automation. Bump version intentionally; tag releases to match `package.json`.
 - **Dependencies:** Minimal, auditable `package.json` changes; run tests and CI after lockfile updates.
-- **License:** PolyForm Noncommercial 1.0.0 — do not relicense without maintainer approval.
+- **License:** Apache 2.0 — do not relicense without maintainer approval.
 
 ---
 

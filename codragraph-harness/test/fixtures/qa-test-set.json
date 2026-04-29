@@ -549,7 +549,7 @@
     {
       "id": "qa-094",
       "question": "What licence does the codragraph monorepo use?",
-      "expectedAnswer": "PolyForm-Noncommercial-1.0.0"
+      "expectedAnswer": "Apache-2.0"
     },
     {
       "id": "qa-095",
