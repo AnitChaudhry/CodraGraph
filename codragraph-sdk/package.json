@@ -64,7 +64,7 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "codragraph": "*",
+    "@codragraph/cli": "*",
     "@codragraph/harness": "*",
     "@codragraph/compress": "*",
     "@codragraph/graphstore": "*"

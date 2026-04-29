@@ -17,10 +17,10 @@
     "compare": "tsx compare-baselines.ts"
   },
   "dependencies": {
-    "codragraph": "*",
-    "codragraph-harness": "*",
-    "codragraph-compress": "*",
-    "codragraph-sdk": "*",
+    "@codragraph/cli": "*",
+    "@codragraph/harness": "*",
+    "@codragraph/compress": "*",
+    "@codragraph/sdk": "*",
     "commander": "^14.0.3",
     "yaml": "^2.6.0"
   },
