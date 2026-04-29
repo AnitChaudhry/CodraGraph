@@ -81,9 +81,9 @@ jobs:
           cache: npm
       - run: npm ci
       - name: graphstore tests
-        run: npm test --workspace codragraph-graphstore
+        run: npm test --workspace @codragraph/graphstore
       - name: harness tests
-        run: npm test --workspace codragraph-harness
+        run: npm test --workspace @codragraph/harness
 
   # ── Build all publishable packages → ensures `npm publish` works ──
   build:
@@ -98,10 +98,12 @@ jobs:
       - run: npm ci
       - name: Build publishable packages
         # Same dep-order rationale as the typecheck job:
-        # shared → graphstore → codragraph → harness → compress → sdk → org
+        # shared → graphstore → cli → harness → compress → sdk → org
+        # `--workspace` takes the npm package NAME (now scoped under
+        # @codragraph) — not the on-disk directory name.
         run: |
           set -e
-          for pkg in codragraph-shared codragraph-graphstore codragraph codragraph-harness codragraph-compress codragraph-sdk codragraph-org; do
+          for pkg in @codragraph/shared @codragraph/graphstore @codragraph/cli @codragraph/harness @codragraph/compress @codragraph/sdk @codragraph/org; do
             echo "::group::build $pkg"
             npm run build --workspace "$pkg"
             echo "::endgroup::"
@@ -109,7 +111,7 @@ jobs:
       - name: Pack (dry run — exercises publishConfig + files allow-list)
         run: |
           set -e
-          for pkg in codragraph-shared codragraph-graphstore codragraph codragraph-harness codragraph-compress codragraph-sdk codragraph-org; do
+          for pkg in @codragraph/shared @codragraph/graphstore @codragraph/cli @codragraph/harness @codragraph/compress @codragraph/sdk @codragraph/org; do
             echo "::group::npm pack --dry-run $pkg"
             npm pack --workspace "$pkg" --dry-run
             echo "::endgroup::"
