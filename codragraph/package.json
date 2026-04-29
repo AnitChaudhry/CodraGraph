@@ -56,10 +56,10 @@
     "prepack": "node scripts/build.js"
   },
   "dependencies": {
+    "@codragraph/graphstore": "^0.1.1",
     "@huggingface/transformers": "^4.1.0",
     "@ladybugdb/core": "^0.15.2",
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@codragraph/graphstore": "^0.1.1",
     "@scarf/scarf": "^1.4.0",
     "cli-progress": "^3.12.0",
     "commander": "^14.0.3",
@@ -99,6 +99,7 @@
     "tree-sitter-swift": "^0.6.0"
   },
   "devDependencies": {
+    "@codragraph/shared": "file:../codragraph-shared",
     "@types/cli-progress": "^3.11.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -106,7 +107,6 @@
     "@types/node": "^25.6.0",
     "@types/uuid": "^11.0.0",
     "@vitest/coverage-v8": "^4.0.18",
-    "@codragraph/shared": "file:../codragraph-shared",
     "tsx": "^4.0.0",
     "typescript": "^5.4.5",
     "vitest": "^4.0.18"
