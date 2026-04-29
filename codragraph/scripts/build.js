@@ -4,9 +4,11 @@
  *
  * Steps:
  *  1. Build codragraph-shared (tsc)
- *  2. Build codragraph (tsc)
- *  3. Copy codragraph-shared/dist → dist/_shared
- *  4. Rewrite bare 'codragraph-shared' specifiers → relative paths
+ *  2. Build codragraph-graphstore (tsc) — codragraph imports it; without
+ *     a populated dist/ here, step 3 fails to resolve types.
+ *  3. Build codragraph (tsc)
+ *  4. Copy codragraph-shared/dist → dist/_shared
+ *  5. Rewrite bare 'codragraph-shared' specifiers → relative paths
  */
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -16,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const SHARED_ROOT = path.resolve(ROOT, '..', 'codragraph-shared');
+const GRAPHSTORE_ROOT = path.resolve(ROOT, '..', 'codragraph-graphstore');
 const DIST = path.join(ROOT, 'dist');
 const SHARED_DEST = path.join(DIST, '_shared');
 
@@ -23,7 +26,18 @@ const SHARED_DEST = path.join(DIST, '_shared');
 console.log('[build] compiling codragraph-shared…');
 execSync('npx tsc', { cwd: SHARED_ROOT, stdio: 'inherit' });
 
-// ── 2. Build codragraph ──────────────────────────────────────────────
+// ── 2. Build codragraph-graphstore ───────────────────────────────────
+// codragraph depends on this for snapshot/branch/diff types. On a
+// fresh checkout (CI, npm ci) the graphstore dist is empty until we
+// build it here, so step 3 would otherwise fail to resolve
+// `codragraph-graphstore` imports. Skip gracefully if the workspace
+// is not present (e.g. someone pinned an older monorepo layout).
+if (fs.existsSync(GRAPHSTORE_ROOT)) {
+  console.log('[build] compiling codragraph-graphstore…');
+  execSync('npx tsc', { cwd: GRAPHSTORE_ROOT, stdio: 'inherit' });
+}
+
+// ── 3. Build codragraph ──────────────────────────────────────────────
 console.log('[build] compiling codragraph…');
 execSync('npx tsc', { cwd: ROOT, stdio: 'inherit' });
 

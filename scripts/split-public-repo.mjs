@@ -43,10 +43,11 @@ const PUBLIC_INCLUDE = [
   'codragraph-claude-plugin',
   'codragraph-cursor-integration',
   'codragraph-codex-integration',
+  'codragraph-org',
 
   // ── Repo-wide ───────────────────────────────────────────────
   'branding',
-  'scripts',  // includes migrate-dist-imports + seed-dashboard-fixture + split-public-repo (these are public-safe)
+  'scripts', // includes migrate-dist-imports + split-public-repo (public-safe). The seed-*-fixture.mjs scripts are dev-only mock-data tools and are excluded by NEVER_PUBLISH_SUBSTRINGS below.
   '.github',
   '.husky',
 
@@ -68,8 +69,8 @@ const PUBLIC_INCLUDE = [
   'CONTRIBUTING.md',
   'CODE_OF_CONDUCT.md',
   'SECURITY.md',
-  'AGENTS.md',  // contributor-facing AI-assistant guidance
-  'llms.txt',   // small public LLM-context file
+  'AGENTS.md', // contributor-facing AI-assistant guidance
+  'llms.txt', // small public LLM-context file
 
   // Docker dev environment
   'docker-compose.yaml',
@@ -100,6 +101,13 @@ const NEVER_PUBLISH_SUBSTRINGS = [
   '/DoD.md',
   '/GUARDRAILS.md',
   '/private-ruleset.json',
+  // Dev-only mock-data seeders. Their docstrings explicitly say they
+  // exist to work around local-env analyze issues for dashboard
+  // development. Public users running the real analyze flow don't need
+  // them — and publishing demo/mock fixtures conflicts with the
+  // "public repo is for users to Use" principle.
+  '/seed-dashboard-fixture.mjs',
+  '/seed-cross-repo-fixture.mjs',
   '/MIGRATION.md',
   '/RUNBOOK.md',
   '/TESTING.md',
