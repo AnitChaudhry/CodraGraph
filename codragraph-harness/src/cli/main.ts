@@ -39,9 +39,9 @@ import { compileAndLoadCandidate } from '../loader.js';
 
 const program = new Command();
 program
-  .name('@codragraph/harness')
+  .name('codragraph-harness')
   .description('Auto-tuned harnesses for AI agents — Meta-Harness search loop')
-  .version('0.1.0');
+  .version('0.1.1');
 
 program
   .command('search')

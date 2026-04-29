@@ -12,10 +12,7 @@ const _require = createRequire(import.meta.url);
 const pkg = _require('../../package.json');
 const program = new Command();
 
-program
-  .name('@codragraph/cli')
-  .description('CodraGraph local CLI and MCP server')
-  .version(pkg.version);
+program.name('codragraph').description('CodraGraph local CLI and MCP server').version(pkg.version);
 
 program
   .command('setup')

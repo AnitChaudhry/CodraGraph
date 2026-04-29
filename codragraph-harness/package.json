@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/harness",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Auto-tuned harnesses for AI agents — Meta-Harness algorithm with Pareto search over (accuracy, tokens, latency)",
   "author": {
     "name": "Anit Chaudhary",
@@ -15,7 +15,7 @@
     "codex",
     "opencode",
     "mcp",
-    "@codragraph/cli",
+    "codragraph",
     "pareto-search",
     "ai-agent"
   ],
@@ -37,7 +37,7 @@
     }
   },
   "bin": {
-    "@codragraph/harness": "dist/cli/main.js"
+    "codragraph-harness": "dist/cli/main.js"
   },
   "files": [
     "dist",

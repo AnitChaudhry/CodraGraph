@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/cli",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Graph-powered code intelligence for AI agents. Index any codebase, query via MCP or CLI.",
   "author": {
     "name": "Anit Chaudhary",
@@ -17,7 +17,7 @@
     "claude",
     "codex",
     "ai-agent",
-    "@codragraph/cli",
+    "codragraph",
     "static-analysis",
     "codebase-indexing"
   ],
@@ -33,7 +33,7 @@
     }
   },
   "bin": {
-    "@codragraph/cli": "dist/cli/index.js"
+    "codragraph": "dist/cli/index.js"
   },
   "files": [
     "dist",
