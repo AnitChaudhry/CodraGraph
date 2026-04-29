@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/graphstore",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Dolt-like content-addressed versioning for the CodraGraph knowledge graph — snapshots, branches, diffs, three-way merge.",
   "author": {
     "name": "Anit Chaudhary",
@@ -9,7 +9,7 @@
   },
   "license": "Apache-2.0",
   "keywords": [
-    "@codragraph/cli",
+    "codragraph",
     "knowledge-graph",
     "versioning",
     "content-addressed",

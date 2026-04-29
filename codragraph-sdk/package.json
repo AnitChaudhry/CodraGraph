@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "One-import surface for the CodraGraph platform — graph intelligence, dynamic harness, compression. Works with Claude Code, Codex, OpenCode, any inference.",
   "author": {
     "name": "Anit Chaudhary",
@@ -9,7 +9,7 @@
   },
   "license": "Apache-2.0",
   "keywords": [
-    "@codragraph/cli",
+    "codragraph",
     "ai-agent",
     "mcp",
     "claude-code",
@@ -64,7 +64,7 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "@codragraph/cli": "*",
+    "codragraph": "*",
     "@codragraph/harness": "*",
     "@codragraph/compress": "*",
     "@codragraph/graphstore": "*"
