@@ -31,19 +31,24 @@ if (target === monorepo) {
 
 // What we WANT in the public repo. Anything not on this list does not
 // get copied. Items can be files OR directories.
+//
+// IMPORTANT: these are ON-DISK DIRECTORY names, NOT npm package names.
+// Even though the packages publish as `@codragraph/cli`, `@codragraph/shared`
+// etc. under the npm scope, the workspace dirs on disk stay
+// `codragraph/`, `codragraph-shared/`, etc.
 const PUBLIC_INCLUDE = [
   // ── Packages ────────────────────────────────────────────────
-  '@codragraph/cli',
-  '@codragraph/sdk',
-  '@codragraph/graphstore',
-  '@codragraph/harness',
-  '@codragraph/compress',
-  '@codragraph/shared',
+  'codragraph',
+  'codragraph-sdk',
+  'codragraph-graphstore',
+  'codragraph-harness',
+  'codragraph-compress',
+  'codragraph-shared',
   'codragraph-web',
-  '@codragraph/claude-plugin',
-  '@codragraph/cursor',
-  '@codragraph/codex',
-  '@codragraph/org',
+  'codragraph-claude-plugin',
+  'codragraph-cursor-integration',
+  'codragraph-codex-integration',
+  'codragraph-org',
 
   // ── Repo-wide ───────────────────────────────────────────────
   'branding',
