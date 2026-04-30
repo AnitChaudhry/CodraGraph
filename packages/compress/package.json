@@ -1,0 +1,63 @@
+{
+  "name": "@codragraph/compress",
+  "version": "2.1.0",
+  "description": "Lossless semantic compression for LLM contexts — strip grammar, keep facts, save tokens.",
+  "author": {
+    "name": "Anit Chaudhary",
+    "email": "getintouch.anit@gmail.com",
+    "url": "https://anit.upfyn.com"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "codragraph",
+    "compression",
+    "token-savings",
+    "llm",
+    "rag",
+    "context-compression",
+    "semantic-compression",
+    "claude",
+    "openai"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./llm": {
+      "types": "./dist/llm.d.ts",
+      "default": "./dist/llm.js"
+    }
+  },
+  "files": [
+    "dist",
+    "prompts",
+    "SPEC.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepack": "tsc"
+  },
+  "dependencies": {
+    "@codragraph/harness": "^2.1.0",
+    "@codragraph/shared": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.4.5",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

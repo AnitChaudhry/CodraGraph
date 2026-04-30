@@ -1,0 +1,81 @@
+{
+  "name": "@codragraph/graphstore",
+  "version": "2.1.0",
+  "description": "Dolt-like content-addressed versioning for the CodraGraph knowledge graph — snapshots, branches, diffs, three-way merge.",
+  "author": {
+    "name": "Anit Chaudhary",
+    "email": "getintouch.anit@gmail.com",
+    "url": "https://anit.upfyn.com"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "codragraph",
+    "knowledge-graph",
+    "versioning",
+    "content-addressed",
+    "dolt",
+    "snapshots",
+    "graph-diff"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": "./dist/types.js"
+    },
+    "./cas": {
+      "types": "./dist/cas/interface.d.ts",
+      "default": "./dist/cas/interface.js"
+    },
+    "./snapshot": {
+      "types": "./dist/snapshot/serializer.d.ts",
+      "default": "./dist/snapshot/serializer.js"
+    },
+    "./history": {
+      "types": "./dist/history/commit.d.ts",
+      "default": "./dist/history/commit.js"
+    },
+    "./diff": {
+      "types": "./dist/diff/structural.d.ts",
+      "default": "./dist/diff/structural.js"
+    },
+    "./dist/*": {
+      "types": "./dist/*",
+      "default": "./dist/*"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "RFC.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepack": "tsc"
+  },
+  "dependencies": {
+    "@codragraph/shared": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "^5.4.5",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

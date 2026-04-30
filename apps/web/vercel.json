@@ -1,0 +1,3 @@
+{
+  "installCommand": "cd ../../packages/shared && npm install && npm run build && cd ../../apps/web && npm install"
+}

@@ -1,0 +1,77 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly.
+title: '[bug] '
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please give us enough
+        detail to reproduce — most "I tried X and it broke" reports
+        without a repro can't be acted on.
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected package
+      description: Which package is the bug in?
+      options:
+        - codragraph (CLI / MCP / server)
+        - codragraph-sdk
+        - codragraph-graphstore
+        - codragraph-harness
+        - codragraph-compress
+        - codragraph-web (dashboard)
+        - codragraph-claude-plugin
+        - codragraph-cursor-integration
+        - codragraph-codex-integration
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "Run `<pkg> --version` or check `package.json`. Include the commit SHA if you're on a fork."
+      placeholder: 'e.g. codragraph 1.6.2 / commit abc1234'
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: OS + Node version. Output of `node -v` and `uname -a` (or `ver` on Windows).
+      placeholder: 'macOS 14.4 / Node 22.14.0'
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Minimal steps to reproduce. Commands, file paths, expected vs observed.
+      placeholder: |
+        1. `codragraph analyze /tmp/my-repo`
+        2. Expected: meta.json written
+        3. Observed: native crash with `UNREACHABLE_CODE`
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      description: Paste relevant logs. Wrap in triple backticks. Redact API keys.
+      render: shell
+
+  - type: checkboxes
+    id: pre-flight
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I searched existing issues and didn't find a duplicate
+          required: true
+        - label: I'm on the latest minor release (or noted otherwise)
+          required: true

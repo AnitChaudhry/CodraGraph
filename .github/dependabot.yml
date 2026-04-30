@@ -1,0 +1,37 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    groups:
+      typescript:
+        patterns:
+          - 'typescript'
+          - '@types/*'
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+      radix:
+        patterns:
+          - '@radix-ui/*'
+      langchain:
+        patterns:
+          - '@langchain/*'
+          - 'langchain'
+    ignore:
+      # Pin tree-sitter grammar packages — manual upgrades only (native
+      # ABI compatibility is fragile). Upgrade as part of the
+      # codragraph release cycle.
+      - dependency-name: 'tree-sitter*'
+      - dependency-name: '@huggingface/transformers'
+      - dependency-name: 'onnxruntime-node'
+
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: monthly

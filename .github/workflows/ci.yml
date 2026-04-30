@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Lint + format check (cheap, fail-fast) ───────────────────────
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - name: install (cross-platform, npm/cli#4828 workaround)
+        shell: bash
+        run: rm -f package-lock.json && npm install --no-audit --no-fund --include=optional
+      - run: npm run format:check
+      - run: npm run lint
+
+  # ── Typecheck across every workspace package ─────────────────────
+  typecheck:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - name: install (cross-platform, npm/cli#4828 workaround)
+        shell: bash
+        run: rm -f package-lock.json && npm install --no-audit --no-fund --include=optional
+      - name: build + typecheck all packages
+        # Packages MUST run in dependency order — downstream packages
+        # need upstream `dist/` populated for type resolution to succeed.
+        # `npm run build` per package writes dist (which doubles as a
+        # typecheck), so we don't need a separate `tsc --noEmit` pass.
+        # Order rationale:
+        #   shared     → no deps
+        #   graphstore → shared
+        #   core       → shared + graphstore
+        #   harness    → core + shared
+        #   compress   → harness + shared
+        #   sdk        → harness
+        #   org        → graphstore + shared
+        #   web (app)  → shared
+        run: |
+          set -e
+          for pkg in packages/shared packages/graphstore packages/core packages/harness packages/compress packages/sdk packages/org; do
+            if [ -f "$pkg/package.json" ]; then
+              echo "::group::build $pkg"
+              (cd "$pkg" && npm run build)
+              echo "::endgroup::"
+            fi
+          done
+          echo "::group::tsc apps/web"
+          (cd apps/web && npx tsc --noEmit -p tsconfig.app.json)
+          echo "::endgroup::"
+
+  # ── Unit / integration tests for the publishable packages ────────
+  test:
+    runs-on: ${{ matrix.os }}
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: install (cross-platform, npm/cli#4828 workaround)
+        shell: bash
+        run: rm -f package-lock.json && npm install --no-audit --no-fund --include=optional
+      - name: graphstore tests
+        run: npm test --workspace @codragraph/graphstore
+      - name: harness tests
+        run: npm test --workspace @codragraph/harness
+      - name: org tests
+        run: npm test --workspace @codragraph/org
+      - name: codragraph-web tests
+        run: npm test --workspace codragraph-web
+      # CLI tests use vitest 4, which has a known native-module segfault on
+      # Windows (STATUS_ACCESS_VIOLATION / exit 0xC0000005). Skip there until
+      # vitest 4 ships a fix. Linux + macOS still gate the build.
+      - name: CLI unit tests
+        if: runner.os != 'Windows'
+        run: npm test --workspace @codragraph/cli -- test/unit
+      # Integration tests cover hook e2e + setup-skills wiring + LadybugDB.
+      # Linux-only for now:
+      #   - Windows: vitest 4 native-module STATUS_ACCESS_VIOLATION segfault.
+      #   - macOS: LadybugDB/Vitest worker-process exit crashes still need
+      #     native-runner validation. Production search has a cross-platform
+      #     non-FTS fallback, but the integration gate stays Linux-only until
+      #     the native test-runner crash is fixed.
+      - name: CLI integration tests
+        if: runner.os == 'Linux'
+        run: npm test --workspace @codragraph/cli -- test/integration
+
+  # ── Build all publishable packages → ensures `npm publish` works ──
+  build:
+    runs-on: ubuntu-latest
+    needs: [typecheck, test]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - name: install (cross-platform, npm/cli#4828 workaround)
+        shell: bash
+        run: rm -f package-lock.json && npm install --no-audit --no-fund --include=optional
+      - name: Build publishable packages
+        # Same dep-order rationale as the typecheck job:
+        # shared → graphstore → cli → harness → compress → sdk → org
+        # `--workspace` takes the npm package NAME (now scoped under
+        # @codragraph) — not the on-disk directory name.
+        run: |
+          set -e
+          for pkg in @codragraph/shared @codragraph/graphstore @codragraph/cli @codragraph/harness @codragraph/compress @codragraph/sdk @codragraph/org; do
+            echo "::group::build $pkg"
+            npm run build --workspace "$pkg"
+            echo "::endgroup::"
+          done
+      - name: Pack (dry run — exercises publishConfig + files allow-list)
+        run: |
+          set -e
+          for pkg in @codragraph/shared @codragraph/graphstore @codragraph/cli @codragraph/harness @codragraph/compress @codragraph/sdk @codragraph/org; do
+            echo "::group::npm pack --dry-run $pkg"
+            npm pack --workspace "$pkg" --dry-run
+            echo "::endgroup::"
+          done

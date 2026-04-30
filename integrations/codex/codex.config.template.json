@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "preToolUse": {
+      "match": ["Grep", "Glob", "Read", "Bash"],
+      "command": "node \"${CODRAGRAPH_PLUGIN_ROOT}/hooks/codragraph-codex-hook.js\"",
+      "timeoutMs": 10000,
+      "statusMessage": "Enriching with CodraGraph graph context…"
+    },
+    "postToolUse": {
+      "match": ["Edit", "Write"],
+      "command": "node \"${CODRAGRAPH_PLUGIN_ROOT}/hooks/codragraph-codex-hook.js\" --post",
+      "timeoutMs": 10000,
+      "statusMessage": "Checking CodraGraph index freshness…"
+    }
+  }
+}

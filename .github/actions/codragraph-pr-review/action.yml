@@ -1,0 +1,170 @@
+# CodraGraph PR Review — composite GitHub Action.
+#
+# Indexes the PR's base and head refs, runs `codragraph diff --semantic --json`,
+# formats the result as a sticky PR comment. Two modes:
+#
+#   - deterministic (default, free): structural-diff Markdown only.
+#   - review (opt-in, paid): also calls Anthropic with the diff JSON to produce
+#                            a richer human-readable review on top.
+#
+# Both modes update a single sticky comment per PR (matched by `comment-marker`)
+# rather than spamming a new comment per push.
+
+name: 'CodraGraph PR Review'
+description: >
+  Posts a structural-diff PR comment using `codragraph diff --semantic --json`.
+  Optional LLM-augmented review when an Anthropic API key is provided.
+author: 'Anit Chaudhary'
+branding:
+  icon: 'git-pull-request'
+  color: 'blue'
+
+inputs:
+  mode:
+    description: '`deterministic` (free, structural-only) or `review` (LLM-augmented). Default: deterministic.'
+    required: false
+    default: 'deterministic'
+  anthropic-api-key:
+    description: 'Anthropic API key. Required when `mode=review`.'
+    required: false
+    default: ''
+  anthropic-model:
+    description: 'Anthropic model id for review mode.'
+    required: false
+    default: 'claude-sonnet-4-6'
+  codragraph-version:
+    description: 'Version of `@codragraph/cli` to install (npm dist-tag or exact).'
+    required: false
+    default: 'latest'
+  comment-marker:
+    description: 'HTML comment marker used to find/update a sticky comment across pushes.'
+    required: false
+    default: '<!-- codragraph-pr-review -->'
+  github-token:
+    description: 'GitHub token with `pull-requests: write`. Defaults to `github.token`.'
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [[ "${{ inputs.mode }}" != "deterministic" && "${{ inputs.mode }}" != "review" ]]; then
+          echo "::error::Invalid mode '${{ inputs.mode }}'. Must be 'deterministic' or 'review'."
+          exit 1
+        fi
+        if [[ "${{ inputs.mode }}" == "review" && -z "${{ inputs.anthropic-api-key }}" ]]; then
+          echo "::error::mode=review requires `anthropic-api-key` input."
+          exit 1
+        fi
+        if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+          echo "::error::This action requires a pull_request event (got ${{ github.event_name }})."
+          exit 1
+        fi
+
+    - name: Setup Node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install codragraph CLI
+      shell: bash
+      run: |
+        # Tree-sitter native deps need python + make + g++. ubuntu-latest has them by default.
+        npm install -g "@codragraph/cli@${{ inputs.codragraph-version }}"
+        codragraph --version
+
+    - name: Resolve PR base/head SHAs
+      id: refs
+      shell: bash
+      run: |
+        echo "base_sha=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+        echo "head_sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+
+    - name: Index base ref
+      shell: bash
+      run: |
+        git checkout "${{ steps.refs.outputs.base_sha }}"
+        codragraph analyze --no-setup
+        # `analyze` writes the graphstore commit id to .codragraph/meta.json#headCommit
+        BASE_COMMIT=$(node -e "
+          const m = JSON.parse(require('fs').readFileSync('.codragraph/meta.json', 'utf8'));
+          if (!m.headCommit) { console.error('meta.headCommit missing'); process.exit(1); }
+          console.log(m.headCommit);
+        ")
+        echo "BASE_COMMIT=$BASE_COMMIT" >> "$GITHUB_ENV"
+        echo "Base graph commit: $BASE_COMMIT"
+
+    - name: Index head ref
+      shell: bash
+      run: |
+        git checkout "${{ steps.refs.outputs.head_sha }}"
+        codragraph analyze --no-setup
+        HEAD_COMMIT=$(node -e "
+          const m = JSON.parse(require('fs').readFileSync('.codragraph/meta.json', 'utf8'));
+          if (!m.headCommit) { console.error('meta.headCommit missing'); process.exit(1); }
+          console.log(m.headCommit);
+        ")
+        echo "HEAD_COMMIT=$HEAD_COMMIT" >> "$GITHUB_ENV"
+        echo "Head graph commit: $HEAD_COMMIT"
+
+    - name: Run semantic diff
+      shell: bash
+      run: |
+        codragraph diff "$BASE_COMMIT" "$HEAD_COMMIT" --semantic --json > diff.json
+        echo "Diff JSON (first 80 lines):"
+        head -80 diff.json || true
+
+    - name: Format deterministic comment
+      shell: bash
+      run: |
+        node "${{ github.action_path }}/format-comment.mjs" diff.json "${{ inputs.comment-marker }}" > comment.md
+        echo "Comment preview (first 40 lines):"
+        head -40 comment.md || true
+
+    - name: Augment with LLM review (mode=review only)
+      if: inputs.mode == 'review'
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        ANTHROPIC_MODEL: ${{ inputs.anthropic-model }}
+      run: |
+        node "${{ github.action_path }}/llm-review.mjs" diff.json comment.md > comment.augmented.md
+        if [[ -s comment.augmented.md ]]; then
+          mv comment.augmented.md comment.md
+        else
+          echo "::warning::LLM review produced empty output; falling back to deterministic comment."
+        fi
+
+    - name: Post or update sticky PR comment
+      uses: actions/github-script@v7
+      env:
+        COMMENT_MARKER: ${{ inputs.comment-marker }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const fs = require('fs');
+          const body = fs.readFileSync('comment.md', 'utf8');
+          const marker = process.env.COMMENT_MARKER;
+          const { owner, repo } = context.repo;
+          const issue_number = context.payload.pull_request.number;
+
+          // Find existing sticky comment by marker (avoids spamming on every push).
+          const { data: comments } = await github.rest.issues.listComments({
+            owner, repo, issue_number, per_page: 100,
+          });
+          const existing = comments.find(c => typeof c.body === 'string' && c.body.includes(marker));
+
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner, repo, comment_id: existing.id, body,
+            });
+            core.info(`Updated sticky comment ${existing.id}`);
+          } else {
+            const { data } = await github.rest.issues.createComment({
+              owner, repo, issue_number, body,
+            });
+            core.info(`Created comment ${data.id}`);
+          }

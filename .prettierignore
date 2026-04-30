@@ -1,0 +1,16 @@
+dist/
+coverage/
+codragraph/vendor/
+codragraph/test/fixtures/
+codragraph-web/playwright-report/
+codragraph-web/test-results/
+*.d.ts
+*.snap
+*.wasm
+*.md
+.codragraph/
+.vercel/
+.claude-flow/
+.swarm/
+assets/
+repomix-output*

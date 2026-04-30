@@ -1,0 +1,420 @@
+import * as React from 'react';
+import {
+  Activity,
+  Boxes,
+  Coins,
+  Files,
+  GitCommit,
+  Network,
+  Sparkles,
+  Workflow,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useAppState } from '@/hooks/useAppState';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { StatCard } from './StatCard';
+import { CapabilityCard } from './CapabilityCard';
+import { fetchGraphstoreLog, type GraphstoreCommit } from '@/services/graphstore-client';
+// (the GraphstoreCommit type is also referenced by the Top-recipes panel below)
+import { fetchRecipesList, type RecipeSummary } from '@/services/recipes-client';
+import type { DashboardSection } from '@/hooks/useDashboardSection';
+import type { BackendRepo } from '@/services/backend-client';
+import { useGraphstoreContext } from '@/hooks/useGraphstoreContext';
+
+/**
+ * The Overview marquee. Renders:
+ *   - 4 stat cards (Files / Nodes / Edges / Processes)
+ *   - 4 capability cards (Token savings / Dynamic harness / Versioned graph / Agent swarm)
+ *   - Recent commits timeline (via graphstore_log)
+ *   - Recipes summary (via harness_recipes_list)
+ *
+ * All async data calls degrade gracefully when the server hasn't yet
+ * exposed the endpoints — empty states with explanatory hints replace
+ * the data panels rather than blocking the page.
+ */
+export interface OverviewSectionProps {
+  onNavigate: (section: DashboardSection) => void;
+}
+
+interface RemoteState<T> {
+  status: 'idle' | 'loading' | 'available' | 'unavailable';
+  data: T | null;
+  reason?: string;
+}
+
+export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX.Element => {
+  const { projectName, availableRepos } = useAppState();
+  const currentRepo = projectName || null;
+  const repo = useCurrentRepo(currentRepo, availableRepos);
+  const ctx = useGraphstoreContext(currentRepo);
+
+  const [logState, setLogState] = useState<RemoteState<GraphstoreCommit[]>>({
+    status: 'idle',
+    data: null,
+  });
+  const [recipesState, setRecipesState] = useState<RemoteState<RecipeSummary[]>>({
+    status: 'idle',
+    data: null,
+  });
+
+  useEffect(() => {
+    if (!currentRepo) return;
+    let cancelled = false;
+    setLogState({ status: 'loading', data: null });
+    fetchGraphstoreLog(currentRepo, { limit: 8 }).then((res) => {
+      if (cancelled) return;
+      if (res.available) {
+        setLogState({ status: 'available', data: res.data.commits });
+      } else {
+        setLogState({ status: 'unavailable', data: null, reason: res.reason });
+      }
+    });
+    setRecipesState({ status: 'loading', data: null });
+    fetchRecipesList(currentRepo, { limit: 5 }).then((res) => {
+      if (cancelled) return;
+      if (res.available) {
+        setRecipesState({ status: 'available', data: res.data.recipes });
+      } else {
+        setRecipesState({
+          status: 'unavailable',
+          data: null,
+          reason: res.reason,
+        });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentRepo]);
+
+  const stats = repo?.stats ?? {};
+
+  return (
+    <ScrollArea className="h-full">
+      <div className="mx-auto max-w-screen-2xl space-y-8 px-4 py-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
+            {repo?.name ?? 'Repository overview'}
+          </h1>
+          <p className="mt-1 text-sm text-text-secondary">
+            {repo
+              ? `${repo.repoPath ?? repo.path}${repo.indexedAt ? ` · indexed ${formatRelative(repo.indexedAt)}` : ''}`
+              : 'Connect to a server and pick a repo to see its knowledge-graph overview.'}
+          </p>
+        </div>
+
+        {/* Stat row */}
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <StatCard
+            label="Files"
+            value={stats.files}
+            icon={Files}
+            accentClassName="text-node-file"
+            loading={!repo}
+          />
+          <StatCard
+            label="Nodes"
+            value={stats.nodes}
+            icon={Boxes}
+            accentClassName="text-node-class"
+            hint={stats.embeddings ? `${stats.embeddings.toLocaleString()} embeddings` : undefined}
+            loading={!repo}
+          />
+          <StatCard
+            label="Edges"
+            value={stats.edges}
+            icon={Network}
+            accentClassName="text-node-method"
+            loading={!repo}
+          />
+          <StatCard
+            label="Processes"
+            value={stats.processes}
+            icon={Workflow}
+            accentClassName="text-node-interface"
+            hint={
+              stats.communities ? `${stats.communities.toLocaleString()} communities` : undefined
+            }
+            loading={!repo}
+          />
+        </div>
+
+        {/* Capabilities row */}
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold tracking-wider text-text-secondary uppercase">
+              Capabilities
+            </h2>
+            <Badge variant="outline" className="text-text-muted">
+              4 co-equal
+            </Badge>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <CapabilityCard
+              title="Token savings"
+              tagline='"Use the right 4k tokens, not the wrong 32k."'
+              icon={Coins}
+              status={
+                recipesState.status === 'available' && (recipesState.data?.length ?? 0) > 0
+                  ? 'active'
+                  : recipesState.status === 'unavailable'
+                    ? 'idle'
+                    : 'ready'
+              }
+              metric={
+                recipesState.status === 'available'
+                  ? `${recipesState.data?.length ?? 0} recipes`
+                  : recipesState.status === 'loading'
+                    ? '—'
+                    : undefined
+              }
+              detail={
+                recipesState.status === 'unavailable'
+                  ? 'Recipe endpoint not yet wired to this server'
+                  : 'Versioned recipe memory'
+              }
+              cta={{ label: 'Open Recipes', onClick: () => onNavigate('recipes') }}
+            />
+            <CapabilityCard
+              title="Dynamic harness"
+              tagline='"Your agent self-improves on your tasks."'
+              icon={Sparkles}
+              status="ready"
+              metric={recipesState.status === 'available' ? 'ready' : '—'}
+              detail="Run swarm-search to learn a harness for a task family"
+            />
+            <CapabilityCard
+              title="Versioned code graph"
+              tagline='"Your codebase has git history; your agent should too."'
+              icon={GitCommit}
+              status={repo?.headCommit ? 'active' : 'ready'}
+              metric={repo?.headCommit ? repo.headCommit.replace(/^sha256:/, '').slice(0, 12) : '—'}
+              detail={
+                repo?.currentBranch
+                  ? `HEAD on ${repo.currentBranch}`
+                  : 'Run codragraph analyze to capture the first snapshot'
+              }
+              cta={{ label: 'Open History', onClick: () => onNavigate('history') }}
+            />
+            <CapabilityCard
+              title="Agent swarm"
+              tagline='"Explorer + Exploiter + Critic working in parallel."'
+              icon={Activity}
+              status="ready"
+              metric="ready"
+              detail="harness_swarm_run with --task-family to start"
+            />
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Recent activity row */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Recent commits</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onNavigate('history')}
+                  className="text-text-secondary"
+                >
+                  View all →
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <CommitsList state={logState} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Top recipes</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onNavigate('recipes')}
+                  className="text-text-secondary"
+                >
+                  View all →
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <RecipesList state={recipesState} commitBySnapshotId={ctx.commitBySnapshotId} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </ScrollArea>
+  );
+};
+
+// ──────────────────────────────────────────────────────────────────────
+// Internals
+// ──────────────────────────────────────────────────────────────────────
+
+const useCurrentRepo = (
+  currentRepo: string | null,
+  availableRepos: BackendRepo[],
+): BackendRepo | null => {
+  if (!currentRepo) return null;
+  return availableRepos.find((r) => r.name === currentRepo) ?? null;
+};
+
+const CommitsList = ({ state }: { state: RemoteState<GraphstoreCommit[]> }): React.JSX.Element => {
+  if (state.status === 'loading' || state.status === 'idle') {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </div>
+    );
+  }
+  if (state.status === 'unavailable') {
+    return (
+      <EmptyHint
+        title="Versioning endpoint not wired"
+        body="The codragraph server hasn't exposed `/api/graphstore/log`. Once it does, this panel will populate from the graphstore HEAD walk."
+        reason={state.reason}
+      />
+    );
+  }
+  if (!state.data || state.data.length === 0) {
+    return (
+      <EmptyHint
+        title="No commits yet"
+        body={
+          'Run `codragraph analyze` to capture the first snapshot, or `codragraph commit -m "message"` to record a checkpoint.'
+        }
+      />
+    );
+  }
+  return (
+    <ul className="space-y-1.5">
+      {state.data.map((c) => (
+        <li
+          key={c.id}
+          className="flex items-start gap-3 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-elevated"
+        >
+          <span className="font-mono text-xs text-text-muted">{c.short}</span>
+          <span className="flex-1 truncate text-text-primary">{c.message}</span>
+          <span className="text-xs text-text-secondary">{formatRelative(c.ts)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+const RecipesList = ({
+  state,
+  commitBySnapshotId,
+}: {
+  state: RemoteState<RecipeSummary[]>;
+  commitBySnapshotId: Map<string, GraphstoreCommit>;
+}): React.JSX.Element => {
+  if (state.status === 'loading' || state.status === 'idle') {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-12 w-full" />
+        ))}
+      </div>
+    );
+  }
+  if (state.status === 'unavailable') {
+    return (
+      <EmptyHint
+        title="Recipe endpoint not wired"
+        body="The codragraph server hasn't exposed `/api/recipes`. Once it does, top recipes for the current snapshot will appear here."
+        reason={state.reason}
+      />
+    );
+  }
+  if (!state.data || state.data.length === 0) {
+    return (
+      <EmptyHint
+        title="No recipes yet"
+        body='Run `codragraph-harness swarm-search --task-family "..." --snapshot-id "..."` to learn the first recipe.'
+      />
+    );
+  }
+  return (
+    <ul className="space-y-2">
+      {state.data.map((r) => {
+        const commit = commitBySnapshotId.get(r.snapshotId);
+        return (
+          <li key={r.id} className="rounded-md border border-border-subtle bg-deep px-3 py-2">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium text-text-primary">
+                  {r.harnessName}
+                </div>
+                <div className="text-xs text-text-secondary">
+                  {r.taskFamily} · {formatRelative(r.searchedAt)}
+                </div>
+              </div>
+              <div className="ml-3 flex shrink-0 items-center gap-2 font-mono text-xs">
+                <Badge variant="success">acc {r.accuracy.toFixed(2)}</Badge>
+                <span className="text-text-muted">{r.tokens.toFixed(0)}t</span>
+              </div>
+            </div>
+            {commit && (
+              <div
+                className="mt-1.5 flex items-center gap-1.5 text-[11px] text-text-muted"
+                title={commit.message}
+              >
+                <GitCommit className="h-3 w-3 text-accent" />
+                <span className="font-mono text-text-secondary">{commit.short}</span>
+                <span className="truncate">{commit.message}</span>
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+};
+
+const EmptyHint = ({
+  title,
+  body,
+  reason,
+}: {
+  title: string;
+  body: string;
+  reason?: string;
+}): React.JSX.Element => (
+  <div className="rounded-md border border-dashed border-border-subtle bg-deep p-4">
+    <p className="text-sm font-medium text-text-primary">{title}</p>
+    <p className="mt-1 text-xs text-text-secondary">{body}</p>
+    {reason && <p className="mt-2 font-mono text-[10px] text-text-muted">reason: {reason}</p>}
+  </div>
+);
+
+const formatRelative = (iso: string): string => {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return iso;
+  const diff = Date.now() - t;
+  const sec = Math.round(diff / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const d = Math.round(hr / 24);
+  if (d < 30) return `${d}d ago`;
+  const mo = Math.round(d / 30);
+  if (mo < 12) return `${mo}mo ago`;
+  return `${Math.round(mo / 12)}y ago`;
+};

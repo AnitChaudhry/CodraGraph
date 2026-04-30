@@ -1,0 +1,82 @@
+{
+  "name": "@codragraph/org",
+  "version": "2.1.0",
+  "description": "Multi-tenant orgs, SSO, RBAC, and tamper-evident audit logging for the CodraGraph platform.",
+  "author": {
+    "name": "Anit Chaudhary",
+    "email": "getintouch.anit@gmail.com",
+    "url": "https://anit.upfyn.com"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "codragraph",
+    "multi-tenant",
+    "sso",
+    "rbac",
+    "audit-log",
+    "tamper-evident",
+    "oidc"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "default": "./dist/types.js"
+    },
+    "./tenancy": {
+      "types": "./dist/tenancy/context.d.ts",
+      "default": "./dist/tenancy/context.js"
+    },
+    "./auth": {
+      "types": "./dist/auth/interface.d.ts",
+      "default": "./dist/auth/interface.js"
+    },
+    "./audit": {
+      "types": "./dist/audit/interface.d.ts",
+      "default": "./dist/audit/interface.js"
+    },
+    "./rbac": {
+      "types": "./dist/rbac/check.d.ts",
+      "default": "./dist/rbac/check.js"
+    },
+    "./dist/*": {
+      "types": "./dist/*",
+      "default": "./dist/*"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "RFC.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepack": "tsc"
+  },
+  "dependencies": {
+    "@codragraph/graphstore": "^2.1.0",
+    "@codragraph/shared": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "^5.4.5",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

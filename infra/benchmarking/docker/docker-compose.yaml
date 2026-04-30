@@ -1,0 +1,89 @@
+# Reproducible benchmark stack: vLLM inference + codragraph (CLI/MCP) + bench scripts.
+# `docker compose up` brings up the inference server. The bench script runs in a
+# separate `bench` service that depends on it.
+
+services:
+  # --- Inference server (vLLM, OpenAI-compatible) -------------------------
+  vllm:
+    image: vllm/vllm-openai:v0.6.3
+    ports:
+      - '8000:8000'
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: ${TENSOR_PARALLEL_SIZE:-1}
+              capabilities: [gpu]
+    command:
+      - --model
+      - ${MODEL}
+      - --gpu-memory-utilization
+      - '${GPU_MEMORY_UTILIZATION:-0.9}'
+      - --max-model-len
+      - '${MAX_MODEL_LEN:-32768}'
+      - --tensor-parallel-size
+      - '${TENSOR_PARALLEL_SIZE:-1}'
+      - --max-num-seqs
+      - '${MAX_NUM_SEQS:-64}'
+      - --max-num-batched-tokens
+      - '${MAX_NUM_BATCHED_TOKENS:-8192}'
+      - --enable-prefix-caching
+      - --disable-log-requests
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/v1/models']
+      interval: 15s
+      timeout: 5s
+      retries: 30
+      start_period: 180s
+
+  # --- Codragraph CLI (for indexing the target repo + serving graph) -------
+  codragraph:
+    build:
+      context: ../..
+      dockerfile: Benchmarking/docker/codragraph.dockerfile
+    image: codragraph:bench
+    volumes:
+      - ${INDEXED_REPO_PATH:-../..}:/workspace/repo:rw
+      - codragraph_data:/root/.codragraph
+    environment:
+      - NODE_ENV=production
+    working_dir: /workspace/repo
+    # Run interactively (override via `docker compose run`)
+    command: ['sleep', 'infinity']
+
+  # --- Bench scripts (run-benchmark.ts, report.ts) -------------------------
+  bench:
+    build:
+      context: ../..
+      dockerfile: Benchmarking/docker/bench.dockerfile
+    image: codragraph-bench:latest
+    depends_on:
+      vllm:
+        condition: service_healthy
+      codragraph:
+        condition: service_started
+    volumes:
+      - ../../:/workspace/thinqmesh-codra:rw
+      - codragraph_data:/root/.codragraph:ro
+      - ./results:/workspace/thinqmesh-codra/Benchmarking/results
+    working_dir: /workspace/thinqmesh-codra/Benchmarking/scripts
+    environment:
+      - NODE_ENV=production
+      - VLLM_URL=http://vllm:8000/v1
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JUDGE_PROVIDER=${JUDGE_PROVIDER:-anthropic}
+      - JUDGE_MODEL=${JUDGE_MODEL:-claude-haiku-4-5-20251001}
+    # Run interactively via `docker compose run --rm bench npm run benchmark -- ...`
+    command: ['sleep', 'infinity']
+
+volumes:
+  hf_cache:
+    driver: local
+  codragraph_data:
+    driver: local

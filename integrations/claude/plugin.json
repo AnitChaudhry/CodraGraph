@@ -1,0 +1,33 @@
+{
+  "name": "codragraph",
+  "version": "0.1.1",
+  "displayName": "CodraGraph",
+  "description": "Graph-aware code intelligence for Claude Code. Surfaces blast-radius, blame, and execution-flow context before edits.",
+  "author": {
+    "name": "Anit Chaudhary",
+    "email": "getintouch.anit@gmail.com",
+    "url": "https://anit.upfyn.com"
+  },
+  "homepage": "https://github.com/codragraph/codragraph",
+  "license": "Apache-2.0",
+  "keywords": ["code-intelligence", "knowledge-graph", "impact-analysis"],
+  "hooks": "./hooks/hooks.json",
+  "skills": [
+    "./skills/codragraph-cli",
+    "./skills/codragraph-debugging",
+    "./skills/codragraph-exploring",
+    "./skills/codragraph-guide",
+    "./skills/codragraph-impact-analysis",
+    "./skills/codragraph-pr-review",
+    "./skills/codragraph-refactoring"
+  ],
+  "requires": {
+    "@codragraph/cli": ">=1.0.0",
+    "claude-code": ">=1.0.0"
+  },
+  "config": {
+    "configFile": "~/.codragraph/config.json",
+    "envVars": ["ANTHROPIC_API_KEY"],
+    "setupCommand": "codragraph setup"
+  }
+}
