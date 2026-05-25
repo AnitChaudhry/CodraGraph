@@ -115,66 +115,33 @@ If you use coding agents, follow project context files (e.g. `AGENTS.md`, `CLAUD
 
 ## Releases
 
-Two publish workflows ship `codragraph` to npm:
+`NPM Release` (`.github/workflows/npm-release.yml`) is the production publish
+path for public packages. It runs a cross-platform validation matrix on
+Ubuntu, macOS, and Windows before the publish job is allowed to start.
 
-- **Stable** (`.github/workflows/publish.yml`) — triggered by pushing any `v*`
-  tag. Publishes to the `latest` dist-tag with a changelog-backed GitHub
-  release. Maintainers are expected to tag from `main` as a convention; the
-  workflow itself does not enforce branch reachability.
-- **Release Candidate** (`.github/workflows/release-candidate.yml`) — runs on
-  every push to `main` (typically a merged PR) plus manual dispatch. Docs-only
-  changes are skipped via `paths-ignore`. Publishes to the `rc` dist-tag with
-  version `X.Y.Z-rc.N` and a GitHub prerelease, where:
-  - `X.Y.Z` is selected automatically. On push (and on dispatch with
-    `bump: auto`, the default) the workflow **continues the active rc cycle**:
-    if the registry already has `X.Y.Z-rc.*` versions with `X.Y.Z` > current
-    `latest`, it reuses the highest such base; otherwise it patch-bumps
-    from `latest`. Dispatching with `bump: patch|minor|major` **resets**
-    the cycle from `latest`.
-  - `N` is auto-incremented against existing `X.Y.Z-rc.*` entries on the
-    registry. First rc for a given base is `rc.1`.
-  - After the npm publish succeeds, the workflow calls `docker.yml` as a
-    reusable workflow to build and push the corresponding RC Docker images
-    (e.g. `your-registry/codragraph:1.7.0-rc.1`, mirrored to
-    `your-mirror/codragraph:1.7.0-rc.1`). The images are signed
-    with Cosign; the OIDC identity is `docker.yml@refs/heads/main` (the
-    caller's ref — see README.md § Docker for the verify command).
+Trigger it in one of two ways:
 
-  Idempotency: the workflow pushes an `rc/<HEAD_SHA>` marker tag and a
-  `v<RC>` release tag **atomically, before** calling `npm publish`. The guard
-  refuses to re-run once the marker exists, so a post-publish failure will
-  not mint a duplicate rc for the same commit. The `v<RC>` tag points at a
-  detached release commit whose `package.json` matches the npm tarball
-  exactly (traceable releases). Recovery after a partial failure:
+- Push a `v*` tag from the release commit, for example `v2.1.1`.
+- Run the workflow manually with `publish=true` when maintainers need to
+  republish missing packages or verify the release path.
 
-  ```bash
-  git push --delete origin rc/<HEAD_SHA> v<RC>
-  # then redispatch the workflow with force: true
-  ```
+The workflow publishes from Ubuntu only, after:
 
-  **Docker-only partial failure:** if `publish` succeeds (npm tarball + tags
-  are live) but the `docker` job subsequently fails (e.g. GHCR flakiness),
-  the npm RC is already published and the `rc/<HEAD_SHA>` marker is in place.
-  Re-running `release-candidate.yml` with `force: true` will abort at the
-  "Version already exists on npm" guard. To recover without cutting a new RC:
+- dependency installation succeeds with npm on all three operating systems
+- publishable workspaces build in dependency order
+- graphstore, harness, org, web, and non-Windows CLI unit tests pass
+- `npm pack --dry-run` succeeds for CLI, SDK, graphstore, harness, compress,
+  org, Claude plugin, and Codex integration
 
-  ```bash
-  # 1. Manually trigger only the docker workflow, passing the existing RC tag:
-  gh workflow run docker.yml --ref main -f tag=v<RC_VERSION>
-  # (requires a workflow_dispatch trigger on docker.yml — see note below)
-  ```
+The npm credential must live in the repository secret `NPM_TOKEN`; never commit
+an `.npmrc` with an auth token. The publish step is idempotent: it checks
+`npm view <package>@<version>` first and skips packages that already exist on
+npm. Tag releases also create or update GitHub release notes.
 
-  Because `docker.yml` intentionally has no `workflow_dispatch` (images are
-  tag-driven by design), the practical recovery options are:
-  - Wait for the next commit on `main`, which will cut a new RC that includes
-    the Docker build.
-  - Manually run `docker build` + `docker push` locally and sign with Cosign
-    against the same digest.
-  - Delete `rc/<HEAD_SHA>` and `v<RC>` tags, then redispatch with `force:
-    true` to re-run the full RC pipeline (cuts a new RC number).
-
-The rc workflow never moves `latest`. To verify after a change, inspect dist-tags:
+To verify after publishing:
 
 ```bash
-npm view codragraph dist-tags
+npm view @codragraph/cli version
+npm view @codragraph/sdk version
+npm view @codragraph/cli dist-tags
 ```

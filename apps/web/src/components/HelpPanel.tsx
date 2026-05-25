@@ -20,7 +20,7 @@ const tabs: Tab[] = [
   { id: 'overview', label: 'Overview', icon: <HelpCircle className="h-4 w-4" /> },
   { id: 'graph', label: 'Graph & nodes', icon: <GitBranch className="h-4 w-4" /> },
   { id: 'search', label: 'Search & filter', icon: <Search className="h-4 w-4" /> },
-  { id: 'ai', label: 'Codra AI', icon: <Zap className="h-4 w-4" /> },
+  { id: 'ai', label: 'CodraGraph AI', icon: <Zap className="h-4 w-4" /> },
   { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="h-4 w-4" /> },
   { id: 'status', label: 'Status bar', icon: <BarChart2 className="h-4 w-4" /> },
 ];
@@ -184,8 +184,8 @@ function TabContent({
             <br />
             <strong style={{ color: '#e2e2e8', fontWeight: 500 }}>2.</strong> Search by name or type
             <br />
-            <strong style={{ color: '#e2e2e8', fontWeight: 500 }}>3.</strong> Ask Codra AI a natural
-            language question
+            <strong style={{ color: '#e2e2e8', fontWeight: 500 }}>3.</strong> Ask CodraGraph AI a
+            natural language question
           </p>
         </div>
 
@@ -355,7 +355,7 @@ function TabContent({
             letterSpacing: '0.08em',
           }}
         >
-          Codra AI
+          CodraGraph AI
         </p>
 
         <div
@@ -370,8 +370,8 @@ function TabContent({
             ✓ Semantic Ready
           </p>
           <p style={{ fontSize: 12, color: '#9ca3af', margin: 0, lineHeight: 1.6 }}>
-            Your repo is indexed and ready for semantic queries. Codra AI understands code structure
-            and relationships, not just file names.
+            Your repo is indexed and ready for semantic queries. CodraGraph AI understands code
+            structure and relationships, not just file names.
           </p>
         </div>
 
@@ -400,7 +400,7 @@ function TabContent({
         <div style={{ borderTop: '0.5px solid rgba(255,255,255,0.08)', margin: '4px 0' }} />
 
         <p style={{ fontSize: 12, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
-          Open the prompt via the <span style={{ color: '#e2e2e8' }}>Codra AI</span> button
+          Open the prompt via the <span style={{ color: '#e2e2e8' }}>CodraGraph AI</span> button
           (top-right).
         </p>
       </div>

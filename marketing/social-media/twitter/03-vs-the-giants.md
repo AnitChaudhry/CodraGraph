@@ -7,7 +7,7 @@
 **1/5**
 Common question: "Isn't this what Sourcegraph / Cursor / Copilot does?"
 
-No. They overlap, but Codragraph fits next to them, not against. Quick honest comparison:
+No. They overlap, but CodraGraph fits next to them, not against. Quick honest comparison:
 
 ---
 
@@ -19,7 +19,7 @@ Sourcegraph:
 • Doesn't run local-first
 • No versioned recipe memory
 
-Use both: Sourcegraph for human nav, Codragraph for agent context.
+Use both: Sourcegraph for human nav, CodraGraph for agent context.
 
 ---
 
@@ -30,7 +30,7 @@ Cursor / Copilot:
 • Pulls context heuristically (no graph)
 • No recipe persistence
 
-Use both: Cursor as your editor, Codragraph as the context layer Cursor's agent calls into.
+Use both: Cursor as your editor, CodraGraph as the context layer Cursor's agent calls into.
 
 ---
 
@@ -40,16 +40,16 @@ Raw 200k context window:
 • Burning tokens on slop is now CHEAPER but still wasteful
 • Smaller models can't keep up because they're fed the same slop
 
-Codragraph picks the right 4k. Smaller models suddenly compete.
+CodraGraph picks the right 4k. Smaller models suddenly compete.
 
 ---
 
 **5/5**
-Codragraph isn't trying to replace your stack.
+CodraGraph isn't trying to replace your stack.
 
 It's the layer that makes your stack 60–85% cheaper to run.
 
-If you're already shipping agents on Sourcegraph / Cursor / Copilot / your own infra — Codragraph slots in as a tool. MCP-native. Local. BYO key.
+If you're already shipping agents on Sourcegraph / Cursor / Copilot / your own infra — CodraGraph slots in as a tool. MCP-native. Local. BYO key.
 
 (Drops next month.)
 
@@ -59,4 +59,4 @@ If you're already shipping agents on Sourcegraph / Cursor / Copilot / your own i
 
 - This thread is for the "isn't this Sourcegraph" objection that comes up in every demo
 - Honest about what they do well — credibility move
-- Final tweet positions Codragraph as additive, not replacement
+- Final tweet positions CodraGraph as additive, not replacement

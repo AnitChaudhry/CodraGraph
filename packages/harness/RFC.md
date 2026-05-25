@@ -4,7 +4,7 @@
 |---|---|
 | Status | Scaffold landed (2026-04-29) |
 | Phase | 1 of 5 (Harness in TS) |
-| Author | Anit Chaudhary |
+| Author | Thinqmesh Technologies |
 | Reference | [Meta-Harness paper, arXiv 2603.28052](https://arxiv.org/abs/2603.28052) |
 | Approach | Scaffold first, RFC second (per AskUserQuestion 2026-04-29) |
 
@@ -33,7 +33,7 @@ Out of scope for Phase 1 (deferred):
 - Parallel evaluation (sequential by design, for clean traces).
 - Swarm / multi-proposer (Phase 3).
 - Dolt-like graph storage (Phase 4).
-- Codragraph-compress integration (Phase 1.5).
+- CodraGraph-compress integration (Phase 1.5).
 
 ## 2. Package layout
 

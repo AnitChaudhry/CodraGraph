@@ -6,7 +6,7 @@
 
 ## Body
 
-Codragraph is open-source under Apache-2.0. The full platform is free to download, run locally, and use for any purpose — personal, commercial, or anything in between.
+CodraGraph is open-source under Apache-2.0. The full platform is free to download, run locally, and use for any purpose — personal, commercial, or anything in between.
 
 You bring your own LLM API key (Anthropic, OpenAI, etc.). **Your keys never touch our servers.** Your code never leaves your machine.
 
@@ -24,7 +24,7 @@ For solo developers, students, OSS maintainers, evaluators.
 - Local-first — your code never leaves your machine
 - Community support via GitHub Discussions
 
-**Limit:** none. Apache-2.0 lets you use, modify, fork, embed, or even rehost Codragraph itself. The paid tiers below exist because they're more convenient than self-hosting, not because the OSS forbids commercial use.
+**Limit:** none. Apache-2.0 lets you use, modify, fork, embed, or even rehost CodraGraph itself. The paid tiers below exist because they're more convenient than self-hosting, not because the OSS forbids commercial use.
 
 ---
 
@@ -32,7 +32,7 @@ For solo developers, students, OSS maintainers, evaluators.
 
 For engineering teams who want shared, managed infra.
 
-- Hosted Codragraph server with team auth (SSO)
+- Hosted CodraGraph server with team auth (SSO)
 - Centralized recipe memory across team members
 - Per-developer usage analytics
 - Audit logs for compliance
@@ -62,7 +62,7 @@ For organizations that want self-hosted with white-glove support.
 
 We're not in the inference business. Anthropic, OpenAI, and the model vendors do that better and cheaper than any middleware ever could.
 
-What we sell: **the layer that makes their models 30× cheaper to use.** Codragraph routes your tokens, but the tokens are billed to you by your model provider directly.
+What we sell: **the layer that makes their models 30× cheaper to use.** CodraGraph routes your tokens, but the tokens are billed to you by your model provider directly.
 
 This means:
 - We can't see your prompts or your code.
@@ -75,9 +75,9 @@ This means:
 ## License clarification
 
 **Apache License 2.0** lets you:
-- ✅ Use Codragraph internally at your company
-- ✅ Build OSS or commercial products that bundle Codragraph
-- ✅ Rehost Codragraph as a paid service (the license permits it)
+- ✅ Use CodraGraph internally at your company
+- ✅ Build OSS or commercial products that bundle CodraGraph
+- ✅ Rehost CodraGraph as a paid service (the license permits it)
 - ✅ Modify the source and ship your own fork
 
 There are no usage restrictions. The Team and Enterprise tiers are for teams

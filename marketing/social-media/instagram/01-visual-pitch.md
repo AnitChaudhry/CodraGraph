@@ -26,7 +26,7 @@
 
 **Visual:** The 4-layer stack diagram (clean, spaced, white background).
 
-> Codragraph: a 4-layer context engine for AI agents.
+> CodraGraph: a 4-layer context engine for AI agents.
 > 
 > 1. Graph-aware retrieval
 > 2. LLM-aware compression
@@ -90,7 +90,7 @@
 
 🧠 Your AI agent burns 30,000 tokens to do work that needed 4,000.
 
-Codragraph fixes this. We built the context layer between your codebase and your agent — a graph-indexed, auto-tuned, version-aware retrieval engine that cuts 60–85% of the tokens your agent reads, and lets smaller models punch at flagship weight.
+CodraGraph fixes this. We built the context layer between your codebase and your agent — a graph-indexed, auto-tuned, version-aware retrieval engine that cuts 60–85% of the tokens your agent reads, and lets smaller models punch at flagship weight.
 
 Open-source soon. Drop a 🚀 if you'd try it.
 

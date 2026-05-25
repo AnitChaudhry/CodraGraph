@@ -1,6 +1,6 @@
-# Codragraph — Benchmarking
+# CodraGraph — Benchmarking
 
-Reproducible infrastructure for measuring Codragraph's actual token-savings, latency, and accuracy claims against real workloads on real models.
+Reproducible infrastructure for measuring CodraGraph's actual token-savings, latency, and accuracy claims against real workloads on real models.
 
 > **Status (2026-04-29):** Scaffolded. The headline claim — "60–85% token reduction with smaller models matching flagship outputs" — is a hypothesis until this folder produces numbers.
 
@@ -61,7 +61,7 @@ infra/benchmarking/
 #    Recommended: 1x A100 40GB or RTX 4090 24GB. Linux + Docker pre-installed.
 
 # 2. Clone this repo on the GPU box
-git clone <repo>; cd thinqmesh-codra/Benchmarking
+git clone <repo>; cd thinqmesh-codragraph/infra/benchmarking
 
 # 3. Pick a model and start vLLM
 cd docker

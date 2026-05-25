@@ -39,7 +39,7 @@ export type HarnessOrigin =
  * concrete provider modules directly — pull everything from `ctx`.
  */
 export interface HarnessContext {
-  /** Codragraph graph capabilities (query, context, impact). */
+  /** CodraGraph graph capabilities (query, context, impact). */
   graph: GraphClient;
   /** Inference provider (Claude / OpenAI / OpenCode / ...). */
   inference: InferenceProvider;

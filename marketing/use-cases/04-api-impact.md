@@ -17,12 +17,12 @@ Public APIs are the highest-blast-radius surface in any codebase. Getting impact
 
 The hard part isn't finding "uses of `id`"; it's finding **uses of the `id` returned by THIS API**. Most tools can't do that.
 
-## What Codragraph does differently
+## What CodraGraph does differently
 
 `codragraph_api_impact` is purpose-built for this. It combines four passes:
 
 1. **Route map** — finds the handler for `/api/users` via `codragraph_route_map`
-2. **Response shape extraction** — what fields does the handler actually return? (Codragraph's ORM + return-type extractors).
+2. **Response shape extraction** — what fields does the handler actually return? (CodraGraph's ORM + return-type extractors).
 3. **Consumer detection** — which files call `/api/users` (via fetch/axios/native client patterns)?
 4. **Property-access flow** — for each consumer, which properties of the response do they access?
 
@@ -68,7 +68,7 @@ API change analysis is **the recipe most teams want and never build**. The harne
 In a pre-merge GH Action:
 
 ```yaml
-- name: Codragraph API impact check
+- name: CodraGraph API impact check
   run: |
     npx codragraph api-impact --route /api/users --fail-on-risk HIGH
 ```
@@ -77,4 +77,4 @@ Block merges that have unacknowledged HIGH-risk consumer impact.
 
 ## Honest limit
 
-If your consumers reach the API via dynamic patterns (string-built URLs, generic client wrappers), Codragraph's static analysis can miss them. The graph captures what's statically inspectable. For dynamic patterns, you'll need runtime telemetry — which is a different product.
+If your consumers reach the API via dynamic patterns (string-built URLs, generic client wrappers), CodraGraph's static analysis can miss them. The graph captures what's statically inspectable. For dynamic patterns, you'll need runtime telemetry — which is a different product.

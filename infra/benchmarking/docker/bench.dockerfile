@@ -7,29 +7,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /workspace/thinqmesh-codra
+WORKDIR /workspace/thinqmesh-codragraph
 
 # Copy the entire monorepo — bench scripts depend on codragraph-harness etc. as
 # workspace deps. The volumes in docker-compose.yaml mount fresh source over this.
 COPY package.json package-lock.json ./
-COPY codragraph-shared codragraph-shared
-COPY codragraph codragraph
-COPY codragraph-harness codragraph-harness
-COPY codragraph-compress codragraph-compress
-COPY codragraph-sdk codragraph-sdk
-COPY codragraph-graphstore codragraph-graphstore
-COPY Benchmarking Benchmarking
+COPY packages packages
+COPY apps/web apps/web
+COPY integrations integrations
+COPY infra/benchmarking infra/benchmarking
 
-# Workspace install (the Benchmarking/scripts/package.json is its own workspace package
+# Workspace install (the infra/benchmarking/scripts/package.json is its own package
 # OR depends on the monorepo via file: refs — see scripts/package.json)
 RUN npm install --no-audit --no-fund --ignore-scripts
 
 # Build the deps the bench scripts use
-RUN cd codragraph-shared && npm run build || true
-RUN cd codragraph && npm run build || true
-RUN cd codragraph-harness && npm run build || true
+RUN npm run build --workspace @codragraph/shared || true
+RUN npm run build --workspace @codragraph/graphstore || true
+RUN npm run build --workspace @codragraph/cli || true
+RUN npm run build --workspace @codragraph/harness || true
 
-WORKDIR /workspace/thinqmesh-codra/Benchmarking/scripts
+WORKDIR /workspace/thinqmesh-codragraph/infra/benchmarking/scripts
 
 # Default: idle so docker compose run --rm bench <cmd> works
 CMD ["sleep", "infinity"]

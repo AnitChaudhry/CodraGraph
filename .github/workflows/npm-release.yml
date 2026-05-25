@@ -1,0 +1,203 @@
+name: NPM Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish packages to npm after validation'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22'
+  REGISTRY_URL: https://registry.npmjs.org/
+
+jobs:
+  cross-platform-validate:
+    name: Validate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install workspace dependencies
+        shell: bash
+        run: rm -f package-lock.json && npm install --no-audit --no-fund --include=optional
+      - name: Build publishable packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          for pkg in \
+            @codragraph/shared \
+            @codragraph/graphstore \
+            @codragraph/cli \
+            @codragraph/harness \
+            @codragraph/compress \
+            @codragraph/sdk \
+            @codragraph/org
+          do
+            echo "::group::build ${pkg}"
+            npm run build --workspace "${pkg}"
+            echo "::endgroup::"
+          done
+      - name: Test cross-platform packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm test --workspace @codragraph/graphstore
+          npm test --workspace @codragraph/harness
+          npm test --workspace @codragraph/org
+          npm test --workspace codragraph-web
+          if [ "$RUNNER_OS" != "Windows" ]; then
+            npm test --workspace @codragraph/cli -- test/unit
+          fi
+
+  pack-dry-run:
+    name: Pack Dry Run
+    runs-on: ubuntu-latest
+    needs: cross-platform-validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          registry-url: ${{ env.REGISTRY_URL }}
+      - name: Install workspace dependencies
+        shell: bash
+        run: rm -f package-lock.json && npm install --no-audit --no-fund --include=optional
+      - name: Build publishable packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          for pkg in \
+            @codragraph/shared \
+            @codragraph/graphstore \
+            @codragraph/cli \
+            @codragraph/harness \
+            @codragraph/compress \
+            @codragraph/sdk \
+            @codragraph/org
+          do
+            npm run build --workspace "${pkg}"
+          done
+      - name: npm pack --dry-run
+        shell: bash
+        run: |
+          set -euo pipefail
+          for pkg in \
+            @codragraph/shared \
+            @codragraph/graphstore \
+            @codragraph/cli \
+            @codragraph/harness \
+            @codragraph/compress \
+            @codragraph/sdk \
+            @codragraph/org \
+            @codragraph/claude-plugin \
+            @codragraph/codex
+          do
+            echo "::group::pack ${pkg}"
+            npm pack --workspace "${pkg}" --dry-run
+            echo "::endgroup::"
+          done
+
+  publish:
+    name: Publish To npm
+    runs-on: ubuntu-latest
+    needs: pack-dry-run
+    if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event.inputs.publish == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          registry-url: ${{ env.REGISTRY_URL }}
+      - name: Install workspace dependencies
+        shell: bash
+        run: rm -f package-lock.json && npm install --no-audit --no-fund --include=optional
+      - name: Build publishable packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          for pkg in \
+            @codragraph/shared \
+            @codragraph/graphstore \
+            @codragraph/cli \
+            @codragraph/harness \
+            @codragraph/compress \
+            @codragraph/sdk \
+            @codragraph/org
+          do
+            npm run build --workspace "${pkg}"
+          done
+      - name: Verify npm identity
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm whoami --registry="${REGISTRY_URL}"
+      - name: Publish packages that are not already on npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for pkg in \
+            @codragraph/shared \
+            @codragraph/graphstore \
+            @codragraph/cli \
+            @codragraph/harness \
+            @codragraph/compress \
+            @codragraph/sdk \
+            @codragraph/org \
+            @codragraph/claude-plugin \
+            @codragraph/codex
+          do
+            version="$(npm pkg get version --workspace "${pkg}" | tr -d '"')"
+            if npm view "${pkg}@${version}" version --registry="${REGISTRY_URL}" >/dev/null 2>&1; then
+              echo "${pkg}@${version} already exists on npm; skipping."
+            else
+              echo "::group::publish ${pkg}@${version}"
+              npm publish --workspace "${pkg}" --access public --provenance
+              echo "::endgroup::"
+            fi
+          done
+
+  github-release:
+    name: GitHub Release Notes
+    runs-on: ubuntu-latest
+    needs: publish
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create or update release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            gh release edit "${tag}" --latest
+          else
+            gh release create "${tag}" --verify-tag --latest --generate-notes
+          fi

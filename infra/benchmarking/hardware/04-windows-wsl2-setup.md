@@ -1,6 +1,6 @@
 # Windows + WSL2 GPU Setup
 
-If you're on the Windows machine where the project lives (`D:\Thinqmesh Wesbite\thinqmesh-codra`), this is your path. WSL2 with NVIDIA GPU passthrough lets you run the same Linux-based stack that production benchmarks use.
+If you're on the Windows machine where the project lives (`D:\Projects\thinqmesh-codragraph`), this is your path. WSL2 with NVIDIA GPU passthrough lets you run the same Linux-based stack that production benchmarks use.
 
 ## Prerequisites
 
@@ -89,16 +89,16 @@ This is the most common Windows-WSL2 footgun.
 ```bash
 # Inside WSL2:
 mkdir -p ~/projects && cd ~/projects
-git clone https://github.com/<your-fork>/thinqmesh-codra
-cd thinqmesh-codra
+git clone https://github.com/<your-fork>/thinqmesh-codragraph
+cd thinqmesh-codragraph
 ```
 
-If you must work with the existing `D:\Thinqmesh Wesbite\thinqmesh-codra` folder, copy it into WSL2's filesystem first:
+If you must work with the existing `D:\Projects\thinqmesh-codragraph` folder, copy it into WSL2's filesystem first:
 
 ```bash
-# This copy can take 5–10 minutes for a large monorepo
-mkdir -p ~/projects && cp -r /mnt/d/Thinqmesh\ Wesbite/thinqmesh-codra ~/projects/
-cd ~/projects/thinqmesh-codra
+# This copy can take 5-10 minutes for a large monorepo
+mkdir -p ~/projects && cp -r /mnt/d/Projects/thinqmesh-codragraph ~/projects/
+cd ~/projects/thinqmesh-codragraph
 ```
 
 You can edit on the Windows side via Cursor / VS Code with the WSL extension — those use the WSL filesystem natively.
@@ -130,7 +130,7 @@ wsl
 ## 7. Run a smoke test
 
 ```bash
-cd ~/projects/thinqmesh-codra/infra/benchmarking/docker
+cd ~/projects/thinqmesh-codragraph/infra/benchmarking/docker
 cp .env.example .env
 # Edit .env: pick a small model first, e.g. MODEL=Qwen/Qwen2.5-Coder-1.5B-Instruct
 docker compose up -d vllm

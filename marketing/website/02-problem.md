@@ -34,17 +34,17 @@ A layer between **your codebase** and **your agent** that:
 - Learns the right recipe per task, automatically — so you don't hand-tune prompts forever
 - Remembers what worked, versioned against your code — so the harness doesn't re-tune from scratch every time
 
-That layer is Codragraph.
+That layer is CodraGraph.
 
 ## Visual cue (designer brief)
 
 A side-by-side comparison:
 
-**LEFT (without Codragraph):**
+**LEFT (without CodraGraph):**
 - Question → grep → 32k tokens of slop → flagship model → answer
 - Cost: $0.16 · Time: 90s · Accuracy: 80%
 
-**RIGHT (with Codragraph):**
+**RIGHT (with CodraGraph):**
 - Question → graph subgraph + compression + tuned recipe → 3k tokens of relevant context → smaller model → answer
 - Cost: $0.005 · Time: 8s · Accuracy: matches flagship on routine tasks
 

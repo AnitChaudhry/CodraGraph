@@ -1,5 +1,5 @@
 /**
- * Codragraph-side glue for the Phase 4 versioned graph store.
+ * CodraGraph-side glue for the Phase 4 versioned graph store.
  *
  * The graphstore package itself is engine-agnostic; everything that
  * touches LadybugDB lives here, in codragraph/. Best-effort by design:

@@ -3,7 +3,7 @@
 | Status | Draft (review) |
 |---|---|
 | Tracks task | `[DESIGN] #10 — Compress to relieve heap pressure during analyze` |
-| Author | Anit Chaudhary |
+| Author | Thinqmesh Technologies |
 | Created | 2026-04-30 |
 | Owner | repository maintainers |
 

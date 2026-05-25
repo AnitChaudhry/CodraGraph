@@ -17,9 +17,9 @@ Most agentic AI products today are general-purpose. The next wave is vertical �
 
 The pattern: every "build a coding agent" startup spends months reinventing graph indexing, retrieval, harness tuning, and prompt engineering. Months that should be spent on the *vertical*, not the plumbing.
 
-## What Codragraph does differently
+## What CodraGraph does differently
 
-Codragraph is a **platform**, not an agent. You build the vertical agent on top.
+CodraGraph is a **platform**, not an agent. You build the vertical agent on top.
 
 The 4-layer stack handles all the plumbing:
 
@@ -57,9 +57,9 @@ class SecurityAuditAgent {
 }
 ```
 
-What you ship: the **vertical-specific knowledge** (which patterns to look for, scoring rubric, output format). What Codragraph ships: indexing, retrieval, compression, harness orchestration, recipe memory.
+What you ship: the **vertical-specific knowledge** (which patterns to look for, scoring rubric, output format). What CodraGraph ships: indexing, retrieval, compression, harness orchestration, recipe memory.
 
-## Verticals already viable on Codragraph
+## Verticals already viable on CodraGraph
 
 - **Security audit agents** — find injection patterns, missing validation, exposed secrets
 - **Compliance scanners** — GDPR, PCI, HIPAA — code-level rule matching with audit trail
@@ -72,26 +72,26 @@ What you ship: the **vertical-specific knowledge** (which patterns to look for, 
 - **Doc generation agents** — generate and maintain living docs
 - **Onboarding agents** — repo-specific tutors for new hires
 
-Each is a startup-sized opportunity. Codragraph makes the platform cost zero so you can focus on the wedge.
+Each is a startup-sized opportunity. CodraGraph makes the platform cost zero so you can focus on the wedge.
 
 ## The before / after
 
 **Before:** A vertical AI startup spends 4–6 months building graph retrieval, eval harness, recipe management, and deployment infra before shipping any product. By then, two competitors launched.
 
-**After:** Same startup uses Codragraph for the platform layer. Spends 3–4 weeks on the vertical-specific knowledge and prompts. Ships v1 in month 2. Iterates faster than competitors who reinvented plumbing.
+**After:** Same startup uses CodraGraph for the platform layer. Spends 3–4 weeks on the vertical-specific knowledge and prompts. Ships v1 in month 2. Iterates faster than competitors who reinvented plumbing.
 
 ## Why the moat matters here
 
 This is where versioned recipe memory pays off **biggest**. Your vertical agent runs the same kind of analysis across thousands of customer repos. The harness finds the right recipe per repo type — but you don't pay for re-search on every repo. The version graph indexes the recipe space; new repos bootstrap from the closest known winner.
 
-Concrete: a security audit agent built on Codragraph, deployed to 100 customer repos, runs 10× cheaper than the same agent built on raw RAG + LangChain — because recipe memory amortizes the harness search across all 100 deployments.
+Concrete: a security audit agent built on CodraGraph, deployed to 100 customer repos, runs 10× cheaper than the same agent built on raw RAG + LangChain — because recipe memory amortizes the harness search across all 100 deployments.
 
 ## Sample vertical pitch
 
-> "Codragraph is the AWS for code-aware AI agents.
+> "CodraGraph is the AWS for code-aware AI agents.
 >  You bring the vertical knowledge. We bring the platform.
 >  Ship in weeks, not quarters."
 
 ## Honest limit
 
-Codragraph is best for verticals that lean on **structural code understanding**. Verticals that need runtime telemetry (production error analysis, real-user-monitoring AI) need other infra — observability, log analysis. Codragraph is the static-analysis half of agentic AI; the other half is observability, and that's a separate product.
+CodraGraph is best for verticals that lean on **structural code understanding**. Verticals that need runtime telemetry (production error analysis, real-user-monitoring AI) need other infra — observability, log analysis. CodraGraph is the static-analysis half of agentic AI; the other half is observability, and that's a separate product.

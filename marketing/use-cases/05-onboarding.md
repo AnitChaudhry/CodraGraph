@@ -17,9 +17,9 @@ Onboarding eats senior engineering time. The new hire spends two weeks scrolling
 
 The friction: **structural knowledge of a codebase isn't in any one document.** It's in the call graph, the process flow, the directory layout, the test fixtures.
 
-## What Codragraph does differently
+## What CodraGraph does differently
 
-Codragraph generates structural answers from the graph:
+CodraGraph generates structural answers from the graph:
 
 - `codragraph_query "authentication"` returns the **execution flows** related to auth, ranked by relevance
 - Each flow lists the symbols involved and the file paths
@@ -47,7 +47,7 @@ The new hire reads 3 process descriptions instead of 30 files. Onboarding goes f
 
 **Before:** New hire opens 50 files in their first week. Asks "where does login start?" three times in different threads. Senior engineer answers the same question for the fourth time this quarter.
 
-**After:** New hire installs Codragraph day one. Asks the agent "explain how login works in this codebase". Gets a structural answer with file paths, then opens those files with full context for *why* they're important.
+**After:** New hire installs CodraGraph day one. Asks the agent "explain how login works in this codebase". Gets a structural answer with file paths, then opens those files with full context for *why* they're important.
 
 ## Why the moat matters here
 
@@ -75,12 +75,12 @@ Day 2:
  existing patterns I should follow."
 ```
 
-Codragraph's graph + harness gives the new hire structural answers their senior teammates would otherwise have to type out.
+CodraGraph's graph + harness gives the new hire structural answers their senior teammates would otherwise have to type out.
 
 ## Bonus: AGENTS.md / CLAUDE.md auto-generation
 
-After every `codragraph analyze`, Codragraph regenerates `AGENTS.md` and `CLAUDE.md` with up-to-date architecture summaries. New hires reading those get accurate, current docs without anyone manually maintaining them.
+After every `codragraph analyze`, CodraGraph regenerates `AGENTS.md` and `CLAUDE.md` with up-to-date architecture summaries. New hires reading those get accurate, current docs without anyone manually maintaining them.
 
 ## Honest limit
 
-Codragraph documents the **what**, not the **why**. Architectural decisions ("we picked Postgres because of audit-log requirements") still need to be written down by humans. Codragraph generates structural docs; ADRs are still on you.
+CodraGraph documents the **what**, not the **why**. Architectural decisions ("we picked Postgres because of audit-log requirements") still need to be written down by humans. CodraGraph generates structural docs; ADRs are still on you.

@@ -2,18 +2,18 @@
 
 ## Section title
 
-**Codragraph: the context layer for agentic AI.**
+**CodraGraph: the context layer for agentic AI.**
 
 ## Body
 
-Codragraph sits between your codebase and your agent. Four layers stack on top of each other; each one multiplies the next.
+CodraGraph sits between your codebase and your agent. Four layers stack on top of each other; each one multiplies the next.
 
 ---
 
 ### Layer 1 — Code-aware Indexing
 **16 languages. 45 node types. 23 relationship types. One unified graph.**
 
-Codragraph parses your repo with tree-sitter, builds a knowledge graph (call edges, type relationships, route handlers, ORM queries, process flows), and stores it in a local LadybugDB. When your agent asks "what calls `validateUser`?", it gets a structured answer in milliseconds — not a substring scan.
+CodraGraph parses your repo with tree-sitter, builds a knowledge graph (call edges, type relationships, route handlers, ORM queries, process flows), and stores it in a local LadybugDB. When your agent asks "what calls `validateUser`?", it gets a structured answer in milliseconds — not a substring scan.
 
 > **Wins:** ~8–10× fewer tokens vs grep. Higher answer quality. No cloud roundtrip.
 
@@ -22,7 +22,7 @@ Codragraph parses your repo with tree-sitter, builds a knowledge graph (call edg
 ### Layer 2 — LLM-aware Compression
 **Defensive bound on token cost.**
 
-Even surgical retrieval sometimes returns more than you need. Codragraph's compression layer (semantic, not character-based) tightens the retrieved context further while preserving meaning. It's the safety net.
+Even surgical retrieval sometimes returns more than you need. CodraGraph's compression layer (semantic, not character-based) tightens the retrieved context further while preserving meaning. It's the safety net.
 
 > **Wins:** ~30–50% additional reduction on whatever the graph returned. Bounded worst case.
 
@@ -31,7 +31,7 @@ Even surgical retrieval sometimes returns more than you need. Codragraph's compr
 ### Layer 3 — Auto-tuned Harness
 **Your agent learns the right recipe for each task family.**
 
-Inspired by the [Meta-Harness paper (arXiv 2603.28052)](https://arxiv.org/abs/2603.28052), Codragraph runs a swarm of three roles — Explorer, Exploiter, Critic — that propose and test harness variants for your task type. The result: a Pareto frontier of (accuracy, tokens, latency) — pick the recipe that fits your budget.
+Inspired by the [Meta-Harness paper (arXiv 2603.28052)](https://arxiv.org/abs/2603.28052), CodraGraph runs a swarm of three roles — Explorer, Exploiter, Critic — that propose and test harness variants for your task type. The result: a Pareto frontier of (accuracy, tokens, latency) — pick the recipe that fits your budget.
 
 > **Wins:** No hand-tuning. The harness finds prompts and retrieval patterns you wouldn't.
 

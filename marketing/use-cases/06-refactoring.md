@@ -15,7 +15,7 @@ Large refactors are where AI assistants fail visibly. They look helpful, run gre
 | jscodeshift / facebook codemod | Template-based AST rewrites | High-effort to write codemod; no impact analysis |
 | Manual + grep + faith | The default | Slow, fragile |
 
-## What Codragraph does differently
+## What CodraGraph does differently
 
 Two purpose-built primitives for refactoring:
 
@@ -41,9 +41,9 @@ The standard refactor playbook becomes:
 
 ## The before / after
 
-**Before (without Codragraph):** A senior engineer plans a 4-week refactor of the auth module. Spends week 1 reading code, week 2 doing find-and-replace, week 3 fixing the things find-and-replace broke, week 4 in regression hell.
+**Before (without CodraGraph):** A senior engineer plans a 4-week refactor of the auth module. Spends week 1 reading code, week 2 doing find-and-replace, week 3 fixing the things find-and-replace broke, week 4 in regression hell.
 
-**After (with Codragraph):** Same engineer runs impact analysis day 1 (15 minutes), gets a stratified change list, plans deprecation/update/remove cycles per risk tier. Refactor completes in 1.5 weeks with zero unexpected breakages.
+**After (with CodraGraph):** Same engineer runs impact analysis day 1 (15 minutes), gets a stratified change list, plans deprecation/update/remove cycles per risk tier. Refactor completes in 1.5 weeks with zero unexpected breakages.
 
 ## Why the moat matters here
 
@@ -80,4 +80,4 @@ Claude (using codragraph_impact + codragraph_context):
 
 ## Honest limit
 
-Refactors that change runtime behavior (e.g., changing async semantics, swapping a sync API for async) need actual testing — Codragraph confirms what *will be called*, not whether the new implementation is *correct*. Run the test suite.
+Refactors that change runtime behavior (e.g., changing async semantics, swapping a sync API for async) need actual testing — CodraGraph confirms what *will be called*, not whether the new implementation is *correct*. Run the test suite.

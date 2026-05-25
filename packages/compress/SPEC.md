@@ -1,8 +1,8 @@
-# Codragraph Compression Specification v1.0
+# CodraGraph Compression Specification v1.0
 
 ## Overview
 
-This document defines the formal rules for Codragraph Compression: a lossless semantic compression technique that removes linguistic overhead while preserving all information content.
+This document defines the formal rules for CodraGraph Compression: a lossless semantic compression technique that removes linguistic overhead while preserving all information content.
 
 **Design Goal**: Minimize token count while maintaining complete semantic fidelity.
 
@@ -232,7 +232,7 @@ Only enumerate when specificity adds information:
 
 ## Validation Algorithm
 
-To verify Codragraph Compression correctness:
+To verify CodraGraph Compression correctness:
 
 1. **Extract facts**: List all discrete facts from original text
 2. **Extract facts from compressed**: List all discrete facts from compressed text
@@ -275,9 +275,9 @@ To verify Codragraph Compression correctness:
 
 ```
 ❌ Original: "Use hash map"
-❌ Codragraph: "Use hash map. Hash map is fast."
+❌ CodraGraph: "Use hash map. Hash map is fast."
 
-✅ Codragraph: "Use hash map."
+✅ CodraGraph: "Use hash map."
 ```
 
 **Problem**: Added information not in original ("is fast").
@@ -296,7 +296,7 @@ position. If target is less, search the left half. If target is greater,
 search the right half.
 ```
 
-**Level 2 Codragraph (49 tokens)**:
+**Level 2 CodraGraph (49 tokens)**:
 ```
 Binary search divides search space in half. Compare target to middle element.
 Match found. Return position. Target less than middle. Search left half.
@@ -317,7 +317,7 @@ see which variable is null. Add a null check before the dereference to
 prevent the error from happening again.
 ```
 
-**Level 2 Codragraph (54 tokens)**:
+**Level 2 CodraGraph (54 tokens)**:
 ```
 Debugging null pointer exception. Check stack trace. Find error location.
 Examine code at error line. Identify null variable. Variable needs value

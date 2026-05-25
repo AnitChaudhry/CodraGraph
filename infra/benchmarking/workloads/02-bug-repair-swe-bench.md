@@ -1,6 +1,6 @@
 # Workload 02 — Bug Repair (SWE-bench-lite-mini)
 
-The hard workload. Test-pass-or-fail signal. Where Codragraph's harness layer earns its rent.
+The hard workload. Test-pass-or-fail signal. Where CodraGraph's harness layer earns its rent.
 
 ## What it measures
 

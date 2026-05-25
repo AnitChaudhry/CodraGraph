@@ -4,7 +4,7 @@
 |---|---|
 | Status | Scaffold landed (2026-04-29) |
 | Phase | 5 of 5 (Org features) |
-| Author | Anit Chaudhary |
+| Author | Thinqmesh Technologies |
 | License | Apache-2.0 |
 | Approach | Scaffold first, RFC second (per AskUserQuestion 2026-04-29) |
 

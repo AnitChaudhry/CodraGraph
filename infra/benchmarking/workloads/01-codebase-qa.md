@@ -1,6 +1,6 @@
 # Workload 01 — Codebase Q&A
 
-The primary benchmark workload. Tests retrieval-heavy agent behavior — precisely where Codragraph claims its biggest wins.
+The primary benchmark workload. Tests retrieval-heavy agent behavior — precisely where CodraGraph claims its biggest wins.
 
 ## What it measures
 

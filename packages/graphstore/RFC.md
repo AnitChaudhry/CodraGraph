@@ -4,7 +4,7 @@
 |---|---|
 | Status | Complete (2026-04-29) — three-way merge, semantic diff, gc all shipped |
 | Phase | 4 of 5 (Dolt-like versioned graph) |
-| Author | Anit Chaudhary |
+| Author | Thinqmesh Technologies |
 | Built in parallel with | Phase 3 (swarm) — separate session |
 | Approach | Hybrid: keep LadybugDB as runtime backend, add CAS layer alongside |
 
@@ -66,7 +66,7 @@ Deferred (genuinely out of scope, not the same as "stubbed"):
 
 ```
 packages/graphstore/
-├── package.json                v0.1.0; author Anit Chaudhary; Apache-2.0
+├── package.json                v0.1.0; author Thinqmesh Technologies; Apache-2.0
 ├── tsconfig.json               ESM, NodeNext, strict + noUncheckedIndexedAccess
 ├── vitest.config.ts            test runner config
 ├── README.md                   user-facing intro

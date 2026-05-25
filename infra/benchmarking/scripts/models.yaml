@@ -1,4 +1,4 @@
-# Pinned model registry for the bench. Keep in sync with Benchmarking/models/01-model-matrix.md.
+# Pinned model registry for the bench. Keep in sync with infra/benchmarking/models/01-model-matrix.md.
 # Use `<sha>` placeholders until you've pinned actual revisions for a published run.
 
 models:

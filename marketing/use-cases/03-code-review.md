@@ -17,7 +17,7 @@ Every team wants automated code review. Most of what ships today is shallow.
 
 The common weakness: reviewers (human or AI) don't see the **blast radius** of a change. A 10-line edit that touches a function called from 47 sites is not a 10-line review.
 
-## What Codragraph does differently
+## What CodraGraph does differently
 
 `codragraph_detect_changes` + `codragraph_impact` + the indexed graph give the reviewer:
 
@@ -33,7 +33,7 @@ This is **structurally honest review**, not vibe-based.
 
 **Before:** GPT-4o reviews a 200-line PR with 18 files of grep context — 45k input tokens. Flags "this looks risky" without knowing which 4 production paths actually use the changed function. ~$0.30 per PR.
 
-**After:** Codragraph review recipe pulls the change's blast radius first (1.2k tokens of structured impact), then asks the model to focus on the 4 highest-risk callsites. ~$0.05 per PR. Catches the regression an unrelated reviewer would miss because they wouldn't know about callsite #4.
+**After:** CodraGraph review recipe pulls the change's blast radius first (1.2k tokens of structured impact), then asks the model to focus on the 4 highest-risk callsites. ~$0.05 per PR. Catches the regression an unrelated reviewer would miss because they wouldn't know about callsite #4.
 
 ## Why the moat matters here
 
@@ -41,7 +41,7 @@ PR review is **continuous**. A team ships 50–200 PRs/week. The recipe for "rev
 
 - The recipe stays sharp for the team's typical change patterns.
 - When the codebase undergoes a major refactor (e.g. switch from Express to Hono), the recipe age-bombs out and the harness re-tunes.
-- Smaller teams using Codragraph + Haiku ship review quality that would otherwise require Opus + manual prompt engineering.
+- Smaller teams using CodraGraph + Haiku ship review quality that would otherwise require Opus + manual prompt engineering.
 
 ## Sample agent output
 
@@ -72,4 +72,4 @@ Suggest: block merge until admin-only.ts updated.
 
 ## Honest limit
 
-Codragraph won't catch logic bugs in code you've written for the first time — it can only see what the graph captures. For pure-reasoning bugs in greenfield code, the model still has to think. We make sure it sees what to think *about*.
+CodraGraph won't catch logic bugs in code you've written for the first time — it can only see what the graph captures. For pure-reasoning bugs in greenfield code, the model still has to think. We make sure it sees what to think *about*.

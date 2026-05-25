@@ -37,7 +37,7 @@ const program = new Command();
 
 program
   .name('run-benchmark')
-  .description('Run a Codragraph benchmark sweep')
+  .description('Run a CodraGraph benchmark sweep')
   .requiredOption('-w, --workload <id>', 'Workload id (e.g. codebase-qa)')
   .requiredOption(
     '-t, --treatments <list>',

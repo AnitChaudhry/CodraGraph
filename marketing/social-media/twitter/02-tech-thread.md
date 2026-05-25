@@ -60,7 +60,7 @@ End to end: 60–85%.
 ---
 
 **6/6**
-Codragraph ships all four layers in one MCP server + npm SDK.
+CodraGraph ships all four layers in one MCP server + npm SDK.
 
 Local-first. 16 languages. BYO inference (Claude / Codex / OpenCode / your own).
 

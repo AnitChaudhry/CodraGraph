@@ -1,14 +1,14 @@
 {
   "name": "codragraph",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "displayName": "CodraGraph",
   "description": "Graph-aware code intelligence for Claude Code. Surfaces blast-radius, blame, and execution-flow context before edits.",
   "author": {
-    "name": "Anit Chaudhary",
-    "email": "getintouch.anit@gmail.com",
-    "url": "https://anit.upfyn.com"
+    "name": "Thinqmesh Technologies",
+    "email": "hello@thinqmesh.com",
+    "url": "https://thinqmesh.com"
   },
-  "homepage": "https://github.com/codragraph/codragraph",
+  "homepage": "https://github.com/AnitChaudhry/CodraGraph",
   "license": "Apache-2.0",
   "keywords": ["code-intelligence", "knowledge-graph", "impact-analysis"],
   "hooks": "./hooks/hooks.json",

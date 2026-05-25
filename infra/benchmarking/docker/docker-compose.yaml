@@ -41,11 +41,11 @@ services:
       retries: 30
       start_period: 180s
 
-  # --- Codragraph CLI (for indexing the target repo + serving graph) -------
+  # --- CodraGraph CLI (for indexing the target repo + serving graph) -------
   codragraph:
     build:
-      context: ../..
-      dockerfile: Benchmarking/docker/codragraph.dockerfile
+      context: ../../..
+      dockerfile: infra/benchmarking/docker/codragraph.dockerfile
     image: codragraph:bench
     volumes:
       - ${INDEXED_REPO_PATH:-../..}:/workspace/repo:rw
@@ -59,8 +59,8 @@ services:
   # --- Bench scripts (run-benchmark.ts, report.ts) -------------------------
   bench:
     build:
-      context: ../..
-      dockerfile: Benchmarking/docker/bench.dockerfile
+      context: ../../..
+      dockerfile: infra/benchmarking/docker/bench.dockerfile
     image: codragraph-bench:latest
     depends_on:
       vllm:
@@ -68,10 +68,10 @@ services:
       codragraph:
         condition: service_started
     volumes:
-      - ../../:/workspace/thinqmesh-codra:rw
+      - ../../..:/workspace/thinqmesh-codragraph:rw
       - codragraph_data:/root/.codragraph:ro
-      - ./results:/workspace/thinqmesh-codra/Benchmarking/results
-    working_dir: /workspace/thinqmesh-codra/Benchmarking/scripts
+      - ./results:/workspace/thinqmesh-codragraph/infra/benchmarking/results
+    working_dir: /workspace/thinqmesh-codragraph/infra/benchmarking/scripts
     environment:
       - NODE_ENV=production
       - VLLM_URL=http://vllm:8000/v1

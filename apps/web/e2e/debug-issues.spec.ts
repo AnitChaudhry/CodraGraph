@@ -27,7 +27,7 @@ debugTest('debug: process view Reset View button', async ({ page }, testInfo) =>
   await connectToServer(page);
 
   // Open Processes tab
-  await page.getByRole('button', { name: 'Codra AI' }).click();
+  await page.getByRole('button', { name: 'CodraGraph AI' }).click();
   await page.getByText('Processes').click();
   await expect(page.getByText(/\d+ processes detected/)).toBeVisible({ timeout: 10_000 });
 

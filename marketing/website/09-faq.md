@@ -6,7 +6,7 @@
 
 ---
 
-### What is Codragraph in one sentence?
+### What is CodraGraph in one sentence?
 
 **A code-aware context layer for AI agents.** It indexes your codebase as a graph, compresses retrieved context, auto-tunes per-task recipes, and remembers what worked across every commit — so your agent gets the right 4k tokens instead of the wrong 32k.
 
@@ -14,13 +14,13 @@
 
 ### How is this different from Sourcegraph?
 
-Sourcegraph is a code search and navigation tool for humans, hosted in the cloud. Codragraph is a context layer for agents, runs locally, and includes the harness layer Sourcegraph doesn't have. They're complementary — many teams use both.
+Sourcegraph is a code search and navigation tool for humans, hosted in the cloud. CodraGraph is a context layer for agents, runs locally, and includes the harness layer Sourcegraph doesn't have. They're complementary — many teams use both.
 
 ---
 
 ### How is this different from Cursor or Copilot?
 
-Cursor and Copilot are model-tied editors. Codragraph is a model-agnostic context layer that any agent (including Cursor and Copilot, via MCP) can consume. You don't replace them; you make them smarter.
+Cursor and Copilot are model-tied editors. CodraGraph is a model-agnostic context layer that any agent (including Cursor and Copilot, via MCP) can consume. You don't replace them; you make them smarter.
 
 ---
 
@@ -55,22 +55,22 @@ Three caveats:
 
 **Per-codebase-version recipe memory.** Each `codragraph analyze` produces a content-addressed snapshot. Each harness search produces a Pareto frontier of recipes. We tag the recipes against the snapshot. Next task: lookup the closest known-good recipe — reuse it if the relevant subgraph is unchanged, re-search if it isn't.
 
-No competitor combines versioning + harness this way. Sourcegraph has search but no harness. LangChain has harness-ish patterns but no graph. Cursor has agents but no recipe memory. Codragraph stacks all four.
+No competitor combines versioning + harness this way. Sourcegraph has search but no harness. LangChain has harness-ish patterns but no graph. Cursor has agents but no recipe memory. CodraGraph stacks all four.
 
 ---
 
-### Why "Codragraph" — what does it mean?
+### Why "CodraGraph" — what does it mean?
 
-**Code + graph.** The brand was distinguished from "Codra" (a French SCADA company holding the trademark in software class 9/42) on 2026-04-29.
+**Code + graph.** CodraGraph is the Thinqmesh Technologies code-intelligence graph: a local-first map of files, symbols, feature clusters, process flows, routes, tools, and cross-repo contracts that gives AI agents the exact context they need.
 
 ---
 
 ### Can I use this commercially?
 
-Yes. Codragraph is Apache-2.0, so you can use it internally, modify it,
+Yes. CodraGraph is Apache-2.0, so you can use it internally, modify it,
 bundle it in commercial products, or host it as a paid service. Keep the
 Apache-2.0 license and attribution notices with redistributed copies. Paid
-Codragraph offerings are for managed hosting, support, security reviews, and
+CodraGraph offerings are for managed hosting, support, security reviews, and
 enterprise operations rather than license gates.
 
 ---
@@ -89,7 +89,7 @@ team operations. Join the waitlist on the Pricing page.
 
 ---
 
-### How do I add a new MCP tool to Codragraph?
+### How do I add a new MCP tool to CodraGraph?
 
 `packages/core/src/mcp/tools.ts` declares the tool, `packages/core/src/mcp/local/local-backend.ts` dispatches it. Both are TypeScript with strict types. PR welcome.
 
@@ -97,7 +97,7 @@ team operations. Join the waitlist on the Pricing page.
 
 ### How big does my repo need to be?
 
-Codragraph runs on repos from 100 LOC to several million. Embedding generation is opt-in and skipped for repos with > 50k nodes (a configurable cap). Chunked parsing keeps memory bounded.
+CodraGraph runs on repos from 100 LOC to several million. Embedding generation is opt-in and skipped for repos with > 50k nodes (a configurable cap). Chunked parsing keeps memory bounded.
 
 ---
 

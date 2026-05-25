@@ -3,9 +3,9 @@
   "version": "2.1.1",
   "description": "Multi-tenant orgs, SSO, RBAC, and tamper-evident audit logging for the CodraGraph platform.",
   "author": {
-    "name": "Anit Chaudhary",
-    "email": "getintouch.anit@gmail.com",
-    "url": "https://anit.upfyn.com"
+    "name": "Thinqmesh Technologies",
+    "email": "hello@thinqmesh.com",
+    "url": "https://thinqmesh.com"
   },
   "license": "Apache-2.0",
   "keywords": [
@@ -78,5 +78,14 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "homepage": "https://github.com/AnitChaudhry/CodraGraph#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnitChaudhry/CodraGraph.git",
+    "directory": "packages/org"
+  },
+  "bugs": {
+    "url": "https://github.com/AnitChaudhry/CodraGraph/issues"
   }
 }

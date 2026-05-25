@@ -95,7 +95,7 @@ docker run --gpus all --rm nvcr.io/nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-sm
 
 ## Node.js + npm
 
-Codragraph and the bench scripts need Node 20+:
+CodraGraph and the bench scripts need Node 20+:
 
 ```bash
 # Use NodeSource for a recent version

@@ -3,9 +3,9 @@
   "private": true,
   "description": "CodraGraph monorepo — code intelligence platform (CLI/MCP, web UI, shared types, plugins, harness, SDK)",
   "author": {
-    "name": "Anit Chaudhary",
-    "email": "getintouch.anit@gmail.com",
-    "url": "https://anit.upfyn.com"
+    "name": "Thinqmesh Technologies",
+    "email": "hello@thinqmesh.com",
+    "url": "https://thinqmesh.com"
   },
   "license": "Apache-2.0",
   "workspaces": [
@@ -45,5 +45,13 @@
       "prettier --write"
     ],
     "*.{js,jsx,mjs,json,css,yml,yaml}": "prettier --write"
+  },
+  "homepage": "https://github.com/AnitChaudhry/CodraGraph#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnitChaudhry/CodraGraph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AnitChaudhry/CodraGraph/issues"
   }
 }

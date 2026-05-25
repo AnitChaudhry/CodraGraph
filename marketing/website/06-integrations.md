@@ -2,11 +2,11 @@
 
 ## Section title
 
-**Codragraph plugs in. It doesn't replace your stack.**
+**CodraGraph plugs in. It doesn't replace your stack.**
 
 ## Body
 
-You've already picked an agent. Codragraph makes it smarter.
+You've already picked an agent. CodraGraph makes it smarter.
 
 ---
 
@@ -17,7 +17,7 @@ You've already picked an agent. Codragraph makes it smarter.
 npx codragraph setup
 ```
 
-Codragraph registers itself as an MCP server in Claude Code's config. The `codragraph_*` tools appear in your tool list immediately. Pre-commit hook setup is included.
+CodraGraph registers itself as an MCP server in Claude Code's config. The `codragraph_*` tools appear in your tool list immediately. Pre-commit hook setup is included.
 
 > **Best for:** developers who want zero-config, agentic editing with structural awareness.
 
@@ -35,7 +35,7 @@ Auto-installed via `codragraph setup`. The Cursor agent gets the same `codragrap
 ### 🟢 Codex (OpenAI)
 **Native MCP — same tools, different model.**
 
-The OpenAI Codex CLI speaks MCP. Codragraph MCP server works without modification. Switch your harness inference provider to `openai` and the auto-tuned recipe targets Codex.
+The OpenAI Codex CLI speaks MCP. CodraGraph MCP server works without modification. Switch your harness inference provider to `openai` and the auto-tuned recipe targets Codex.
 
 ```bash
 packages/harness swarm-search --inference openai --critic-inference openai ...
@@ -46,12 +46,12 @@ packages/harness swarm-search --inference openai --critic-inference openai ...
 ### 🟡 OpenCode
 **Local-first agent, local-first context.**
 
-OpenCode runs locally; Codragraph runs locally. Combine for zero-network agentic workflows. Inference provider: `opencode`, configured via `OPENCODE_URL` env or per-call `baseURL`.
+OpenCode runs locally; CodraGraph runs locally. Combine for zero-network agentic workflows. Inference provider: `opencode`, configured via `OPENCODE_URL` env or per-call `baseURL`.
 
 ---
 
 ### 🟠 Aider
-**Aider's `--mcp` flag picks up Codragraph automatically once `codragraph setup` runs.**
+**Aider's `--mcp` flag picks up CodraGraph automatically once `codragraph setup` runs.**
 
 ---
 
@@ -91,4 +91,4 @@ Built-in adapters:
 
 ## Visual brief
 
-A grid of 6 logos (Claude Code, Cursor, Codex, OpenCode, Aider, "Your agent") with a connecting line into a single Codragraph block.
+A grid of 6 logos (Claude Code, Cursor, Codex, OpenCode, Aider, "Your agent") with a connecting line into a single CodraGraph block.

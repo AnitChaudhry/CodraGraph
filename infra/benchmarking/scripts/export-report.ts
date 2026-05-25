@@ -59,7 +59,7 @@ function renderMarkdown(s: SummaryFile): string {
   lines.push(`| Seeds | ${s.env.seeds.join(', ')} |`);
   lines.push(`| Judge | ${s.env.judge.provider} / ${s.env.judge.model} |`);
   lines.push(
-    `| Codragraph | ${s.env.codragraph.version}; indexed repo SHA: ${s.env.codragraph.indexedRepoSha} |`,
+    `| CodraGraph | ${s.env.codragraph.version}; indexed repo SHA: ${s.env.codragraph.indexedRepoSha} |`,
   );
   lines.push(`| Host | ${s.env.host.os}; ${s.env.host.cpu}; ${s.env.host.ramGb} GB RAM |`);
   if (s.env.host.gpus.length > 0) {

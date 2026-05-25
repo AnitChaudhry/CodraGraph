@@ -1,4 +1,4 @@
-# Instagram — A Day Building Codragraph
+# Instagram — A Day Building CodraGraph
 
 **Format:** Single-image or short reel. Founder-vibe content.
 
@@ -14,7 +14,7 @@
 [10–15s] Side-by-side: "Before: 32k tokens · 90s · $0.16" vs "After: 1.8k · 4s · $0.005"
 [15–20s] Founder talking head: "Smaller models, flagship outputs. That's the bet."
 [20–25s] Graph snapshot tree visual with "recipes" hanging off commits — "And the harness remembers what works."
-[25–30s] CTA: "Codragraph. Drops next month." + handle
+[25–30s] CTA: "CodraGraph. Drops next month." + handle
 
 **Audio:** A focused-coding instrumental track (low-fi or synth).
 
@@ -22,7 +22,7 @@
 
 ## Caption
 
-Day in the life of building Codragraph.
+Day in the life of building CodraGraph.
 
 It started as a weekend hack: what if my AI agent stopped reading the entire codebase to answer one question?
 

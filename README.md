@@ -5,7 +5,7 @@
 <h1 align="center">CodraGraph</h1>
 
 <p align="center">
-  Graph-powered code intelligence for AI agents — index any codebase,
+  Graph-powered code intelligence for AI agents by Thinqmesh Technologies — index any codebase,
   query via MCP or CLI, version it like git, and auto-tune the harness
   per task family.
 </p>
@@ -699,8 +699,8 @@ Current workspace versions:
 | `@codragraph/compress` | 2.1.1 | LLM-context compression and FeatureCluster context-pack compression |
 | `@codragraph/sdk` | 2.1.1 | One-import programmatic surface over graph, harness, graphstore, compress |
 | `@codragraph/org` | 2.1.1 | Tenant, RBAC, and audit helpers for hosted/team deployments |
-| `@codragraph/codex` | 0.1.1 | |
-| `@codragraph/claude-plugin` | 0.1.1 | |
+| `@codragraph/codex` | 0.1.2 | Codex hooks and MCP wiring |
+| `@codragraph/claude-plugin` | 0.1.2 | Claude Code hooks, skills, and MCP wiring |
 
 Pre-context-pack indexes (`schemaVersion < 4`) are auto-detected and force
 a full re-analyze on first 2.1+ run so the FeatureCluster table, feature
@@ -716,8 +716,8 @@ Help, discussion, and bug reports — pick the right channel:
 |---|---|
 | **GitHub Issues** ([open one](https://github.com/AnitChaudhry/CodraGraph/issues/new/choose)) | Bug reports, feature requests, integration questions, anything reproducible |
 | **GitHub Discussions** ([browse](https://github.com/AnitChaudhry/CodraGraph/discussions)) | Show-and-tell, "how do I…", architecture conversations, recipe-sharing |
-| **Security reports** | Email `getintouch.anit@gmail.com` with subject line `[SECURITY] CodraGraph: <title>`. **Do not open public issues for security findings.** Full policy + supported-version matrix + disclosure timeline in [SECURITY.md](./SECURITY.md). |
-| **Commercial / partnership inquiries** | Email `getintouch.anit@gmail.com` |
+| **Security reports** | Email `security@thinqmesh.com` with subject line `[SECURITY] CodraGraph: <title>`. **Do not open public issues for security findings.** Full policy + supported-version matrix + disclosure timeline in [SECURITY.md](./SECURITY.md). |
+| **Commercial / partnership inquiries** | Email `hello@thinqmesh.com` |
 
 > CodraGraph is in **developer preview**. APIs are stabilizing but may
 > still shift in minor versions of the 0.x packages. The CLI surface
@@ -783,7 +783,7 @@ authorship.
 The project follows the **[Contributor Covenant v2.1](./CODE_OF_CONDUCT.md)**.
 TL;DR: be excellent to each other; harassment, discrimination, or
 sustained disruption are not tolerated and will be acted on.
-Reports go to `getintouch.anit@gmail.com`.
+Reports go to `conduct@thinqmesh.com`.
 
 ---
 

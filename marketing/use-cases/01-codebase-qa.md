@@ -15,7 +15,7 @@ Every developer asks variants of this every day. Every agent answers it badly to
 | Sourcegraph | Cross-repo search | Cloud roundtrip, requires upload, weak agent integration |
 | Claude Code (no MCP) | Runs grep itself | Burns 30k tokens on slop, sometimes wrong |
 
-## What Codragraph does differently
+## What CodraGraph does differently
 
 `codragraph_query` + `codragraph_context` + `codragraph_impact` — three structured calls, ~1.8k tokens of typed graph data:
 
@@ -41,13 +41,13 @@ That's all the model needs. Smaller models read this fine; flagship models read 
 
 ## The before / after
 
-**Before Codragraph:** GPT-4o reads 12 files via grep, 32k input tokens, 90 seconds, $0.16, sometimes misses an indirect reference. Smaller models like Haiku get confused by the volume.
+**Before CodraGraph:** GPT-4o reads 12 files via grep, 32k input tokens, 90 seconds, $0.16, sometimes misses an indirect reference. Smaller models like Haiku get confused by the volume.
 
-**After Codragraph:** GPT-4o-mini gets a 1.8k structured response, 4 seconds, $0.005, deterministic. Same answer.
+**After CodraGraph:** GPT-4o-mini gets a 1.8k structured response, 4 seconds, $0.005, deterministic. Same answer.
 
 ## Why the moat matters here
 
-When the user asks the same kind of question again next week — "where is `refreshToken` called from?" — Codragraph **already has a recipe** tagged against your repo's current snapshot for symbol-impact questions. It reuses that recipe. No re-search, no re-thinking. The first question paid for the recipe; the next thousand questions ride it for free.
+When the user asks the same kind of question again next week — "where is `refreshToken` called from?" — CodraGraph **already has a recipe** tagged against your repo's current snapshot for symbol-impact questions. It reuses that recipe. No re-search, no re-thinking. The first question paid for the recipe; the next thousand questions ride it for free.
 
 Recipes auto-invalidate only when the relevant subgraph changes — which means stable parts of your codebase get cheaper to query over time.
 
@@ -68,4 +68,4 @@ Claude (using codragraph_context + codragraph_impact):
 
 ## Time-to-value
 
-Install Codragraph → answer your first impact question in < 5 minutes. Save 80% of token cost on the next thousand.
+Install CodraGraph → answer your first impact question in < 5 minutes. Save 80% of token cost on the next thousand.

@@ -4,7 +4,7 @@
 
 ---
 
-I built Codragraph because I was tired of watching my AI agent burn money to do bad work.
+We built CodraGraph because we were tired of watching AI agents burn money to do bad work.
 
 Last month I sat down to refactor a 200-file TypeScript codebase using Cursor + Claude Sonnet. Standard workflow.
 
@@ -18,9 +18,9 @@ The frustrating part wasn't the model. Sonnet is excellent. The problem was that
 
 That's when I realized: the agent didn't need a smarter model. It needed a smarter *context layer*.
 
-Codragraph started as a weekend hack: index the repo as a graph, expose it via MCP, watch the agent's token usage drop by 80%. It worked. So I kept building.
+CodraGraph started as a focused internal build: index the repo as a graph, expose it via MCP, watch the agent's token usage drop by 80%. It worked, so Thinqmesh Technologies kept building.
 
-Today Codragraph is four layers:
+Today CodraGraph is four layers:
 
 1. Graph-aware retrieval (the foundation)
 2. LLM-aware compression (the safety net)
@@ -29,13 +29,13 @@ Today Codragraph is four layers:
 
 I can run Haiku on tasks I used to need Opus for. I can ship CI checks that would have cost $30 per PR for $0.50.
 
-I'm building this in public. Open core. Local-first. Bring your own key.
+We're building this in public. Open core. Local-first. Bring your own key.
 
 If you're building anything in agentic AI — agents, dev tools, vertical products — this might be the missing layer for you too.
 
 Currently in pre-launch. Drop a "interested" if you want early access.
 
-— Anit
+— Thinqmesh Technologies
 
 #FounderStory #AgenticAI #DeveloperTools #BuildInPublic
 

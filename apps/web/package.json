@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "description": "CodraGraph browser UI — graph explorer and AI chat for the CodraGraph knowledge graph",
   "author": {
-    "name": "Anit Chaudhary",
-    "email": "getintouch.anit@gmail.com",
-    "url": "https://anit.upfyn.com"
+    "name": "Thinqmesh Technologies",
+    "email": "hello@thinqmesh.com",
+    "url": "https://thinqmesh.com"
   },
   "license": "Apache-2.0",
   "engines": {
@@ -93,5 +93,14 @@
     "vite": "^5.2.0",
     "vitest": "^3.2.4",
     "wait-on": "^9.0.5"
+  },
+  "homepage": "https://github.com/AnitChaudhry/CodraGraph#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnitChaudhry/CodraGraph.git",
+    "directory": "apps/web"
+  },
+  "bugs": {
+    "url": "https://github.com/AnitChaudhry/CodraGraph/issues"
   }
 }

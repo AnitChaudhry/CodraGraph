@@ -224,7 +224,7 @@ export const RightPanel = () => {
             }`}
           >
             <Sparkles className="h-3.5 w-3.5" />
-            <span>Codra AI</span>
+            <span>CodraGraph AI</span>
           </button>
 
           {/* Processes Tab */}
@@ -335,7 +335,7 @@ export const RightPanel = () => {
                         <div className="mb-3 flex items-center gap-2">
                           <Sparkles className="h-4 w-4 text-accent" />
                           <span className="text-xs font-medium tracking-wide text-text-muted uppercase">
-                            Codra AI
+                            CodraGraph AI
                           </span>
                           {isChatLoading && message === chatMessages[chatMessages.length - 1] && (
                             <Loader2 className="h-3 w-3 animate-spin text-accent" />

@@ -7,7 +7,7 @@
 **1/7**
 Most AI-for-code tools have ONE good idea. Sourcegraph: graph indexing. Cursor: editor UX. Copilot: completions.
 
-Codragraph stacks four. The fourth is the actual moat. Let me explain what nobody else does. 🧵
+CodraGraph stacks four. The fourth is the actual moat. Let me explain what nobody else does. 🧵
 
 ---
 
@@ -34,7 +34,7 @@ This is where the moat sits.
 ---
 
 **4/7**
-Codragraph: each `analyze` produces a content-addressed graph snapshot. sha256-rooted. Dolt-like.
+CodraGraph: each `analyze` produces a content-addressed graph snapshot. sha256-rooted. Dolt-like.
 
 Each harness run produces a Pareto frontier of recipes.
 
@@ -67,7 +67,7 @@ Versioning + harness has been built separately. Stanford did harness. Dolt did v
 
 Stacking all three with the recipe-memory layer ON TOP — that's what nobody has shipped.
 
-That's Codragraph.
+That's CodraGraph.
 
 (Open core, drops next month. DM for access.)
 

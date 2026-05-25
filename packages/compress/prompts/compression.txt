@@ -30,8 +30,8 @@ BE SMART ABOUT:
 
 EXAMPLES:
 
-"Codragraph Compression is a semantic compression method for LLM contexts"
-→ "Codragraph Compression semantic compression method LLM contexts."
+"CodraGraph Compression is a semantic compression method for LLM contexts"
+→ "CodraGraph Compression semantic compression method LLM contexts."
 (Remove: is, a, for)
 
 "It removes predictable grammar while preserving the unpredictable content"

@@ -6,7 +6,7 @@
 
 ## Body
 
-Sixty to eighty-five percent of the tokens your agent burns through right now are slop. You can keep paying for them, or you can install Codragraph and reroute around them.
+Sixty to eighty-five percent of the tokens your agent burns through right now are slop. You can keep paying for them, or you can install CodraGraph and reroute around them.
 
 ```bash
 npx codragraph analyze .
@@ -31,7 +31,7 @@ Sixty seconds. Local-first. Bring your own key. No sign-up required.
 ## Final positioning line
 
 > **Smaller models. Flagship outputs. Versioned recipes that age with your code.**
-> *That's Codragraph.*
+> *That's CodraGraph.*
 
 ---
 
@@ -75,7 +75,7 @@ Sixty seconds. Local-first. Bring your own key. No sign-up required.
 
 ## Brand line at the very bottom
 
-`© 2026 Codragraph. Apache-2.0 open source. Built by Anit Chaudhary.`
+`© 2026 CodraGraph. Apache-2.0 open source. Built by Thinqmesh Technologies.`
 
 ## Designer brief
 

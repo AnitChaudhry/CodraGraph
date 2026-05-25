@@ -4,7 +4,7 @@
 
 ---
 
-🚀 We're building Codragraph — the context layer for agentic AI.
+🚀 We're building CodraGraph — the context layer for agentic AI.
 
 Here's what we noticed:
 
@@ -14,7 +14,7 @@ Cursor pulls 12 files via grep. Copilot scrolls your buffer. Claude Code grep-lo
 
 The bill silently compounds. Smaller models can't compete because they're fed the same noisy context as flagship models. Teams default to Opus and GPT-5 everywhere — and the per-engineer monthly inference bill quietly hits $400.
 
-Codragraph is the layer between your codebase and your agent.
+CodraGraph is the layer between your codebase and your agent.
 
 Four parts, each one multiplies the next:
 

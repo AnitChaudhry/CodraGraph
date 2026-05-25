@@ -10,7 +10,7 @@
 npx codragraph analyze .
 ```
 
-Codragraph parses your repo with tree-sitter, walks 12 ingestion phases (parse, routes, tools, ORM, MRO, communities, processes), and persists the graph locally to `.codragraph/cgdb`. **Sixteen languages. One command.** No cloud roundtrip, no source code leaves your machine.
+CodraGraph parses your repo with tree-sitter, walks 12 ingestion phases (parse, routes, tools, ORM, MRO, communities, processes), and persists the graph locally to `.codragraph/cgdb`. **Sixteen languages. One command.** No cloud roundtrip, no source code leaves your machine.
 
 ## Step 2 — Wire your editor
 
@@ -47,11 +47,11 @@ npx packages/harness swarm-search \
   --token-budget 5000000
 ```
 
-Codragraph's three-role swarm (Explorer + Exploiter + Critic) searches for the best harness recipe for your task family. The result is a Pareto frontier — pick the recipe that fits your accuracy/cost target.
+CodraGraph's three-role swarm (Explorer + Exploiter + Critic) searches for the best harness recipe for your task family. The result is a Pareto frontier — pick the recipe that fits your accuracy/cost target.
 
 ## Step 5 — Recipes get smarter over time
 
-Every harness run is **versioned against your codebase snapshot**. Next time you run a similar task, Codragraph reuses the closest known-good recipe — no re-search required. Recipes auto-invalidate only when the relevant subgraph actually changes.
+Every harness run is **versioned against your codebase snapshot**. Next time you run a similar task, CodraGraph reuses the closest known-good recipe — no re-search required. Recipes auto-invalidate only when the relevant subgraph actually changes.
 
 This is the moat: **your harness gets cheaper to run as your codebase stabilizes.**
 

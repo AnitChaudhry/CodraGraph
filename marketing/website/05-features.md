@@ -55,7 +55,7 @@
 
 ## Comparison table (side-by-side feel)
 
-| | Codragraph | Sourcegraph / Cody | Cursor | Copilot Chat |
+| | CodraGraph | Sourcegraph / Cody | Cursor | Copilot Chat |
 |---|---|---|---|---|
 | Local-first | ✅ | ❌ (cloud) | ⚠️ partial | ❌ |
 | Code-as-graph | ✅ | ✅ | ❌ | ❌ |

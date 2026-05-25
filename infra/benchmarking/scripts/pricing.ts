@@ -29,7 +29,7 @@ export function computeCost(model: ModelSpec, inputTokens: number, outputTokens:
   if (!price) {
     // Unknown closed-API model — return 0 with a stderr warning
     console.error(
-      `[pricing] no entry for ${model.modelId}; reporting cost as $0. Update Benchmarking/scripts/pricing.ts.`,
+      `[pricing] no entry for ${model.modelId}; reporting cost as $0. Update infra/benchmarking/scripts/pricing.ts.`,
     );
     return 0;
   }

@@ -3,9 +3,9 @@
   "version": "2.1.1",
   "description": "Auto-tuned harnesses for AI agents — Meta-Harness algorithm with Pareto search over (accuracy, tokens, latency)",
   "author": {
-    "name": "Anit Chaudhary",
-    "email": "getintouch.anit@gmail.com",
-    "url": "https://anit.upfyn.com"
+    "name": "Thinqmesh Technologies",
+    "email": "hello@thinqmesh.com",
+    "url": "https://thinqmesh.com"
   },
   "license": "Apache-2.0",
   "keywords": [
@@ -74,5 +74,14 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "homepage": "https://github.com/AnitChaudhry/CodraGraph#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnitChaudhry/CodraGraph.git",
+    "directory": "packages/harness"
+  },
+  "bugs": {
+    "url": "https://github.com/AnitChaudhry/CodraGraph/issues"
   }
 }

@@ -48,7 +48,7 @@ import { DEFAULT_OLLAMA_BASE_URL, DEFAULT_OPENROUTER_BASE_URL } from '../../conf
  * 4. Output format & rules
  * 5. [Dynamic context appended at end]
  */
-export const BASE_SYSTEM_PROMPT = `You are Codra, a Code Analysis Agent with access to a Knowledge Graph. Your responses MUST be grounded.
+export const BASE_SYSTEM_PROMPT = `You are CodraGraph, a Code Analysis Agent with access to a Knowledge Graph. Your responses MUST be grounded.
 
 ## ⚠️ MANDATORY: GROUNDING
 Every factual claim MUST include a citation.

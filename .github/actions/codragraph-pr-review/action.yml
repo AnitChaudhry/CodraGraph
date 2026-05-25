@@ -14,7 +14,7 @@ name: 'CodraGraph PR Review'
 description: >
   Posts a structural-diff PR comment using `codragraph diff --semantic --json`.
   Optional LLM-augmented review when an Anthropic API key is provided.
-author: 'Anit Chaudhary'
+author: 'Thinqmesh Technologies'
 branding:
   icon: 'git-pull-request'
   color: 'blue'

@@ -1,6 +1,6 @@
-# Codragraph — Marketing Content
+# CodraGraph — Marketing Content
 
-All public-facing content for the Codragraph platform. Drop these into the website CMS, social schedulers, sales decks, and onboarding docs.
+All public-facing content for the CodraGraph platform. Drop these into the website CMS, social schedulers, sales decks, and onboarding docs.
 
 ## Folder layout
 
@@ -23,7 +23,7 @@ marketing/
    - **(a) Time-travel queries** — code review, blame-aware retrieval, regression analysis
    - **(b) Recipe memory** — the moat: harness recipes tagged against codebase fingerprint
 
-**The moat (lead with this in any deep-dive):** Codragraph **remembers what worked**. The harness doesn't re-tune from scratch every task — it bootstraps from the closest known-good recipe for your repo's current snapshot. Recipes age out only when the relevant subgraph actually changes. No competitor stacks versioning + harness this way.
+**The moat (lead with this in any deep-dive):** CodraGraph **remembers what worked**. The harness doesn't re-tune from scratch every task — it bootstraps from the closest known-good recipe for your repo's current snapshot. Recipes age out only when the relevant subgraph actually changes. No competitor stacks versioning + harness this way.
 
 **Headline numbers (use as positioning, not benchmarks):**
 - **60–85% token reduction** typical for retrieval-heavy agent workflows
@@ -37,7 +37,7 @@ marketing/
 - **Honest, not hype.** Headline claims are believable to engineers who'd actually use this. No "10× everything" marketing speak.
 - **Specific over vague.** "60–85% token reduction" beats "massive savings."
 - **Show the architecture.** Engineers buy when they see the diagram.
-- **Acknowledge the giants.** We don't pretend Sourcegraph, Cursor, Copilot don't exist; we explain where Codragraph fits next to them.
+- **Acknowledge the giants.** We don't pretend Sourcegraph, Cursor, Copilot don't exist; we explain where CodraGraph fits next to them.
 
 ## What to NEVER claim
 
@@ -54,7 +54,7 @@ marketing/
 
 ## License language
 
-Codragraph is Apache-2.0 across every public package. Marketing copy must
+CodraGraph is Apache-2.0 across every public package. Marketing copy must
 not imply that commercial use, resale, paid hosting, bundling, or internal
 company use is restricted. Paid tiers should be positioned as managed
 hosting, support, security review, enterprise deployment, or procurement

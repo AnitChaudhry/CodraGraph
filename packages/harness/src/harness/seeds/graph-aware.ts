@@ -85,7 +85,7 @@ function formatContext(
     callees?: Array<{ name: string; file?: string }>;
   }>,
 ): string {
-  const lines: string[] = ['=== Codragraph context ==='];
+  const lines: string[] = ['=== CodraGraph context ==='];
 
   if (hits.length > 0) {
     lines.push('', 'Search hits:');

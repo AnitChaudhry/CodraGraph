@@ -16,7 +16,7 @@ The benchmark task. SWE-bench territory. Every agent vendor wants to be best at 
 | Devin / Cognition | End-to-end agent | Cloud, expensive, opaque |
 | Hand-coded SWE-bench harnesses | Task-tuned, repo-specific | Brittle; rebuilt per repo |
 
-## What Codragraph does differently
+## What CodraGraph does differently
 
 The harness layer is **made for this**. The bug-repair task family has a ready-made pipeline:
 
@@ -32,7 +32,7 @@ The auto-tuned harness (Phase 3 swarm) finds the right counts — how many candi
 
 **Before:** Cursor pulls 12 open files plus grep matches into 60k tokens, runs a flagship model, edits, sometimes fixes, sometimes breaks an unrelated test. ~$1.50 per attempt.
 
-**After:** Codragraph harness runs the recipe — 5–8k tokens of surgically retrieved context, smaller model proposes edit, impact analysis runs first, broken-elsewhere risk surfaced before commit. ~$0.10 per attempt.
+**After:** CodraGraph harness runs the recipe — 5–8k tokens of surgically retrieved context, smaller model proposes edit, impact analysis runs first, broken-elsewhere risk surfaced before commit. ~$0.10 per attempt.
 
 ## Why the moat matters here
 
@@ -58,4 +58,4 @@ Claude (using harness_run with the bug-repair recipe):
 
 ## Honest limit
 
-Bug repair on hard reasoning bugs (concurrency, weird state machines) still benefits from flagship models. We help the model find the right files; we don't make it smarter. **Codragraph's win here is reducing token waste on the 70% of bugs that are local — not solving the 30% that require novel insight.**
+Bug repair on hard reasoning bugs (concurrency, weird state machines) still benefits from flagship models. We help the model find the right files; we don't make it smarter. **CodraGraph's win here is reducing token waste on the 70% of bugs that are local — not solving the 30% that require novel insight.**

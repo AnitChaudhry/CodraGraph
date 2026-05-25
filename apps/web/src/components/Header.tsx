@@ -472,7 +472,7 @@ export const Header = ({
           } `}
         >
           <Sparkles className="h-4 w-4" />
-          <span>Codra AI</span>
+          <span>CodraGraph AI</span>
         </button>
       </div>
     </header>

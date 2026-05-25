@@ -11,7 +11,7 @@ Every run writes an `env.json` snapshot to `results/<run-id>/env.json`:
   "runId": "2026-04-29-qwen-coder-7b-codebase-qa-codragraph-swarm-tuned",
   "timestamp": "2026-04-29T18:42:11.503Z",
   "git": {
-    "thinqmesh-codra-sha": "abc123...",
+    "thinqmesh-codragraph-sha": "abc123...",
     "branch": "main",
     "dirty": false
   },
@@ -87,7 +87,7 @@ Caveats:
 ## Repository state
 
 Every benchmark run captures:
-- The thinqmesh-codra repo SHA
+- The thinqmesh-codragraph repo SHA
 - Whether the working tree was dirty (uncommitted changes)
 - The indexed target repo SHA (the repo we ran codragraph against, e.g. codragraph itself when self-benchmarking)
 

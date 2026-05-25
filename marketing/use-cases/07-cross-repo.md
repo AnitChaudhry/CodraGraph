@@ -15,9 +15,9 @@ Cross-repo impact is the hardest dependency-tracking problem. Each service's CI 
 | OpenAPI / Protobuf tooling | Compatibility checks | Limited to API-shape; misses internal-service-call breakage |
 | Custom CI integration | Team-built | Brittle, repo-specific |
 
-## What Codragraph does differently
+## What CodraGraph does differently
 
-**Cross-repo groups** are a first-class concept in Codragraph.
+**Cross-repo groups** are a first-class concept in CodraGraph.
 
 Configure a `group.yaml` listing the repos in your microservices estate:
 
@@ -32,7 +32,7 @@ repos:
     path: ../notifications-service
 ```
 
-Then Codragraph's contract bridge:
+Then CodraGraph's contract bridge:
 1. **Extracts contracts** from each repo (HTTP route handlers, gRPC services, exported tool definitions)
 2. **Maps consumer-side calls** — which services call which other services
 3. **Cross-links** at the symbol level when types align
@@ -72,7 +72,7 @@ The Contract Registry itself is versioned alongside the graph. Each commit produ
 
 ```yaml
 # .github/workflows/cross-repo-impact.yml
-- name: Codragraph cross-repo impact
+- name: CodraGraph cross-repo impact
   run: |
     npx codragraph group_sync --name payments-platform
     npx codragraph impact \
@@ -85,4 +85,4 @@ Block merges that introduce HIGH-risk cross-repo changes.
 
 ## Honest limit
 
-Codragraph picks up **statically declared** contracts (HTTP routes, gRPC service definitions, tRPC procedure exports, OpenAPI specs in source). Services that communicate via dynamically-built URLs or message-bus topics need additional configuration. The contract bridge is best-effort — combine with runtime telemetry for full coverage.
+CodraGraph picks up **statically declared** contracts (HTTP routes, gRPC service definitions, tRPC procedure exports, OpenAPI specs in source). Services that communicate via dynamically-built URLs or message-bus topics need additional configuration. The contract bridge is best-effort — combine with runtime telemetry for full coverage.

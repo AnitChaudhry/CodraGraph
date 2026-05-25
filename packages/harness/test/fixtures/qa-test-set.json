@@ -495,9 +495,9 @@
     },
     {
       "id": "qa-084",
-      "question": "What was the project's brand prior to the 2026-04-29 rename?",
-      "expectedAnswer": "Codra (now retired due to French Codra SAS trademark conflict)",
-      "acceptParaphrases": ["Codra"]
+      "question": "Which company maintains CodraGraph?",
+      "expectedAnswer": "Thinqmesh Technologies",
+      "acceptParaphrases": ["Thinqmesh"]
     },
     {
       "id": "qa-085",

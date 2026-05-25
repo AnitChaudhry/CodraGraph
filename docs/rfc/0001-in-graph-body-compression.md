@@ -3,7 +3,7 @@
 | Status | Draft (review) |
 |---|---|
 | Tracks task | `[DESIGN] #9 — Compress source bodies stored in graph (migration-grade)` |
-| Author | Anit Chaudhary |
+| Author | Thinqmesh Technologies |
 | Created | 2026-04-30 |
 | Owner | repository maintainers |
 

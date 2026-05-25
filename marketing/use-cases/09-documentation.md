@@ -15,9 +15,9 @@ Documentation drift is a tax every engineering team pays. Docs are written once;
 | Backstage TechDocs | Service catalog docs | Org-level; not symbol-level |
 | Hand-written + reviewer enforcement | Quality varies wildly | Costs senior engineering time |
 
-## What Codragraph does differently
+## What CodraGraph does differently
 
-Codragraph treats docs as a **derived view of the graph**, not a separate artifact. Three docs that regenerate after every `codragraph analyze`:
+CodraGraph treats docs as a **derived view of the graph**, not a separate artifact. Three docs that regenerate after every `codragraph analyze`:
 
 ### 1. `AGENTS.md` / `CLAUDE.md` (auto-generated, agent-targeted)
 Architectural overview tuned for AI agents working in the repo:
@@ -109,4 +109,4 @@ Claude (using codragraph_context + the explain-symbol recipe):
 
 ## Honest limit
 
-Auto-docs capture **structure**, not **intent**. ADRs ("we chose Postgres because...") still need humans. Docs about *why* a pattern exists, *what* tradeoffs were considered — those are human-authored, and that's correct. Codragraph documents what's there; people document what should be.
+Auto-docs capture **structure**, not **intent**. ADRs ("we chose Postgres because...") still need humans. Docs about *why* a pattern exists, *what* tradeoffs were considered — those are human-authored, and that's correct. CodraGraph documents what's there; people document what should be.

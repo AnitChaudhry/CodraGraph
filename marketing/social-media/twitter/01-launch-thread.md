@@ -9,7 +9,7 @@ Your AI agent reads 30,000 tokens to answer a question that needed 4,000.
 
 Most of those tokens are slop.
 
-I built Codragraph to fix this. Open-sourcing it soon. Here's what it does 🧵
+I built CodraGraph to fix this. Open-sourcing it soon. Here's what it does 🧵
 
 ---
 
@@ -27,7 +27,7 @@ Multiply by 1000 queries/week. Quietly $$$.
 ---
 
 **3/8**
-Codragraph indexes your repo as a graph.
+CodraGraph indexes your repo as a graph.
 
 16 languages. tree-sitter. 45 node types. FeatureCluster packs. Local-first.
 
@@ -40,7 +40,7 @@ Same answer. ~10× fewer tokens.
 **4/8**
 But retrieval isn't enough. The next layer is auto-tuning.
 
-Codragraph runs a swarm of 3 roles:
+CodraGraph runs a swarm of 3 roles:
 • Explorer (broad mutations)
 • Exploiter (refinement)
 • Critic (pre-eval gate)

@@ -26,8 +26,8 @@ For benchmarks that take hours and produce throwaway VMs. We don't need persiste
 
 ```bash
 # Inside the pod
-git clone https://github.com/<your-fork>/thinqmesh-codra
-cd thinqmesh-codra/Benchmarking
+git clone https://github.com/<your-fork>/thinqmesh-codragraph
+cd thinqmesh-codragraph/infra/benchmarking
 docker compose up -d vllm
 # Wait ~3 min for model download + load
 # Then run the benchmark (see scripts/run-benchmark.ts usage)
@@ -47,8 +47,8 @@ When done: **Terminate pod**. Otherwise you keep paying.
 ```bash
 # SSH in
 ssh ubuntu@<lambda-ip>
-git clone https://github.com/<your-fork>/thinqmesh-codra
-cd thinqmesh-codra/Benchmarking
+git clone https://github.com/<your-fork>/thinqmesh-codragraph
+cd thinqmesh-codragraph/infra/benchmarking
 
 # CUDA + nvidia-driver pre-installed by Lambda. Just install Docker if needed.
 sudo apt update && sudo apt install -y docker-compose-plugin
@@ -108,7 +108,7 @@ Best providers:
 
 Before you click "rent", have ready:
 
-1. Your fork URL of thinqmesh-codra (or rsync the folder over scp)
+1. Your fork URL of thinqmesh-codragraph (or rsync the folder over scp)
 2. `.env` populated with API keys for closed-source models you'll benchmark against (Claude, OpenAI)
 3. The model list you want to download (HuggingFace mirror cache helps if your bandwidth is metered)
 4. A target repo to index — we recommend codragraph itself (the monorepo is the workload's source of truth)

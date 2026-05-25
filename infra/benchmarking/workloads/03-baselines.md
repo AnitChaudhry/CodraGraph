@@ -1,6 +1,6 @@
 # Baseline Definitions
 
-For Codragraph's claims to mean anything, the baselines have to be honest. This file documents what each baseline IS, why it's representative of how things work today, and what's deliberately equal across all treatments.
+For CodraGraph's claims to mean anything, the baselines have to be honest. This file documents what each baseline IS, why it's representative of how things work today, and what's deliberately equal across all treatments.
 
 ## What we hold equal across treatments
 
@@ -43,7 +43,7 @@ What VARIES per treatment is the **context retrieval and prompt construction str
 
 **This represents:** the "just use a big context window" objection. Anthropic and Gemini fans say "you don't need retrieval, just feed everything." This baseline is what that actually looks like.
 
-**Why this matters:** if Codragraph doesn't beat baseline-fullfile on token efficiency, the whole pitch falls apart. We expect Codragraph to win convincingly here — graph retrieval is a much sharper signal than keyword overlap.
+**Why this matters:** if CodraGraph doesn't beat baseline-fullfile on token efficiency, the whole pitch falls apart. We expect CodraGraph to win convincingly here — graph retrieval is a much sharper signal than keyword overlap.
 
 ## Treatment 3 — `codragraph-graph-only`
 

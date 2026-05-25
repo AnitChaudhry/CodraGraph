@@ -10,7 +10,7 @@ Two weeks of building an agent and I kept hitting the same wall: I'd ask a quest
 
 Then I'd swap to Claude Haiku to save cost. Same workflow. The answer dropped to 60% right. The slop drowned the signal.
 
-Codragraph fixes this:
+CodraGraph fixes this:
 
 → Index your repo as a graph (tree-sitter, 16 langs, local-first)
 → Agent calls `codragraph_context` instead of grep
@@ -28,7 +28,7 @@ The next layer — the one I'm most excited about — is versioned recipe memory
 
 Code's versioned. Should your agent's understanding be too?
 
-Codragraph is open core, runs locally, and works with whatever inference you bring. Drop a comment if you want early access.
+CodraGraph is open core, runs locally, and works with whatever inference you bring. Drop a comment if you want early access.
 
 #DeveloperTools #AgenticAI #LLM
 

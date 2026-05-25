@@ -3,11 +3,11 @@
 ## Reporting a vulnerability
 
 **Please don't open a public issue for security reports.** Email
-**getintouch.anit@gmail.com** with subject line `[SECURITY] CodraGraph: <short title>`.
+**security@thinqmesh.com** with subject line `[SECURITY] CodraGraph: <short title>`.
 
 Include in the report:
 
-- Affected package(s) — `codragraph` / `packages/sdk` / `packages/graphstore` / `packages/harness` / `packages/compress` / a plugin / web dashboard
+- Affected package(s) — `@codragraph/cli`, `@codragraph/sdk`, `@codragraph/graphstore`, `@codragraph/harness`, `@codragraph/compress`, a plugin, or the web dashboard
 - Affected version(s) (`npm view <pkg> version` or commit SHA)
 - The vulnerability class (RCE, path traversal, prototype pollution, supply-chain, denial of service, secret exposure, etc.)
 - A minimal reproduction (commands, payload, expected vs observed)

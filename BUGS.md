@@ -44,7 +44,7 @@ review report only; it does not apply fixes.
 - Evidence: the installer only substitutes the `${CODRAGRAPH_PLUGIN_ROOT}`
   plugin-root placeholder, not `${HOME}`. A
   local substitution check left the value as `${HOME}/.codragraph`, while the
-  expected value on this machine is `C:\Users\Anit\.codragraph`. CodraGraph uses
+  expected value on a Windows machine is `%USERPROFILE%\.codragraph`. CodraGraph uses
   `process.env.CODRAGRAPH_HOME` directly when it is present.
 - Fix: substitute `${HOME}` during install, omit `CODRAGRAPH_HOME` from the
   generated Codex config so the CLI falls back to `os.homedir()`, or teach

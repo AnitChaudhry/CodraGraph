@@ -15,7 +15,7 @@
 
 ## Subheadline
 
-Codragraph is the missing context layer for agentic AI. It indexes your codebase as a graph, compresses what's left, auto-tunes the retrieval recipe per task, and remembers what worked across every commit. **Result: Claude Haiku punches at Opus weight. GPT-5.5-mini reads like GPT-5.5.** At a fraction of the cost.
+CodraGraph is the missing context layer for agentic AI. It indexes your codebase as a graph, compresses what's left, auto-tunes the retrieval recipe per task, and remembers what worked across every commit. **Result: Claude Haiku punches at Opus weight. GPT-5.5-mini reads like GPT-5.5.** At a fraction of the cost.
 
 Works with **Claude Code, Codex, OpenCode, Cursor, Aider** — or any inference provider you bring.
 

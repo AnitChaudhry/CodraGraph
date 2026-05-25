@@ -3,9 +3,9 @@
   "version": "2.1.1",
   "description": "Shared type definitions for CodraGraph CLI and web",
   "author": {
-    "name": "Anit Chaudhary",
-    "email": "getintouch.anit@gmail.com",
-    "url": "https://anit.upfyn.com"
+    "name": "Thinqmesh Technologies",
+    "email": "hello@thinqmesh.com",
+    "url": "https://thinqmesh.com"
   },
   "license": "Apache-2.0",
   "type": "module",
@@ -22,8 +22,7 @@
     "prepack": "tsc"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "devDependencies": {
     "typescript": "^6.0.3"
@@ -31,5 +30,14 @@
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
+  },
+  "homepage": "https://github.com/AnitChaudhry/CodraGraph#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnitChaudhry/CodraGraph.git",
+    "directory": "packages/shared"
+  },
+  "bugs": {
+    "url": "https://github.com/AnitChaudhry/CodraGraph/issues"
   }
 }

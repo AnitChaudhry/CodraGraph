@@ -2,11 +2,11 @@
   "name": "codragraph-bench",
   "version": "0.1.0",
   "private": true,
-  "description": "Benchmark scripts for the Codragraph platform — runs treatment matrices, captures metrics, generates reports.",
+  "description": "Benchmark scripts for the CodraGraph platform — runs treatment matrices, captures metrics, generates reports.",
   "author": {
-    "name": "Anit Chaudhary",
-    "email": "getintouch.anit@gmail.com",
-    "url": "https://anit.upfyn.com"
+    "name": "Thinqmesh Technologies",
+    "email": "hello@thinqmesh.com",
+    "url": "https://thinqmesh.com"
   },
   "license": "Apache-2.0",
   "type": "module",
@@ -31,5 +31,14 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "homepage": "https://github.com/AnitChaudhry/CodraGraph#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnitChaudhry/CodraGraph.git",
+    "directory": "infra/benchmarking/scripts"
+  },
+  "bugs": {
+    "url": "https://github.com/AnitChaudhry/CodraGraph/issues"
   }
 }
