@@ -154,11 +154,11 @@ export const Header = ({
   };
 
   return (
-    <header className="flex items-center justify-between border-b border-dashed border-border-subtle bg-deep px-5 py-3">
+    <header className="flex min-w-0 items-center justify-between border-b border-dashed border-border-subtle bg-deep px-5 py-3">
       {/* Left section */}
-      <div className="flex items-center gap-4">
+      <div className="flex min-w-0 items-center gap-4">
         {/* Logo */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-2.5">
           <img
             src="/codragraph-logo.png"
             alt="CodraGraph"
@@ -374,7 +374,7 @@ export const Header = ({
       </div>
 
       {/* Center - Search */}
-      <div className="relative mx-6 max-w-md flex-1" ref={searchRef}>
+      <div className="relative mx-6 max-w-md min-w-[220px] flex-1" ref={searchRef}>
         <div className="flex items-center gap-2.5 rounded-lg border border-border-subtle bg-surface px-3.5 py-2 transition-all focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
           <Search className="h-4 w-4 flex-shrink-0 text-text-muted" />
           <input
@@ -392,7 +392,7 @@ export const Header = ({
             className="flex-1 border-none bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
           />
           <kbd className="rounded border border-border-subtle bg-elevated px-1.5 py-0.5 font-mono text-[10px] text-text-muted">
-            ⌘K
+            Ctrl K
           </kbd>
         </div>
 
@@ -434,10 +434,10 @@ export const Header = ({
       </div>
 
       {/* Right section */}
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         {/* Stats */}
         {graph && (
-          <div className="mr-2 flex items-center gap-4 text-xs text-text-muted">
+          <div className="mr-2 hidden items-center gap-4 text-xs text-text-muted xl:flex">
             <span>{nodeCount} nodes</span>
             <span>{edgeCount} edges</span>
           </div>

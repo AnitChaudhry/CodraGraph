@@ -2,7 +2,7 @@
  * Unit Tests: MCP Tool Definitions
  *
  * Tests: CODRAGRAPH_TOOLS from tools.ts
- * - Full tool surface is exposed (24 tools as of harness/graphstore expansion)
+ * - Full tool surface is exposed (30 tools as of cluster-first aliases)
  * - Each tool has valid name, description, inputSchema
  * - Required fields are correct
  * - Optional repo parameter is present on tools that need it
@@ -24,9 +24,9 @@ const NON_REPO_TOOLS = new Set([
 
 describe('CODRAGRAPH_TOOLS', () => {
   it('exports the full tool surface', () => {
-    // Bumped from 13 → 24 after harness_* + graphstore_* tools landed.
+    // Bumped from 26 -> 30 after cluster_query/context/impact/context_pack aliases landed.
     // Update if more tools are added.
-    expect(CODRAGRAPH_TOOLS).toHaveLength(24);
+    expect(CODRAGRAPH_TOOLS).toHaveLength(30);
   });
 
   it('contains all expected tool names', () => {
@@ -41,6 +41,12 @@ describe('CODRAGRAPH_TOOLS', () => {
         'rename',
         'impact',
         'api_impact',
+        'feature_clusters',
+        'feature_context',
+        'cluster_query',
+        'cluster_context',
+        'context_pack',
+        'cluster_impact',
       ]),
     );
   });
@@ -144,6 +150,31 @@ describe('CODRAGRAPH_TOOLS', () => {
     expect(apiImpactTool.inputSchema.properties.route).toBeDefined();
     expect(apiImpactTool.inputSchema.properties.file).toBeDefined();
     expect(apiImpactTool.inputSchema.properties.repo).toBeDefined();
+  });
+
+  it('feature cluster tools expose the targeted context layer', () => {
+    const featureClusters = CODRAGRAPH_TOOLS.find((t) => t.name === 'feature_clusters')!;
+    const featureContext = CODRAGRAPH_TOOLS.find((t) => t.name === 'feature_context')!;
+    const clusterQuery = CODRAGRAPH_TOOLS.find((t) => t.name === 'cluster_query')!;
+    const clusterContext = CODRAGRAPH_TOOLS.find((t) => t.name === 'cluster_context')!;
+    const contextPack = CODRAGRAPH_TOOLS.find((t) => t.name === 'context_pack')!;
+    const clusterImpact = CODRAGRAPH_TOOLS.find((t) => t.name === 'cluster_impact')!;
+
+    expect(featureClusters).toBeDefined();
+    expect(featureClusters.inputSchema.required).toEqual([]);
+    expect(featureClusters.inputSchema.properties.limit.maximum).toBe(500);
+    expect(featureContext).toBeDefined();
+    expect(featureContext.inputSchema.required).toEqual(['name']);
+    expect(featureContext.description).toContain('line ranges');
+    expect(clusterQuery.inputSchema.required).toEqual([]);
+    expect(clusterContext.inputSchema.required).toEqual(['name']);
+    expect(contextPack.inputSchema.required).toEqual(['name']);
+    expect(clusterImpact.inputSchema.required).toEqual(['name']);
+    expect(clusterImpact.inputSchema.properties.direction.enum).toEqual([
+      'upstream',
+      'downstream',
+      'both',
+    ]);
   });
 
   it('impact relationTypes is array of strings', () => {

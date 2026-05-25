@@ -34,9 +34,11 @@ import {
   mroPhase,
   communitiesPhase,
   processesPhase,
+  featureClustersPhase,
   type PipelinePhase,
   type CommunitiesOutput,
   type ProcessesOutput,
+  type FeatureClustersOutput,
 } from './pipeline-phases/index.js';
 
 export interface PipelineOptions {
@@ -44,6 +46,10 @@ export interface PipelineOptions {
   skipGraphPhases?: boolean;
   /** Force sequential parsing (no worker pool). Useful for testing the sequential path. */
   skipWorkers?: boolean;
+  /** Repo label written onto FeatureCluster metadata. */
+  featureClusterRepo?: string;
+  /** Indexed source commit written onto FeatureCluster metadata. */
+  lastIndexedCommit?: string;
   /**
    * @internal Test-only override for worker-pool gating thresholds.
    * When unset, production defaults apply (15 files OR 512 KB total bytes).
@@ -64,8 +70,9 @@ export interface PipelineOptions {
  *
  * Phase dependency graph:
  *
- *   scan → structure → [markdown, cobol] → parse → [routes, tools, orm]
- *     → crossFile → mro → communities → processes
+ *   scan -> structure -> [markdown, cobol] -> parse -> [routes, tools, orm]
+ *     -> crossFile -> scopeResolution -> mro -> communities -> processes
+ *     -> featureClusters
  *
  * To add a new phase: create a file in pipeline-phases/, export the phase
  * object, and add it to the appropriate position in this array.
@@ -85,7 +92,7 @@ function buildPhaseList(options?: PipelineOptions): PipelinePhase[] {
   ];
 
   if (!options?.skipGraphPhases) {
-    phases.push(mroPhase, communitiesPhase, processesPhase);
+    phases.push(mroPhase, communitiesPhase, processesPhase, featureClustersPhase);
   }
 
   return phases;
@@ -119,10 +126,15 @@ export const runPipelineFromRepo = async (
 
   let communityResult: CommunitiesOutput['communityResult'] | undefined;
   let processResult: ProcessesOutput['processResult'] | undefined;
+  let featureClusterResult: FeatureClustersOutput['featureClusterResult'] | undefined;
 
   if (!options?.skipGraphPhases) {
     communityResult = getPhaseOutput<CommunitiesOutput>(results, 'communities').communityResult;
     processResult = getPhaseOutput<ProcessesOutput>(results, 'processes').processResult;
+    featureClusterResult = getPhaseOutput<FeatureClustersOutput>(
+      results,
+      'featureClusters',
+    ).featureClusterResult;
   }
 
   onProgress({
@@ -130,7 +142,7 @@ export const runPipelineFromRepo = async (
     percent: 100,
     message:
       communityResult && processResult
-        ? `Graph complete! ${communityResult.stats.totalCommunities} communities, ${processResult.stats.totalProcesses} processes detected.`
+        ? `Graph complete! ${communityResult.stats.totalCommunities} communities, ${processResult.stats.totalProcesses} processes, ${featureClusterResult?.stats.totalClusters ?? 0} feature clusters detected.`
         : 'Graph complete! (graph phases skipped)',
     stats: {
       filesProcessed: totalFiles,
@@ -145,6 +157,7 @@ export const runPipelineFromRepo = async (
     totalFileCount: totalFiles,
     communityResult,
     processResult,
+    featureClusterResult,
     usedWorkerPool,
   };
 };

@@ -18,7 +18,7 @@ Codragraph is the layer between your codebase and your agent.
 
 Four parts, each one multiplies the next:
 
-🧭 Code-aware retrieval. Your repo as a graph (16 languages, 44 node types). The agent gets the right files, not the substring matches.
+🧭 Code-aware retrieval. Your repo as a graph (16 languages, 45 node types, 23 relationship types), with FeatureCluster packs for product areas like Settings/Auth/AI. The agent gets the right files, not the substring matches.
 
 🗜️ LLM-aware compression. Bound the worst case when retrieval misses.
 

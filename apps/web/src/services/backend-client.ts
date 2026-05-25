@@ -641,6 +641,24 @@ export const fetchClusterDetail = async (repo: string, name: string): Promise<un
   return response.json();
 };
 
+/** Fetch all feature clusters for a repo. */
+export const fetchFeatureClusters = async (repo?: string): Promise<unknown> => {
+  const response = await fetchWithTimeout(
+    `${_backendUrl}/api/feature-clusters${repo ? `?${repoParam(repo)}` : ''}`,
+  );
+  await assertOk(response);
+  return response.json();
+};
+
+/** Fetch context for a single feature cluster. */
+export const fetchFeatureClusterDetail = async (repo: string, name: string): Promise<unknown> => {
+  const response = await fetchWithTimeout(
+    `${_backendUrl}/api/feature-cluster?${repoParam(repo)}&name=${encodeURIComponent(name)}`,
+  );
+  await assertOk(response);
+  return response.json();
+};
+
 // ── Analyze API ────────────────────────────────────────────────────────────
 
 /** Start a server-side analysis job. */

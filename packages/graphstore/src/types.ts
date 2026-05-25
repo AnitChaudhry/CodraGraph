@@ -62,7 +62,7 @@ export interface Snapshot {
 export interface SnapshotManifest {
   readonly schemaVersion: SchemaVersion;
   readonly type: 'snapshot-manifest';
-  /** Node tables keyed by table name (matches `NODE_TABLES` in codragraph-shared). */
+  /** Node tables keyed by table name (matches `NODE_TABLES` in @codragraph/shared). */
   readonly nodeTables: Record<string, TableManifest>;
   /** Single relationships table — `CodeRelation` in the cgdb schema. */
   readonly edges: TableManifest;

@@ -37,9 +37,10 @@ Same query. 0 false positives. Catches what grep can't.
 
 **4/6**
 The graph captures:
-• 44 node types (Function, Class, Method, Route, Tool, Process, etc.)
-• 21 relationship types (CALLS, EXTENDS, IMPLEMENTS, ACCESSES, HANDLES_ROUTE, METHOD_OVERRIDES…)
+• 45 node types (Function, Class, Method, Route, Tool, Process, FeatureCluster, etc.)
+• 23 relationship types (CALLS, EXTENDS, IMPLEMENTS, FEATURE_MEMBER_OF, FEATURE_DEPENDS_ON, METHOD_OVERRIDES…)
 • Per-language MRO walks (C3 for Python, ruby-mixin for Ruby, first-wins for Java/C#)
+• Product/domain feature packs for areas like Settings, Auth, AI, Billing
 
 Agents read 8–10× fewer tokens for the same answer.
 

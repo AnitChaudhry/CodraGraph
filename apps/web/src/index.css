@@ -43,7 +43,7 @@
   --color-node-method: #14b8a6;
 
   /* Fonts */
-  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   /* Animations */
@@ -179,6 +179,8 @@ html,
 body,
 #root {
   height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -194,7 +196,7 @@ body {
 ═══════════════════════════════════════════════════════════════ */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #2a2a3a #0a0a10;
+  scrollbar-color: rgba(122, 129, 144, 0.5) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -203,16 +205,54 @@ body {
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: var(--color-deep);
+  background: transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--color-border-default);
-  border-radius: 4px;
+  background: rgba(122, 129, 144, 0.45);
+  background-clip: content-box;
+  border: 2px solid transparent;
+  border-radius: 999px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background: rgba(136, 136, 160, 0.65);
+  background-clip: content-box;
+}
+
+.scrollbar-canvas {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(122, 129, 144, 0.5) transparent;
+}
+
+.scrollbar-canvas::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.scrollbar-canvas::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-canvas::-webkit-scrollbar-thumb {
+  background: rgba(122, 129, 144, 0.48);
+  background-clip: content-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+
+.scrollbar-canvas::-webkit-scrollbar-thumb:hover {
+  background: rgba(136, 136, 160, 0.68);
+  background-clip: content-box;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════

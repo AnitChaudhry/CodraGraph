@@ -1,12 +1,12 @@
 # Architecture — CodraGraph
 
-Monorepo: **CLI/MCP** (`packages/core/`) + **browser UI** (`apps/web/`).
+Monorepo: **CLI/MCP** (`packages/core/`) + **browser UI** (`apps/web/`) + SDK, harness, graphstore, compression, org, and editor integrations.
 
 ## Repository layout
 
 | Path | Role |
 |------|------|
-| `packages/core/` | npm package `codragraph`: CLI, MCP server (stdio), HTTP API, ingestion pipeline, LadybugDB graph, embeddings. |
+| `packages/core/` | npm package `@codragraph/cli`: CLI, MCP server (stdio), HTTP API, ingestion pipeline, LadybugDB graph, embeddings, feature clusters. |
 | `apps/web/` | Vite + React thin client: graph explorer + AI chat. All queries via `codragraph serve` HTTP API. |
 | `packages/shared/` | Shared TypeScript types and constants (consumed by CLI and Web). |
 | `.claude/`, `integrations/claude/`, `integrations/cursor/` | Agent skills and plugin metadata. |
@@ -15,14 +15,14 @@ Monorepo: **CLI/MCP** (`packages/core/`) + **browser UI** (`apps/web/`).
 
 ## End-to-end flow: index → graph → tools
 
-1. **Ingestion** — `analyze.ts` → `runFullAnalysis` (`run-analyze.ts`) → `runPipelineFromRepo` (`pipeline.ts`). DAG of 12 phases builds a `KnowledgeGraph` in memory, then loads into LadybugDB under `.codragraph/`. Repo registered in `~/.codragraph/registry.json` for MCP discovery.
+1. **Ingestion** — `analyze.ts` → `runFullAnalysis` (`run-analyze.ts`) → `runPipelineFromRepo` (`pipeline.ts`). DAG of 14 phases builds a `KnowledgeGraph` in memory, including FeatureCluster nodes for product/domain areas, then loads into LadybugDB under `.codragraph/`. Repo registered in `~/.codragraph/registry.json` for MCP discovery.
 
 2. **Persistence** — `repo-manager.ts` (paths, registry, KuzuDB cleanup). `cgdb-adapter.ts` (graph load, queries, embedding batches).
 
 3. **Query layer** — three interfaces to the same backend:
    - **MCP (stdio):** `mcp.ts` → `LocalBackend` → tools (`tools.ts`) + resources (`resources.ts`)
    - **HTTP bridge:** `serve.ts` → Express (`api.ts`, `mcp-http.ts`) for web UI
-   - **CLI direct:** `codragraph query|context|impact|cypher` in `tool.ts`
+   - **CLI direct:** `codragraph query|context|impact|feature-clusters|feature-context|cypher` in `tool.ts`
 
 4. **Staleness** — `staleness.ts` compares indexed `lastCommit` to `HEAD`, surfaces hints.
 
@@ -37,6 +37,9 @@ Monorepo: **CLI/MCP** (`packages/core/`) + **browser UI** (`apps/web/`).
 | `impact` | Blast radius (upstream/downstream) with risk summary |
 | `detect_changes` | Map git diffs to affected symbols and processes |
 | `rename` | Graph-assisted multi-file rename with `dry_run` preview |
+| `feature_clusters` / `cluster_query` | Product/domain feature map for targeted context |
+| `feature_context` / `cluster_context` / `context_pack` | Members, line ranges, dependencies, and flows for one feature |
+| `cluster_impact` | Feature-level blast radius with safe edit surface |
 | `api_impact` | Pre-change impact report for an API route handler |
 | `route_map` | API route → handler → consumer mappings |
 | `tool_map` | MCP/RPC tool definitions and handlers |
@@ -50,6 +53,8 @@ Monorepo: **CLI/MCP** (`packages/core/`) + **browser UI** (`apps/web/`).
 |--------------|---------|
 | `codragraph://group/{name}/contracts` | Contract Registry (provider/consumer rows + cross-links) |
 | `codragraph://group/{name}/status` | Per-member index + Contract Registry staleness |
+| `codragraph://repo/{name}/feature-clusters` | Human-facing product/domain feature areas |
+| `codragraph://repo/{name}/feature/{featureName}` | Focused feature context pack with members, line ranges, flows, dependencies |
 
 ## Where to change what
 
@@ -57,6 +62,7 @@ Monorepo: **CLI/MCP** (`packages/core/`) + **browser UI** (`apps/web/`).
 |---------|----------|
 | CLI commands/flags | `src/cli/` (`index.ts`, per-command modules) |
 | Parsing/graph construction | `src/core/ingestion/pipeline-phases/` + `pipeline.ts` |
+| Feature clustering/context packs | `src/core/ingestion/feature-cluster-processor.ts` + `pipeline-phases/feature-clusters.ts` |
 | Graph schema/DB | `src/core/cgdb/` (`schema.ts`, `cgdb-adapter.ts`) |
 | MCP tools/resources | `src/mcp/server.ts`, `tools.ts`, `resources.ts` |
 | Cross-repo groups (sync, contracts, `@<group>` routing) | `src/core/group/` (`service.ts`, `cross-impact.ts`, `sync.ts`, `bridge-db.ts`) |
@@ -77,11 +83,16 @@ Monorepo: **CLI/MCP** (`packages/core/`) + **browser UI** (`apps/web/`).
 
 ## Pipeline Phase DAG
 
-12 phases defined in `packages/core/src/core/ingestion/pipeline-phases/`, each with explicit `deps` and typed output.
+14 phases defined in `packages/core/src/core/ingestion/pipeline-phases/`, each with explicit `deps` and typed output.
 
-```
-scan → structure → [markdown, cobol] → parse → [routes, tools, orm]
-  → crossFile → mro → communities → processes
+```mermaid
+flowchart LR
+    scan["Scan"] --> parse["Parse"]
+    parse --> resolve["Resolve + scope"]
+    resolve --> graph["MRO + communities"]
+    graph --> flows["Processes"]
+    flows --> features["FeatureClusters"]
+    features --> persist["LadybugDB"]
 ```
 
 | Phase | File | Deps | Output |
@@ -95,9 +106,11 @@ scan → structure → [markdown, cobol] → parse → [routes, tools, orm]
 | `tools` | `tools.ts` | `parse` | Tool nodes + HANDLES_TOOL edges |
 | `orm` | `orm.ts` | `parse` | QUERIES edges (Prisma, Supabase) |
 | `crossFile` | `cross-file.ts` + `cross-file-impl.ts` | `parse`, `routes`, `tools`, `orm` | Cross-file type propagation in topological import order |
+| `scopeResolution` | `scope-resolution/pipeline/phase.ts` | `parse`, `crossFile`, `structure` | Registry-primary import/reference edges for migrated languages |
 | `mro` | `mro.ts` | `crossFile`, `structure` | METHOD_OVERRIDES + METHOD_IMPLEMENTS edges |
 | `communities` | `communities.ts` | `mro`, `structure` | Community nodes + MEMBER_OF edges (Leiden algorithm) |
 | `processes` | `processes.ts` | `communities`, `routes`, `tools`, `structure` | Process nodes + STEP_IN_PROCESS edges |
+| `featureClusters` | `feature-clusters.ts` | `processes`, `structure` | FeatureCluster nodes + FEATURE_MEMBER_OF / FEATURE_DEPENDS_ON edges |
 
 **Non-phase files in the same directory:** `parse-impl.ts`, `cross-file-impl.ts` (implementation), `wildcard-synthesis.ts` (whole-module import expansion), `orm-extraction.ts` (sequential ORM fallback), `types.ts`, `runner.ts`, `index.ts`.
 
@@ -348,7 +361,7 @@ CI auto-discovers the set via `tsx`. No workflow edit required.
 16 languages → single unified graph. Four abstraction layers:
 
 ```
- Unified Graph Schema (44 node types, 21 relationship types)
+ Unified Graph Schema (45 node types, 23 relationship types)
            ↑
  Unified Resolution (3-tier name lookup + MRO walk)
            ↑
@@ -426,7 +439,7 @@ Unified walk: `lookupMethodByOwnerWithMRO()` in `model/resolve.ts`.
 CLI (analyze.ts) → runFullAnalysis(repoPath, options, callbacks)
   1. Early exit if lastCommit == HEAD (unless --force)     [0%]
   2. Cache existing embeddings from prior index             [0%]
-  3. runPipelineFromRepo() → KnowledgeGraph                [0-60%]
+  3. runPipelineFromRepo() → KnowledgeGraph + features     [0-60%]
   4. Clean up legacy KuzuDB files                          [60%]
   5. initCgdb() → loadGraphToCgdb() via CSV streaming      [60-85%]
   6. Create FTS indexes (File, Function, Class, Method...) [85-90%]
@@ -457,9 +470,9 @@ Managed by `repo-manager.ts`.
 
 Defined in `cgdb/schema.ts`. Separate node tables per type, single `CodeRelation` table.
 
-**Node tables:** File, Folder, Function, Class, Interface, Method, Constructor, CodeElement, Struct, Enum, Macro, Typedef, Union, Namespace, Trait, Impl, TypeAlias, Const, Static, Property, Record, Delegate, Annotation, Template, Module, Community, Process, Route, Tool, Section, Embedding.
+**Node tables:** File, Folder, Function, Class, Interface, Method, Constructor, CodeElement, Struct, Enum, Macro, Typedef, Union, Namespace, Trait, Impl, TypeAlias, Const, Static, Property, Record, Delegate, Annotation, Template, Module, Community, Process, FeatureCluster, Route, Tool, Section, Embedding.
 
-**Relation types** (`CodeRelation.type`): CONTAINS, DEFINES, CALLS, IMPORTS, EXTENDS, IMPLEMENTS, HAS_METHOD, HAS_PROPERTY, ACCESSES, METHOD_OVERRIDES, METHOD_IMPLEMENTS, MEMBER_OF, STEP_IN_PROCESS, HANDLES_ROUTE, FETCHES, HANDLES_TOOL, ENTRY_POINT_OF.
+**Relation types** (`CodeRelation.type`): CONTAINS, DEFINES, CALLS, IMPORTS, EXTENDS, IMPLEMENTS, HAS_METHOD, HAS_PROPERTY, ACCESSES, METHOD_OVERRIDES, METHOD_IMPLEMENTS, MEMBER_OF, STEP_IN_PROCESS, FEATURE_MEMBER_OF, FEATURE_DEPENDS_ON, HANDLES_ROUTE, FETCHES, HANDLES_TOOL, ENTRY_POINT_OF, WRAPS, QUERIES.
 
 ## Embeddings and search
 

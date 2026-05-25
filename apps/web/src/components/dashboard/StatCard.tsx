@@ -33,25 +33,29 @@ export const StatCard = ({
 }: StatCardProps): React.JSX.Element => {
   const displayValue = formatValue(value);
   return (
-    <Card className={cn('relative p-5', className)}>
-      <div className="flex items-start justify-between">
-        <p className="text-xs font-medium tracking-wider text-text-secondary uppercase">{label}</p>
-        {Icon && <Icon className={cn('h-4 w-4', accentClassName)} aria-hidden />}
+    <Card className={cn('relative p-4', className)}>
+      <div className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-border-subtle bg-elevated/70">
+          {Icon && <Icon className={cn('h-5 w-5', accentClassName)} aria-hidden />}
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium text-text-secondary uppercase">{label}</p>
+          {loading ? (
+            <Skeleton className="mt-2 h-7 w-24" />
+          ) : (
+            <p className="mt-1 truncate font-mono text-2xl font-semibold text-text-primary tabular-nums">
+              {displayValue}
+            </p>
+          )}
+          {hint && !loading && <p className="mt-0.5 truncate text-xs text-text-muted">{hint}</p>}
+        </div>
       </div>
-      {loading ? (
-        <Skeleton className="mt-3 h-8 w-24" />
-      ) : (
-        <p className="mt-3 font-mono text-3xl font-semibold text-text-primary tabular-nums">
-          {displayValue}
-        </p>
-      )}
-      {hint && !loading && <p className="mt-1 text-xs text-text-secondary">{hint}</p>}
     </Card>
   );
 };
 
 const formatValue = (v: number | string | null | undefined): string => {
-  if (v === null || v === undefined) return '—';
+  if (v === null || v === undefined) return '-';
   if (typeof v === 'string') return v;
   // Compact number formatting at thresholds humans can scan.
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;

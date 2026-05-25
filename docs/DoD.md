@@ -1,6 +1,6 @@
 # Definition of Done — CodraGraph
 
-Last reviewed: 2026-04-23 · Version: 2.0.0
+Last reviewed: 2026-05-25 · Version: 2.1.0
 
 This document defines the repo-wide completion bar for production-ready changes in CodraGraph. It is the stable baseline. Implementation prompts, agent behavior, and review workflows may add task-specific checks, but they must never weaken this bar.
 
@@ -117,22 +117,27 @@ Run the commands relevant to the touched area. If something cannot be run in the
 
 ### 4.2 If `packages/core/` changed
 
-- [ ] `cd packages/core && npx tsc --noEmit`
-- [ ] `cd packages/core && npm test`
-- [ ] `cd packages/core && npx prettier --check .` for files in the diff (pre-commit runs the affected-tests subset; do not expand scope)
+- [ ] `npm --prefix packages/core exec tsc -- --noEmit`
+- [ ] `npm --prefix packages/core test`
+- [ ] `npm --prefix packages/core exec prettier -- --check .` for files in the diff (pre-commit runs the affected-tests subset; do not expand scope)
 
 ### 4.3 If `apps/web/` changed
 
-- [ ] `cd apps/web && npx tsc -b --noEmit`
-- [ ] `cd apps/web && npm test`
-- [ ] `cd apps/web && npm run test:e2e` when browser flows or user-facing UI behavior changed
+- [ ] `npm --prefix apps/web exec tsc -- -b --noEmit`
+- [ ] `npm --prefix apps/web test`
+- [ ] `npm --prefix apps/web run test:e2e` when browser flows or user-facing UI behavior changed
 
 ### 4.4 If `packages/shared/` changed
 
 - [ ] Shared package builds cleanly (`npm run build` in `packages/shared/`)
 - [ ] Dependent packages still typecheck and test after the shared change — verify both CLI and web consumers together
 
-### 4.5 If CI workflows or release pipelines changed
+### 4.5 If `packages/harness/` or `packages/sdk/` changed
+
+- [ ] Build the harness before the SDK (`npm --prefix packages/harness run build`, then `npm --prefix packages/sdk run build`) so generated harness types are fresh.
+- [ ] SDK tests run after the harness build (`npm --prefix packages/sdk test`) when graph or harness public types changed.
+
+### 4.6 If CI workflows or release pipelines changed
 
 - [ ] The workflow passes a dry-run or triggered run before merge; concurrency (`cancel-in-progress`) and the `setup-codragraph` action remain wired correctly.
 - [ ] `CHANGELOG.md` is **not** edited here — it is owned by the release process.
@@ -205,5 +210,6 @@ Track material updates in the changelog below. Keep the file tight — if it gro
 
 | Date       | Version | Change                                                                                                                                                        |
 | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-25 | 2.1.0   | Added FeatureCluster context-pack validation expectations and clarified cross-package build order for the shared, harness, SDK, compress, and org surfaces. |
 | 2026-04-23 | 2.0.0   | Restructured into numbered sections; added Security, Observability, Reversibility, Agent-Assisted Guardrails, Review Gates, Not-Done Signals; expanded validation baseline (shared-first build, prettier, CI workflow checks). |
 | 2026-04-13 | 1.0.0   | Initial repo-wide Definition of Done.                                                                                                                         |

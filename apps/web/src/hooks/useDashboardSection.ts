@@ -9,11 +9,18 @@ import { useCallback, useEffect, useState } from 'react';
  * new section is a one-line union extension. Anything we don't recognize
  * falls back to "graph" — the explorer that existed before Phase 2.
  */
-export type DashboardSection = 'graph' | 'overview' | 'history' | 'recipes' | 'projects';
+export type DashboardSection =
+  | 'graph'
+  | 'overview'
+  | 'features'
+  | 'history'
+  | 'recipes'
+  | 'projects';
 
 const VALID_SECTIONS: ReadonlySet<DashboardSection> = new Set([
   'graph',
   'overview',
+  'features',
   'history',
   'recipes',
   'projects',

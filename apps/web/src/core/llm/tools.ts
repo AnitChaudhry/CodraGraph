@@ -2,12 +2,12 @@
  * Graph RAG Tools for LangChain Agent
  *
  * Consolidated tools (7 total):
- * - search: Hybrid search (BM25 + semantic + RRF), grouped by process/cluster
+ * - search: Hybrid search (BM25 + semantic + RRF), grouped by process/feature
  * - cypher: Execute Cypher queries (auto-embeds {{QUERY_VECTOR}} if present)
  * - grep: Regex pattern search across files
  * - read: Read file content by path
- * - overview: Codebase map (clusters + processes)
- * - explore: Deep dive on a symbol, cluster, or process
+ * - overview: Codebase map (features + clusters + processes)
+ * - explore: Deep dive on a symbol, feature, cluster, or process
  * - impact: Impact analysis (what depends on / is affected by changes)
  */
 
@@ -19,6 +19,66 @@ import type { EnrichedSearchResult, GrepResult } from '../../services/backend-cl
 const validLabel = (label: string): boolean => (NODE_TABLES as readonly string[]).includes(label);
 
 const validRelType = (t: string): boolean => (REL_TYPES as readonly string[]).includes(t);
+
+interface FeatureClusterSummary {
+  id?: string;
+  name?: string;
+  slug?: string;
+  featureKind?: string;
+  description?: string;
+  signals?: string[];
+  memberCount?: number;
+  confidence?: number;
+}
+
+interface FeatureClusterMemberSummary {
+  nodeId?: string;
+  id?: string;
+  name?: string;
+  label?: string;
+  type?: string;
+  filePath?: string;
+  startLine?: number;
+  endLine?: number;
+  role?: string;
+  confidence?: number;
+  signals?: string[];
+}
+
+interface FeatureClusterDependencySummary {
+  sourceClusterId?: string;
+  targetClusterId?: string;
+  sourceName?: string;
+  targetName?: string;
+  name?: string;
+  edgeCount?: number;
+  relationshipTypes?: string[];
+  confidence?: number;
+}
+
+interface FeatureContextResponse {
+  cluster?: FeatureClusterSummary;
+  members?: FeatureClusterMemberSummary[];
+  dependencies?:
+    | FeatureClusterDependencySummary[]
+    | {
+        outgoing?: FeatureClusterSummary[];
+        incoming?: FeatureClusterSummary[];
+      };
+  processes?: Array<{
+    id?: string;
+    label?: string;
+    heuristicLabel?: string;
+    processType?: string;
+    stepCount?: number;
+  }>;
+  error?: string;
+}
+
+interface FeatureClustersResponse {
+  clusters?: FeatureClusterSummary[];
+  error?: string;
+}
 
 /**
  * Backend query interface for Graph RAG tools.
@@ -32,13 +92,22 @@ export interface GraphRAGBackend {
   ) => Promise<EnrichedSearchResult[]>;
   grep: (pattern: string, limit?: number) => Promise<GrepResult[]>;
   readFile: (filePath: string) => Promise<string>;
+  fetchFeatureClusters?: () => Promise<FeatureClustersResponse>;
+  fetchFeatureClusterDetail?: (name: string) => Promise<FeatureContextResponse>;
 }
 
 /**
  * Tool factory - creates tools bound to backend HTTP query functions
  */
 export const createGraphRAGTools = (backend: GraphRAGBackend) => {
-  const { executeQuery, search: backendSearch, grep: backendGrep, readFile } = backend;
+  const {
+    executeQuery,
+    search: backendSearch,
+    grep: backendGrep,
+    readFile,
+    fetchFeatureClusters,
+    fetchFeatureClusterDetail,
+  } = backend;
 
   // ============================================================================
   // TOOL 1: SEARCH (Hybrid + 1-hop expansion)
@@ -205,7 +274,7 @@ export const createGraphRAGTools = (backend: GraphRAGBackend) => {
     {
       name: 'search',
       description:
-        'Search for code by keywords or concepts. Combines keyword matching and semantic understanding. Groups results by process with cluster context.',
+        'Search for code by keywords or concepts. Combines keyword matching and semantic understanding. Groups results by process with cluster context; use overview/explore for feature clusters.',
       schema: z.object({
         query: z
           .string()
@@ -298,18 +367,20 @@ export const createGraphRAGTools = (backend: GraphRAGBackend) => {
         return `${results.length} results:\n${formatted.join('\n')}${truncated}`;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        return `Cypher error: ${message}\n\nCheck your query syntax. Node tables: File, Folder, Function, Class, Interface, Method, CodeElement. Relation: CodeRelation with type property (CONTAINS, DEFINES, IMPORTS, CALLS). Example: MATCH (f:File)-[:CodeRelation {type: 'IMPORTS'}]->(g:File) RETURN f, g`;
+        return `Cypher error: ${message}\n\nCheck your query syntax. Node tables include File, Folder, Function, Class, Interface, Method, CodeElement, Community, Process, FeatureCluster, Route, Tool, Section. Relation: CodeRelation with type property (CONTAINS, DEFINES, IMPORTS, CALLS, MEMBER_OF, STEP_IN_PROCESS, FEATURE_MEMBER_OF, FEATURE_DEPENDS_ON). Example: MATCH (m)-[:CodeRelation {type: 'FEATURE_MEMBER_OF'}]->(f:FeatureCluster) RETURN f.name, m.filePath`;
       }
     },
     {
       name: 'cypher',
       description: `Execute a Cypher query against the code graph. Use for structural queries like finding callers, tracing imports, class inheritance, or custom traversals.
 
-Node tables: File, Folder, Function, Class, Interface, Method, CodeElement
-Relation: CodeRelation (single table with 'type' property: CONTAINS, DEFINES, IMPORTS, CALLS, EXTENDS, IMPLEMENTS)
+Node tables: File, Folder, Function, Class, Interface, Method, CodeElement, Community, Process, FeatureCluster, Route, Tool, Section
+Relation: CodeRelation (single table with 'type' property: CONTAINS, DEFINES, IMPORTS, CALLS, EXTENDS, IMPLEMENTS, MEMBER_OF, STEP_IN_PROCESS, FEATURE_MEMBER_OF, FEATURE_DEPENDS_ON)
 
 Example queries:
 - Functions calling a function: MATCH (caller:Function)-[:CodeRelation {type: 'CALLS'}]->(fn:Function {name: 'validate'}) RETURN caller.name, caller.filePath
+- Feature members: MATCH (m)-[:CodeRelation {type: 'FEATURE_MEMBER_OF'}]->(f:FeatureCluster {name: 'Settings'}) RETURN m.name, m.filePath, m.startLine
+- Feature dependencies: MATCH (a:FeatureCluster)-[:CodeRelation {type: 'FEATURE_DEPENDS_ON'}]->(b:FeatureCluster) RETURN a.name, b.name
 - Class inheritance: MATCH (child:Class)-[:CodeRelation {type: 'EXTENDS'}]->(parent:Class) RETURN child.name, parent.name
 - Classes implementing interface: MATCH (c:Class)-[:CodeRelation {type: 'IMPLEMENTS'}]->(i:Interface) RETURN c.name, i.name
 - Files importing a file: MATCH (f:File)-[:CodeRelation {type: 'IMPORTS'}]->(target:File) WHERE target.name = 'utils.ts' RETURN f.name
@@ -442,6 +513,14 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
   const overviewTool = tool(
     async () => {
       try {
+        const featureClustersQuery = `
+          MATCH (f:FeatureCluster)
+          RETURN f.id AS id, f.name AS name, f.slug AS slug, f.featureKind AS featureKind,
+                 f.description AS description, f.signals AS signals, f.memberCount AS memberCount,
+                 f.confidence AS confidence
+          ORDER BY f.memberCount DESC
+          LIMIT 200
+        `;
         const clustersQuery = `
           MATCH (c:Community)
           RETURN c.id AS id, c.label AS label, c.cohesion AS cohesion, c.symbolCount AS symbolCount, c.description AS description
@@ -469,13 +548,56 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
           ORDER BY steps DESC
           LIMIT 10
         `;
+        const featureDepsQuery = `
+          MATCH (a:FeatureCluster)-[:CodeRelation {type: 'FEATURE_DEPENDS_ON'}]->(b:FeatureCluster)
+          RETURN a.name AS \`from\`, b.name AS \`to\`, COUNT(*) AS edges
+          ORDER BY edges DESC
+          LIMIT 15
+        `;
 
-        const [clusters, processes, deps, critical] = await Promise.all([
-          executeQuery(clustersQuery),
-          executeQuery(processesQuery),
-          executeQuery(depsQuery),
-          executeQuery(criticalQuery),
-        ]);
+        const featureClustersPromise = fetchFeatureClusters
+          ? fetchFeatureClusters().catch(() => ({ clusters: [] }))
+          : executeQuery(featureClustersQuery).then((rows) => ({
+              clusters: rows.map((row: any) => ({
+                id: Array.isArray(row) ? row[0] : row.id,
+                name: Array.isArray(row) ? row[1] : row.name,
+                slug: Array.isArray(row) ? row[2] : row.slug,
+                featureKind: Array.isArray(row) ? row[3] : row.featureKind,
+                description: Array.isArray(row) ? row[4] : row.description,
+                signals: Array.isArray(row) ? row[5] : row.signals,
+                memberCount: Array.isArray(row) ? row[6] : row.memberCount,
+                confidence: Array.isArray(row) ? row[7] : row.confidence,
+              })),
+            }));
+
+        const [featureResponse, clusters, processes, deps, critical, featureDeps] =
+          await Promise.all([
+            featureClustersPromise,
+            executeQuery(clustersQuery),
+            executeQuery(processesQuery),
+            executeQuery(depsQuery),
+            executeQuery(criticalQuery),
+            executeQuery(featureDepsQuery),
+          ]);
+
+        const featureClusters = Array.isArray(featureResponse.clusters)
+          ? featureResponse.clusters
+          : [];
+
+        const featureLines = featureClusters.map((cluster) => {
+          const confidence =
+            cluster.confidence !== null && cluster.confidence !== undefined
+              ? Number(cluster.confidence).toFixed(2)
+              : '';
+          return `| ${cluster.name || cluster.slug || cluster.id || ''} | ${cluster.featureKind || ''} | ${cluster.memberCount ?? ''} | ${confidence} | ${cluster.description ?? ''} |`;
+        });
+
+        const featureDepLines = featureDeps.map((row: any) => {
+          const from = Array.isArray(row) ? row[0] : row.from;
+          const to = Array.isArray(row) ? row[1] : row.to;
+          const edges = Array.isArray(row) ? row[2] : row.edges;
+          return `- ${from} -> ${to} (${edges} edges)`;
+        });
 
         const clusterLines = clusters.map((row: any) => {
           const label = Array.isArray(row) ? row[1] : row.label;
@@ -510,6 +632,11 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
         });
 
         return [
+          `FEATURE CLUSTERS (${featureClusters.length} total):`,
+          `| Feature | Kind | Members | Confidence | Description |`,
+          `| --- | --- | --- | --- | --- |`,
+          ...featureLines,
+          ``,
           `CLUSTERS (${clusters.length} total):`,
           `| Cluster | Symbols | Cohesion | Description |`,
           `| --- | --- | --- | --- |`,
@@ -523,6 +650,9 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
           `CLUSTER DEPENDENCIES:`,
           ...(depLines.length > 0 ? depLines : ['- None found']),
           ``,
+          `FEATURE DEPENDENCIES:`,
+          ...(featureDepLines.length > 0 ? featureDepLines : ['- None found']),
+          ``,
           `CRITICAL PATHS:`,
           ...(criticalLines.length > 0 ? criticalLines : ['- None found']),
         ].join('\n');
@@ -533,13 +663,13 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
     {
       name: 'overview',
       description:
-        'Codebase map showing all clusters and processes, plus cross-cluster dependencies.',
+        'Codebase map showing feature clusters, structural clusters, processes, and dependencies.',
       schema: z.object({}),
     },
   );
 
   // ============================================================================
-  // TOOL 6: EXPLORE (Deep dive on symbol, cluster, or process)
+  // TOOL 6: EXPLORE (Deep dive on symbol, feature, cluster, or process)
   // ============================================================================
 
   const exploreTool = tool(
@@ -548,16 +678,20 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
       type,
     }: {
       target: string;
-      type?: 'symbol' | 'cluster' | 'process' | null;
+      type?: 'symbol' | 'feature' | 'cluster' | 'process' | null;
     }) => {
       const safeTarget = target.replace(/'/g, "''");
       let resolvedType = type ?? null;
       let processRow: any | null = null;
+      let featureRow: any | null = null;
       let communityRow: any | null = null;
       let symbolRow: any | null = null;
 
       const getRowValue = (row: any, idx: number, key: string) =>
         Array.isArray(row) ? row[idx] : row[key];
+
+      const featureDisplayName = (feature: FeatureClusterSummary | undefined): string =>
+        feature?.name || feature?.slug || feature?.id || 'Unknown feature';
 
       if (!resolvedType || resolvedType === 'process') {
         const processQuery = `
@@ -570,6 +704,22 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
         if (processRes.length > 0) {
           processRow = processRes[0];
           resolvedType = 'process';
+        }
+      }
+
+      if (!resolvedType || resolvedType === 'feature') {
+        const featureQuery = `
+          MATCH (f:FeatureCluster)
+          WHERE f.id = '${safeTarget}' OR f.name = '${safeTarget}' OR f.slug = '${safeTarget}'
+          RETURN f.id AS id, f.name AS name, f.slug AS slug, f.featureKind AS featureKind,
+                 f.description AS description, f.memberCount AS memberCount, f.confidence AS confidence,
+                 f.signals AS signals
+          LIMIT 1
+        `;
+        const featureRes = await executeQuery(featureQuery);
+        if (featureRes.length > 0) {
+          featureRow = featureRes[0];
+          resolvedType = 'feature';
         }
       }
 
@@ -602,7 +752,7 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
       }
 
       if (!resolvedType) {
-        return `Could not find "${target}" as a symbol, cluster, or process. Try search first.`;
+        return `Could not find "${target}" as a symbol, feature cluster, structural cluster, or process. Try search first.`;
       }
 
       if (resolvedType === 'process') {
@@ -653,6 +803,160 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
           `CLUSTERS TOUCHED:`,
           ...(clusterLines.length > 0 ? clusterLines : ['- None found']),
         ].join('\n');
+      }
+
+      if (resolvedType === 'feature') {
+        const fid = getRowValue(featureRow, 0, 'id');
+        const name = getRowValue(featureRow, 1, 'name');
+        const slug = getRowValue(featureRow, 2, 'slug');
+        const kind = getRowValue(featureRow, 3, 'featureKind');
+        const description = getRowValue(featureRow, 4, 'description');
+        const memberCount = getRowValue(featureRow, 5, 'memberCount');
+        const confidence = getRowValue(featureRow, 6, 'confidence');
+        const signals = getRowValue(featureRow, 7, 'signals');
+
+        let detail: FeatureContextResponse | null = null;
+        if (fetchFeatureClusterDetail) {
+          try {
+            const fetched = await fetchFeatureClusterDetail(String(name || slug || fid));
+            if (!fetched.error && fetched.cluster) {
+              detail = fetched;
+            }
+          } catch {
+            detail = null;
+          }
+        }
+
+        const membersQuery = `
+          MATCH (m)-[r:CodeRelation {type: 'FEATURE_MEMBER_OF'}]->(f:FeatureCluster {id: '${String(fid).replace(/'/g, "''")}'})
+          RETURN m.id AS id, m.name AS name, label(m) AS type, m.filePath AS filePath,
+                 m.startLine AS startLine, m.endLine AS endLine, r.confidence AS confidence,
+                 r.reason AS reason
+          ORDER BY type, filePath, startLine
+          LIMIT 80
+        `;
+        const outgoingQuery = `
+          MATCH (f:FeatureCluster {id: '${String(fid).replace(/'/g, "''")}'})-[r:CodeRelation {type: 'FEATURE_DEPENDS_ON'}]->(d:FeatureCluster)
+          RETURN d.id AS id, d.name AS name, d.slug AS slug, r.confidence AS confidence
+          ORDER BY d.name
+        `;
+        const incomingQuery = `
+          MATCH (s:FeatureCluster)-[r:CodeRelation {type: 'FEATURE_DEPENDS_ON'}]->(f:FeatureCluster {id: '${String(fid).replace(/'/g, "''")}'})
+          RETURN s.id AS id, s.name AS name, s.slug AS slug, r.confidence AS confidence
+          ORDER BY s.name
+        `;
+        const processesQuery = `
+          MATCH (m)-[:CodeRelation {type: 'FEATURE_MEMBER_OF'}]->(f:FeatureCluster {id: '${String(fid).replace(/'/g, "''")}'}),
+                (m)-[:CodeRelation {type: 'STEP_IN_PROCESS'}]->(p:Process)
+          RETURN DISTINCT p.id AS id, p.label AS label, p.processType AS processType, p.stepCount AS stepCount
+          ORDER BY p.stepCount DESC
+          LIMIT 20
+        `;
+
+        const [membersRes, outgoingRes, incomingRes, processesRes] = detail
+          ? [[], [], [], []]
+          : await Promise.all([
+              executeQuery(membersQuery),
+              executeQuery(outgoingQuery),
+              executeQuery(incomingQuery),
+              executeQuery(processesQuery),
+            ]);
+
+        const detailDeps = detail?.dependencies;
+        const detailOutgoing = Array.isArray(detailDeps) ? [] : (detailDeps?.outgoing ?? []);
+        const detailIncoming = Array.isArray(detailDeps) ? [] : (detailDeps?.incoming ?? []);
+
+        const memberRows =
+          detail?.members?.map((member) => ({
+            name: member.name || member.id || member.nodeId || 'Unknown',
+            type: member.type || member.label || 'Node',
+            filePath: member.filePath || 'n/a',
+            startLine: member.startLine,
+            endLine: member.endLine,
+            confidence: member.confidence,
+          })) ??
+          membersRes.map((row: any) => ({
+            name: getRowValue(row, 1, 'name') || getRowValue(row, 0, 'id'),
+            type: getRowValue(row, 2, 'type'),
+            filePath: getRowValue(row, 3, 'filePath') || 'n/a',
+            startLine: getRowValue(row, 4, 'startLine'),
+            endLine: getRowValue(row, 5, 'endLine'),
+            confidence: getRowValue(row, 6, 'confidence'),
+          }));
+
+        const memberLines = memberRows.map((member) => {
+          const lineText = member.startLine
+            ? `:${member.startLine}${member.endLine ? `-${member.endLine}` : ''}`
+            : '';
+          const conf =
+            member.confidence !== null && member.confidence !== undefined
+              ? ` (${Math.round(Number(member.confidence) * 100)}%)`
+              : '';
+          return `- ${member.type}: ${member.name} (${member.filePath}${lineText})${conf}`;
+        });
+
+        const outgoingRows =
+          detailOutgoing.length > 0
+            ? detailOutgoing
+            : outgoingRes.map((row: any) => ({
+                id: getRowValue(row, 0, 'id'),
+                name: getRowValue(row, 1, 'name'),
+                slug: getRowValue(row, 2, 'slug'),
+                confidence: getRowValue(row, 3, 'confidence'),
+              }));
+        const incomingRows =
+          detailIncoming.length > 0
+            ? detailIncoming
+            : incomingRes.map((row: any) => ({
+                id: getRowValue(row, 0, 'id'),
+                name: getRowValue(row, 1, 'name'),
+                slug: getRowValue(row, 2, 'slug'),
+                confidence: getRowValue(row, 3, 'confidence'),
+              }));
+
+        const outgoingLines = outgoingRows.map((dep) => `- ${featureDisplayName(dep)}`);
+        const incomingLines = incomingRows.map((dep) => `- ${featureDisplayName(dep)}`);
+
+        const processRows =
+          detail?.processes ??
+          processesRes.map((row: any) => ({
+            id: getRowValue(row, 0, 'id'),
+            label: getRowValue(row, 1, 'label'),
+            heuristicLabel: undefined,
+            processType: getRowValue(row, 2, 'processType'),
+            stepCount: getRowValue(row, 3, 'stepCount'),
+          }));
+        const processLines = processRows.map((process) => {
+          const label = process.label || process.heuristicLabel || process.id || 'Unknown process';
+          return `- ${label} (${process.stepCount ?? '?'} steps)`;
+        });
+
+        const confidenceText =
+          confidence !== null && confidence !== undefined ? Number(confidence).toFixed(2) : 'n/a';
+        const signalText = Array.isArray(signals) ? signals.slice(0, 8).join(', ') : '';
+
+        return [
+          `FEATURE: ${name || slug || fid}`,
+          `Kind: ${kind || 'feature'}`,
+          `Members: ${memberCount ?? memberRows.length}`,
+          `Confidence: ${confidenceText}`,
+          `Description: ${description || detail?.cluster?.description || 'n/a'}`,
+          signalText ? `Signals: ${signalText}` : '',
+          ``,
+          `TOP MEMBERS:`,
+          ...(memberLines.length > 0 ? memberLines : ['- None found']),
+          ``,
+          `DEPENDS ON:`,
+          ...(outgoingLines.length > 0 ? outgoingLines : ['- None found']),
+          ``,
+          `USED BY:`,
+          ...(incomingLines.length > 0 ? incomingLines : ['- None found']),
+          ``,
+          `PROCESSES TOUCHING THIS FEATURE:`,
+          ...(processLines.length > 0 ? processLines : ['- None found']),
+        ]
+          .filter((line, index, arr) => line !== '' || arr[index - 1] !== '')
+          .join('\n');
       }
 
       if (resolvedType === 'cluster') {
@@ -723,6 +1027,12 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
           RETURN c.label AS label, c.description AS description
           LIMIT 1
         `;
+        const featureQuery = `
+          MATCH (n:${nodeType} {id: '${String(nodeId).replace(/'/g, "''")}'})
+          MATCH (n)-[:CodeRelation {type: 'FEATURE_MEMBER_OF'}]->(f:FeatureCluster)
+          RETURN f.name AS name, f.slug AS slug, f.featureKind AS kind
+          LIMIT 1
+        `;
         const processQuery = `
           MATCH (n:${nodeType} {id: '${String(nodeId).replace(/'/g, "''")}'})
           MATCH (n)-[r:CodeRelation {type: 'STEP_IN_PROCESS'}]->(p:Process)
@@ -739,8 +1049,9 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
           LIMIT 1
         `;
 
-        const [clusterRes, processRes, connRes] = await Promise.all([
+        const [clusterRes, featureRes, processRes, connRes] = await Promise.all([
           executeQuery(clusterQuery),
+          executeQuery(featureQuery),
           executeQuery(processQuery),
           executeQuery(connectionsQuery),
         ]);
@@ -749,6 +1060,11 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
           clusterRes.length > 0 ? getRowValue(clusterRes[0], 0, 'label') : 'Unclustered';
         const clusterDesc =
           clusterRes.length > 0 ? getRowValue(clusterRes[0], 1, 'description') : '';
+        const featureName =
+          featureRes.length > 0
+            ? getRowValue(featureRes[0], 0, 'name') || getRowValue(featureRes[0], 1, 'slug')
+            : '';
+        const featureKind = featureRes.length > 0 ? getRowValue(featureRes[0], 2, 'kind') : '';
 
         const processLines = processRes.map((row: any) => {
           const plabel = getRowValue(row, 0, 'label');
@@ -782,6 +1098,7 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
           `SYMBOL: ${nodeType} ${name}`,
           `ID: ${nodeId}`,
           `File: ${filePath || 'n/a'}`,
+          `Feature: ${featureName || 'Unassigned'}${featureKind ? ` (${featureKind})` : ''}`,
           `Cluster: ${clusterLabel}${clusterDesc ? ` — ${clusterDesc}` : ''}`,
           ``,
           `PROCESSES:`,
@@ -797,11 +1114,11 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
     {
       name: 'explore',
       description:
-        'Deep dive on a symbol, cluster, or process. Shows membership, participation, and connections.',
+        'Deep dive on a symbol, feature cluster, structural cluster, or process. Shows membership, participation, and connections.',
       schema: z.object({
-        target: z.string().describe('Name or ID of a symbol, cluster, or process'),
+        target: z.string().describe('Name or ID of a symbol, feature cluster, cluster, or process'),
         type: z
-          .enum(['symbol', 'cluster', 'process'])
+          .enum(['symbol', 'feature', 'cluster', 'process'])
           .optional()
           .nullable()
           .describe('Optional target type (auto-detected if omitted)'),
@@ -1245,6 +1562,12 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
         stepCount: number | null;
       }> = [];
       let affectedClusters: Array<{ label: string; hits: number; impact: string }> = [];
+      let affectedFeatureClusters: Array<{
+        label: string;
+        kind: string;
+        hits: number;
+        impact: string;
+      }> = [];
 
       if (trimmedIds.length > 0) {
         const processQuery = `
@@ -1261,6 +1584,13 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
           ORDER BY hits DESC
           LIMIT 20
         `;
+        const featureClusterQuery = `
+          MATCH (s)-[:CodeRelation {type: 'FEATURE_MEMBER_OF'}]->(f:FeatureCluster)
+          WHERE s.id IN [${idList}]
+          RETURN f.name AS label, f.featureKind AS kind, COUNT(DISTINCT s.id) AS hits
+          ORDER BY hits DESC
+          LIMIT 20
+        `;
         const directIdList = depth1.map((n) => `'${n.id.replace(/'/g, "''")}'`).join(', ');
         const directClusterQuery =
           depth1.length > 0
@@ -1270,17 +1600,35 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
           RETURN DISTINCT c.label AS label
         `
             : '';
+        const directFeatureClusterQuery =
+          depth1.length > 0
+            ? `
+          MATCH (s)-[:CodeRelation {type: 'FEATURE_MEMBER_OF'}]->(f:FeatureCluster)
+          WHERE s.id IN [${directIdList}]
+          RETURN DISTINCT f.name AS label
+        `
+            : '';
 
-        const [processRes, clusterRes, directClusterRes] = await Promise.all([
-          executeQuery(processQuery),
-          executeQuery(clusterQuery),
-          directClusterQuery ? executeQuery(directClusterQuery) : Promise.resolve([]),
-        ]);
+        const [processRes, clusterRes, directClusterRes, featureClusterRes, directFeatureRes] =
+          await Promise.all([
+            executeQuery(processQuery),
+            executeQuery(clusterQuery),
+            directClusterQuery ? executeQuery(directClusterQuery) : Promise.resolve([]),
+            executeQuery(featureClusterQuery),
+            directFeatureClusterQuery
+              ? executeQuery(directFeatureClusterQuery)
+              : Promise.resolve([]),
+          ]);
 
         const directClusterSet = new Set<string>();
         directClusterRes.forEach((row: any) => {
           const label = Array.isArray(row) ? row[0] : row.label;
           if (label) directClusterSet.add(label);
+        });
+        const directFeatureSet = new Set<string>();
+        directFeatureRes.forEach((row: any) => {
+          const label = Array.isArray(row) ? row[0] : row.label;
+          if (label) directFeatureSet.add(label);
         });
 
         affectedProcesses = processRes.map((row: any) => ({
@@ -1296,18 +1644,34 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
           const impact = directClusterSet.has(label) ? 'direct' : 'indirect';
           return { label, hits, impact };
         });
+
+        affectedFeatureClusters = featureClusterRes.map((row: any) => {
+          const label = Array.isArray(row) ? row[0] : row.label;
+          const kind = Array.isArray(row) ? row[1] : row.kind;
+          const hits = Array.isArray(row) ? row[2] : row.hits;
+          const impact = directFeatureSet.has(label) ? 'direct' : 'indirect';
+          return { label, kind, hits, impact };
+        });
       }
 
       const directCount = depth1.length;
       const processCount = affectedProcesses.length;
       const clusterCount = affectedClusters.length;
+      const featureClusterCount = affectedFeatureClusters.length;
       let risk = 'LOW';
-      if (directCount >= 30 || processCount >= 5 || clusterCount >= 5 || totalAffected >= 200) {
+      if (
+        directCount >= 30 ||
+        processCount >= 5 ||
+        clusterCount >= 5 ||
+        featureClusterCount >= 5 ||
+        totalAffected >= 200
+      ) {
         risk = 'CRITICAL';
       } else if (
         directCount >= 15 ||
         processCount >= 3 ||
         clusterCount >= 3 ||
+        featureClusterCount >= 3 ||
         totalAffected >= 100
       ) {
         risk = 'HIGH';
@@ -1328,6 +1692,13 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
             )
           : ['- None found']),
         ``,
+        `AFFECTED FEATURE CLUSTERS:`,
+        ...(affectedFeatureClusters.length > 0
+          ? affectedFeatureClusters.map(
+              (c) => `- ${c.label}${c.kind ? ` (${c.kind})` : ''} - ${c.impact}, ${c.hits} symbols`,
+            )
+          : ['- None found']),
+        ``,
         `AFFECTED CLUSTERS:`,
         ...(affectedClusters.length > 0
           ? affectedClusters.map((c) => `- ${c.label} (${c.impact}, ${c.hits} symbols)`)
@@ -1336,6 +1707,7 @@ MATCH (n:Function {id: emb.nodeId}) RETURN n`,
         `RISK: ${risk}`,
         `- Direct callers: ${directCount}`,
         `- Processes affected: ${processCount}`,
+        `- Feature clusters affected: ${featureClusterCount}`,
         `- Clusters affected: ${clusterCount}`,
         ``,
       ];
@@ -1441,8 +1813,9 @@ relationTypes filter (optional):
 
 Additional output sections:
 - Affected processes (with step impact)
+- Affected feature clusters (product/domain areas)
 - Affected clusters (direct/indirect)
-- Risk summary (based on direct callers, processes, clusters)`,
+- Risk summary (based on direct callers, processes, feature clusters, clusters)`,
       schema: z.object({
         target: z.string().describe('Name of the function, class, or file to analyze'),
         direction: z

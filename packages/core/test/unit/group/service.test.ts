@@ -503,6 +503,69 @@ repos:
     });
   });
 
+  describe('feature clusters', () => {
+    it('merges same-named clusters across repos and resolves contract links', async () => {
+      const { groupDir, cleanup, tmpDir } = makeTmpGroup();
+      try {
+        vi.stubEnv('CODRAGRAPH_HOME', tmpDir);
+        const provider = makeContract('http::GET::/api/chat', 'provider', 'app/backend');
+        const consumer = makeContract('http::GET::/api/chat', 'consumer', 'app/frontend');
+        const crossLink: CrossLink = {
+          from: {
+            repo: provider.repo,
+            symbolUid: provider.symbolUid,
+            symbolRef: provider.symbolRef,
+          },
+          to: {
+            repo: consumer.repo,
+            symbolUid: consumer.symbolUid,
+            symbolRef: consumer.symbolRef,
+          },
+          type: 'http',
+          contractId: provider.contractId,
+          matchType: 'exact',
+          confidence: 0.94,
+        };
+        await writeContractRegistry(groupDir, makeRegistry([provider, consumer], [crossLink]));
+
+        const featureClusters = vi.fn(async (repo: GroupRepoHandle) => ({
+          clusters: [
+            {
+              id: `FeatureCluster:${repo.name}:ai`,
+              name: repo.name === 'test-backend' ? 'AI Assistant' : 'AiAssistant',
+              slug: repo.name === 'test-backend' ? 'ai-assistant' : undefined,
+              memberCount: repo.name === 'test-backend' ? 6 : 4,
+              entryPointIds:
+                repo.name === 'test-backend' ? [provider.symbolUid] : [consumer.symbolUid],
+              routes: repo.name === 'test-backend' ? ['/api/chat'] : [],
+              tools: [],
+            },
+          ],
+        }));
+
+        const svc = new GroupService(makePort({ featureClusters }));
+        const result = (await svc.groupFeatureClusters({
+          name: 'test-group',
+          query: 'ai',
+        })) as {
+          cross_repo_clusters: Array<{ repoCount: number; memberCount: number }>;
+          cross_repo_links: Array<Record<string, unknown>>;
+        };
+
+        expect(result.cross_repo_clusters[0]).toMatchObject({ repoCount: 2, memberCount: 10 });
+        expect(result.cross_repo_links).toHaveLength(1);
+        expect(result.cross_repo_links[0]).toMatchObject({
+          sourceRepo: 'app/backend',
+          targetRepo: 'app/frontend',
+          contractName: 'http::GET::/api/chat',
+        });
+      } finally {
+        vi.unstubAllEnvs();
+        cleanup();
+      }
+    });
+  });
+
   describe('groupStatus', () => {
     it('test_groupStatus_returns_error_when_name_empty', async () => {
       const svc = new GroupService(makePort());

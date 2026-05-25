@@ -61,6 +61,9 @@ describe('generateAIContextFiles', () => {
     expect(content).toContain('## Never Do');
     expect(content).toContain('## Resources');
     expect(content).toContain('codragraph://repo/TestProject/context');
+    expect(content).toContain('codragraph://repo/TestProject/feature-clusters');
+    expect(content).toContain('codragraph://repo/TestProject/feature/{name}');
+    expect(content).toContain('Commands are cross-platform');
     expect(content).toContain('codragraph-impact-analysis/SKILL.md');
     expect(content).toContain('codragraph-refactoring/SKILL.md');
     expect(content).toContain('codragraph-debugging/SKILL.md');
@@ -87,10 +90,9 @@ describe('generateAIContextFiles', () => {
   });
 
   it('keeps the CLAUDE.md CodraGraph block under the token-cost budget (#856)', async () => {
-    // The pre-trim block was ~5465 chars. After #856 it's ~2580 — about a
-    // 52% reduction. 2700 is a soft ceiling that still leaves headroom for
-    // legitimate future additions but will fail loudly if the trim is
-    // reverted or someone pads the block back out toward the original size.
+    // The pre-trim block was ~5465 chars. The feature-cluster and
+    // cross-platform command hints are still well below that while keeping
+    // the generated block small enough for every agent session.
     const stats = { nodes: 50, edges: 100, processes: 5 };
     await generateAIContextFiles(tmpDir, storagePath, 'TestProject', stats);
 
@@ -99,7 +101,7 @@ describe('generateAIContextFiles', () => {
       content.indexOf('<!-- codragraph:start -->'),
       content.indexOf('<!-- codragraph:end -->'),
     );
-    expect(block.length).toBeLessThan(2700);
+    expect(block.length).toBeLessThan(3100);
   });
 
   it('handles empty stats', async () => {

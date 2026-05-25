@@ -12,6 +12,7 @@ export type PipelinePhase =
   | 'heritage'
   | 'communities'
   | 'processes'
+  | 'feature_clusters'
   | 'enriching'
   | 'complete'
   | 'error';

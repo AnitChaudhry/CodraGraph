@@ -12,18 +12,18 @@ description: "Use when the user wants to know what will break if they change som
 - "Show me the blast radius"
 - "Who uses this code?"
 - Before making non-trivial code changes
-- Before committing â€” to understand what your changes affect
+- Before committing -- to understand what your changes affect
 
 ## Workflow
 
 ```
-1. codragraph_impact({target: "X", direction: "upstream"})  â†’ What depends on this
-2. READ codragraph://repo/{name}/processes                   â†’ Check affected execution flows
-3. codragraph_detect_changes()                               â†’ Map current git changes to affected flows
+1. codragraph_impact({target: "X", direction: "upstream"})  -> What depends on this
+2. READ codragraph://repo/{name}/processes                   -> Check affected execution flows
+3. codragraph_detect_changes()                               -> Map current git changes to affected flows
 4. Assess risk and report to user
 ```
 
-> If "Index is stale" â†’ run `npx @codragraph/cli analyze` in terminal.
+> If "Index is stale" -> run `npx @codragraph/cli analyze` in terminal.
 
 ## Checklist
 
@@ -55,7 +55,7 @@ description: "Use when the user wants to know what will break if they change som
 
 ## Tools
 
-**codragraph_impact** â€” the primary tool for symbol blast radius:
+**codragraph_impact** -- the primary tool for symbol blast radius:
 
 ```
 codragraph_impact({
@@ -65,33 +65,33 @@ codragraph_impact({
   maxDepth: 3
 })
 
-â†’ d=1 (WILL BREAK):
+-> d=1 (WILL BREAK):
   - loginHandler (src/auth/login.ts:42) [CALLS, 100%]
   - apiMiddleware (src/api/middleware.ts:15) [CALLS, 100%]
 
-â†’ d=2 (LIKELY AFFECTED):
+-> d=2 (LIKELY AFFECTED):
   - authRouter (src/routes/auth.ts:22) [CALLS, 95%]
 ```
 
-**codragraph_detect_changes** â€” git-diff based impact analysis:
+**codragraph_detect_changes** -- git-diff based impact analysis:
 
 ```
 codragraph_detect_changes({scope: "staged"})
 
-â†’ Changed: 5 symbols in 3 files
-â†’ Affected: LoginFlow, TokenRefresh, APIMiddlewarePipeline
-â†’ Risk: MEDIUM
+-> Changed: 5 symbols in 3 files
+-> Affected: LoginFlow, TokenRefresh, APIMiddlewarePipeline
+-> Risk: MEDIUM
 ```
 
 ## Example: "What breaks if I change validateUser?"
 
 ```
 1. codragraph_impact({target: "validateUser", direction: "upstream"})
-   â†’ d=1: loginHandler, apiMiddleware (WILL BREAK)
-   â†’ d=2: authRouter, sessionManager (LIKELY AFFECTED)
+   -> d=1: loginHandler, apiMiddleware (WILL BREAK)
+   -> d=2: authRouter, sessionManager (LIKELY AFFECTED)
 
 2. READ codragraph://repo/my-app/processes
-   â†’ LoginFlow and TokenRefresh touch validateUser
+   -> LoginFlow and TokenRefresh touch validateUser
 
 3. Risk: 2 direct callers, 2 processes = MEDIUM
 ```

@@ -550,6 +550,255 @@ describe('LocalBackend.callTool', () => {
     expect(result.error).toContain('Either "route" or "file"');
   });
 
+  it('dispatches feature_clusters tool', async () => {
+    (executeQuery as any).mockResolvedValue([
+      {
+        id: 'FeatureCluster:settings',
+        name: 'Settings',
+        slug: 'settings',
+        featureKind: 'domain',
+        description: 'Settings feature cluster',
+        signals: ['path:settings'],
+        memberCount: 4,
+        entryPointIds: ['fn:settings'],
+        confidence: 0.93,
+        source: 'heuristic',
+      },
+    ]);
+
+    const result = await backend.callTool('feature_clusters', { limit: 10 });
+
+    expect(result.clusters).toHaveLength(1);
+    expect(result.clusters[0]).toEqual(
+      expect.objectContaining({
+        name: 'Settings',
+        slug: 'settings',
+        memberCount: 4,
+      }),
+    );
+  });
+
+  it('dispatches cluster_query alias', async () => {
+    (executeQuery as any).mockResolvedValue([
+      {
+        id: 'FeatureCluster:settings',
+        name: 'Settings',
+        slug: 'settings',
+        featureKind: 'domain',
+        summary: 'Settings feature cluster.',
+        description: 'Settings feature cluster',
+        signals: ['path:settings'],
+        memberCount: 4,
+        entryPointIds: ['fn:settings'],
+        routes: ['/settings'],
+        tools: [],
+        testCoverageHints: ['1 test-related member detected.'],
+        confidence: 0.93,
+        source: 'heuristic',
+      },
+    ]);
+
+    const result = await backend.callTool('cluster_query', { limit: 10 });
+
+    expect(result.clusters[0]).toEqual(
+      expect.objectContaining({
+        name: 'Settings',
+        summary: 'Settings feature cluster.',
+        routes: ['/settings'],
+      }),
+    );
+  });
+
+  it('filters feature cluster search after fetching enough candidates', async () => {
+    (executeQuery as any).mockResolvedValue([
+      {
+        id: 'FeatureCluster:settings',
+        name: 'Settings',
+        slug: 'settings',
+        featureKind: 'domain',
+        summary: 'Settings feature cluster.',
+        signals: ['path:settings'],
+        memberCount: 50,
+        confidence: 0.9,
+        source: 'heuristic',
+      },
+      {
+        id: 'FeatureCluster:billing',
+        name: 'Billing',
+        slug: 'billing',
+        featureKind: 'domain',
+        summary: 'Billing feature cluster.',
+        signals: ['path:billing'],
+        memberCount: 3,
+        confidence: 0.88,
+        source: 'heuristic',
+      },
+    ]);
+
+    const result = await backend.callTool('cluster_query', { query: 'billing', limit: 1 });
+
+    expect(result.clusters).toHaveLength(1);
+    expect(result.clusters[0].name).toBe('Billing');
+    expect(String((executeQuery as any).mock.calls[0][1])).toContain('LIMIT 500');
+  });
+
+  it('dispatches feature_context tool', async () => {
+    (executeParameterized as any)
+      .mockResolvedValueOnce([
+        {
+          id: 'FeatureCluster:ai',
+          name: 'AI',
+          slug: 'ai',
+          featureKind: 'domain',
+          description: 'AI feature cluster',
+          signals: ['path:ai'],
+          memberCount: 1,
+          entryPointIds: ['fn:ai'],
+          confidence: 0.95,
+          source: 'heuristic',
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 'fn:ai',
+          name: 'AiPanel',
+          type: 'Function',
+          filePath: 'src/features/ai/AiPanel.tsx',
+          startLine: 10,
+          endLine: 20,
+          confidence: 0.91,
+          reason: 'path:ai',
+        },
+      ])
+      .mockResolvedValueOnce([
+        { id: 'FeatureCluster:settings', name: 'Settings', slug: 'settings' },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    const result = await backend.callTool('feature_context', { name: 'AI' });
+
+    expect(result.cluster.name).toBe('AI');
+    expect(result.members).toHaveLength(1);
+    expect(result.members[0].filePath).toBe('src/features/ai/AiPanel.tsx');
+    expect(result.dependencies.outgoing[0].name).toBe('Settings');
+    expect(result.safeEditSurface.files).toContain('src/features/ai/AiPanel.tsx');
+    expect(result.entryPoints[0].name).toBe('AiPanel');
+  });
+
+  it('falls back to cluster search when exact feature_context lookup misses', async () => {
+    (executeParameterized as any)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'fn:billing',
+          name: 'BillingPanel',
+          type: 'Function',
+          filePath: 'src/features/billing/BillingPanel.tsx',
+          startLine: 7,
+          endLine: 16,
+          confidence: 0.9,
+          reason: 'path:billing',
+        },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    (executeQuery as any).mockResolvedValue([
+      {
+        id: 'FeatureCluster:billing',
+        name: 'Billing',
+        slug: 'billing',
+        featureKind: 'domain',
+        summary: 'Billing feature cluster.',
+        signals: ['path:billing'],
+        memberCount: 1,
+        entryPointIds: ['fn:billing'],
+        confidence: 0.88,
+        source: 'heuristic',
+      },
+    ]);
+
+    const result = await backend.callTool('feature_context', { name: 'bill' });
+
+    expect(result.cluster.name).toBe('Billing');
+    expect(result.members[0].name).toBe('BillingPanel');
+  });
+
+  it('dispatches context_pack and cluster_impact aliases', async () => {
+    (executeParameterized as any)
+      .mockResolvedValueOnce([
+        {
+          id: 'FeatureCluster:ai',
+          name: 'AI',
+          slug: 'ai',
+          featureKind: 'domain',
+          description: 'AI feature cluster',
+          signals: ['path:ai'],
+          memberCount: 1,
+          entryPointIds: ['fn:ai'],
+          confidence: 0.95,
+          source: 'heuristic',
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 'fn:ai',
+          name: 'AiPanel',
+          type: 'Function',
+          filePath: 'src/features/ai/AiPanel.tsx',
+          startLine: 10,
+          endLine: 20,
+          confidence: 0.91,
+          reason: 'path:ai',
+        },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        { id: 'FeatureCluster:settings', name: 'Settings', slug: 'settings' },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'FeatureCluster:ai',
+          name: 'AI',
+          slug: 'ai',
+          featureKind: 'domain',
+          description: 'AI feature cluster',
+          signals: ['path:ai'],
+          memberCount: 1,
+          entryPointIds: ['fn:ai'],
+          confidence: 0.95,
+          source: 'heuristic',
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 'fn:ai',
+          name: 'AiPanel',
+          type: 'Function',
+          filePath: 'src/features/ai/AiPanel.tsx',
+          startLine: 10,
+          endLine: 20,
+          confidence: 0.91,
+          reason: 'path:ai',
+        },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        { id: 'FeatureCluster:settings', name: 'Settings', slug: 'settings' },
+      ])
+      .mockResolvedValueOnce([]);
+
+    const pack = await backend.callTool('context_pack', { name: 'AI' });
+    const impact = await backend.callTool('cluster_impact', { name: 'AI', direction: 'both' });
+
+    expect(pack.cluster.name).toBe('AI');
+    expect(impact.cluster.name).toBe('AI');
+    expect(impact.direction).toBe('both');
+    expect(impact.impactSummary.riskLevel).toBe('LOW');
+  });
+
   it('api_impact returns error when no routes found', async () => {
     (executeParameterized as any).mockResolvedValue([]);
     const result = await backend.callTool('api_impact', { route: '/api/nonexistent' });

@@ -74,13 +74,13 @@ You are an investigator. For each question:
 - **\`cypher\`** — Cypher queries against the graph. Use \`{{QUERY_VECTOR}}\` for vector search.
 - **\`grep\`** — Regex search. Best for exact strings, TODOs, error codes.
 - **\`read\`** — Read file content. Always use after search/grep to see full code.
-- **\`explore\`** — Deep dive on a symbol, cluster, or process. Shows membership, participation, connections.
-- **\`overview\`** — Codebase map showing all clusters and processes.
-- **\`impact\`** — Impact analysis. Shows affected processes, clusters, and risk level.
+- **\`explore\`** — Deep dive on a symbol, feature cluster, structural cluster, or process.
+- **\`overview\`** — Codebase map showing feature clusters, structural clusters, and processes.
+- **\`impact\`** — Impact analysis. Shows affected processes, feature clusters, clusters, and risk level.
 
 ## 📊 GRAPH SCHEMA
-Nodes: File, Folder, Function, Class, Interface, Method, Community, Process
-Relations: \`CodeRelation\` with \`type\` property: CONTAINS, DEFINES, IMPORTS, CALLS, EXTENDS, IMPLEMENTS, MEMBER_OF, STEP_IN_PROCESS
+Nodes: File, Folder, Function, Class, Interface, Method, Community, Process, FeatureCluster, Route, Tool, Section
+Relations: \`CodeRelation\` with \`type\` property: CONTAINS, DEFINES, IMPORTS, CALLS, EXTENDS, IMPLEMENTS, MEMBER_OF, STEP_IN_PROCESS, FEATURE_MEMBER_OF, FEATURE_DEPENDS_ON
 
 ## 📐 GRAPH SEMANTICS (Important!)
 **Edge Types:**
@@ -93,9 +93,15 @@ Relations: \`CodeRelation\` with \`type\` property: CONTAINS, DEFINES, IMPORTS, 
 - These are heuristic names from tracing execution flow, NOT application-defined names
 - Entry points are detected via export status, naming patterns, and framework conventions
 
+**FeatureCluster Nodes:**
+- Feature clusters are human/product areas like Settings, Auth, AI, Billing, Admin, or Docs.
+- Use \`overview\` first to find relevant feature areas, then \`explore\` with \`type: "feature"\` to load focused files, line ranges, dependencies, and flows.
+- Prefer feature context before broad exploration when the user asks to refactor or understand an application area.
+
 Cypher examples:
 - \`MATCH (f:Function) RETURN f.name LIMIT 10\`
 - \`MATCH (f:File)-[:CodeRelation {type: 'IMPORTS'}]->(g:File) RETURN f.name, g.name\`
+- \`MATCH (m)-[:CodeRelation {type: 'FEATURE_MEMBER_OF'}]->(f:FeatureCluster {name: 'Settings'}) RETURN m.name, m.filePath, m.startLine\`
 
 ## 📝CRITICAL RULES
 - **impact output is trusted.** Do NOT re-validate with cypher. Optionally run the suggested grep commands for dynamic patterns.

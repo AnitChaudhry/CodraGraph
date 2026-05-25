@@ -171,7 +171,7 @@ export const ProcessFlowModal = ({
         diagramRef.current!.innerHTML = `
           <div class="text-center p-8">
             <div class="text-red-400 text-sm font-medium mb-2">
-              ${isSizeError ? '📊 Diagram Too Large' : '⚠️ Render Error'}
+              ${isSizeError ? 'Diagram Too Large' : 'Render Error'}
             </div>
             <div class="text-slate-400 text-xs max-w-md">
               ${
@@ -227,22 +227,18 @@ export const ProcessFlowModal = ({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-black/20"
+      className="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-black/50"
       onClick={handleBackdropClick}
       data-testid="process-modal"
     >
-      {/* Glassmorphism Modal */}
       <div
-        className={`animate-scale-in relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-2xl shadow-cyan-500/10 backdrop-blur-2xl ${
+        className={`animate-scale-in relative flex flex-col overflow-hidden rounded-lg border border-border-default bg-surface shadow-2xl ${
           isFullScreen ? 'h-[95vh] w-[98%] max-w-none' : 'max-h-[90vh] w-[95%] max-w-5xl'
         }`}
       >
-        {/* Subtle gradient overlay for extra glass feel */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
-
         {/* Header */}
-        <div className="relative z-10 border-b border-white/10 px-6 py-5">
-          <h2 className="text-lg font-semibold text-white">Process: {process.label}</h2>
+        <div className="relative z-10 border-b border-border-subtle bg-elevated/40 px-6 py-5">
+          <h2 className="text-lg font-semibold text-text-primary">Process: {process.label}</h2>
         </div>
 
         {/* Diagram */}
@@ -265,22 +261,22 @@ export const ProcessFlowModal = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="relative z-10 flex items-center justify-center gap-3 border-t border-white/10 bg-slate-900/50 px-6 py-4">
+        <div className="relative z-10 flex items-center justify-center gap-3 border-t border-border-subtle bg-elevated/30 px-6 py-4">
           {/* Zoom controls */}
-          <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 p-1">
+          <div className="flex items-center gap-1 rounded-lg border border-border-subtle bg-surface p-1">
             <button
               onClick={handleZoomOut}
-              className="rounded-md p-2 text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+              className="rounded-md p-2 text-text-secondary transition-colors hover:bg-hover hover:text-text-primary"
               title="Zoom out (-)"
             >
               <ZoomOut className="h-4 w-4" />
             </button>
-            <span className="min-w-[3rem] px-2 text-center font-mono text-xs text-slate-400">
+            <span className="min-w-[3rem] px-2 text-center font-mono text-xs text-text-muted">
               {Math.round(zoom * 100)}%
             </span>
             <button
               onClick={handleZoomIn}
-              className="rounded-md p-2 text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+              className="rounded-md p-2 text-text-secondary transition-colors hover:bg-hover hover:text-text-primary"
               title="Zoom in (+)"
             >
               <ZoomIn className="h-4 w-4" />
@@ -288,7 +284,7 @@ export const ProcessFlowModal = ({
           </div>
           <button
             onClick={resetView}
-            className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+            className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface px-4 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-hover hover:text-text-primary"
             title="Reset zoom and pan"
           >
             Reset View
@@ -296,7 +292,7 @@ export const ProcessFlowModal = ({
           {onFocusInGraph && (
             <button
               onClick={handleFocusInGraph}
-              className="flex items-center gap-2 rounded-lg bg-cyan-400 px-5 py-2.5 text-sm font-medium text-slate-900 shadow-lg shadow-cyan-500/20 transition-all hover:bg-cyan-300"
+              className="flex items-center gap-2 rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-medium text-slate-950 transition-colors hover:bg-cyan-400"
             >
               <Focus className="h-4 w-4" />
               Toggle Focus
@@ -304,14 +300,14 @@ export const ProcessFlowModal = ({
           )}
           <button
             onClick={handleCopyMermaid}
-            className="flex items-center gap-2 rounded-lg bg-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-purple-500/20 transition-all hover:bg-purple-500"
+            className="flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dim"
           >
             <Copy className="h-4 w-4" />
             Copy Mermaid
           </button>
           <button
             onClick={onClose}
-            className="rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+            className="rounded-lg border border-border-subtle bg-surface px-5 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-hover hover:text-text-primary"
           >
             Close
           </button>

@@ -27,6 +27,8 @@ import {
   search as backendSearch,
   grep as backendGrep,
   readFile as backendReadFile,
+  fetchFeatureClusters as backendFetchFeatureClusters,
+  fetchFeatureClusterDetail as backendFetchFeatureClusterDetail,
   startEmbeddings as backendStartEmbeddings,
   streamEmbeddingProgress,
   probeBackend,
@@ -601,6 +603,9 @@ const AppStateProviderInner = ({ children }: { children: ReactNode }) => {
           grep: (pattern: string, limit?: number) => backendGrep(pattern, repo, limit),
           readFile: (filePath: string) =>
             backendReadFile(filePath, { repo }).then((r) => r.content),
+          fetchFeatureClusters: async () => (await backendFetchFeatureClusters(repo)) as any,
+          fetchFeatureClusterDetail: async (name: string) =>
+            (await backendFetchFeatureClusterDetail(repo || effectiveProjectName, name)) as any,
         };
 
         agentRef.current = createGraphRAGAgent(config, backend, codebaseContext);

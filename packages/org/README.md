@@ -3,17 +3,20 @@
 Multi-tenant orgs, SSO, RBAC, and tamper-evident audit logging for the
 CodraGraph platform.
 
-This is **Phase 5** of the CodraGraph roadmap — the org-features layer
+This is **Phase 5** of the CodraGraph roadmap: the org-features layer
 that turns the local-first OSS into something that can be operated for
-multiple teams or customers under one server. It is unblocked by the
-2026-04-29 relicense to Apache-2.0.
+multiple teams or customers under one server.
+
+Use this package when you are wrapping the local-first `@codragraph/cli`
+indexing workers, FeatureCluster context packs, and graphstore snapshots in
+tenant, RBAC, and audit boundaries for a hosted or enterprise deployment.
 
 ## What's in here
 
 | Module | What it does |
 |---|---|
 | `tenancy` | `withTenant` / `requireTenant` AsyncLocalStorage scoping. Path helpers that refuse to escape the org root. |
-| `rbac` | `viewer < member < admin < owner`. Default policy covers the core CodraGraph resources; integrators extend by composing additional entries. |
+| `rbac` | `viewer < member < admin < owner`. Default policy covers repos, FeatureCluster context packs/impact, graphstore, recipes, audit, and org administration; integrators extend by composing additional entries. |
 | `audit` | Append-only, tamper-evident log. Each event is a content-addressed object (sha256 of canonical JSON = the id). Re-hashing verifies. Re-uses `@codragraph/graphstore`'s CAS for storage. |
 | `auth` | Provider-agnostic `SsoProvider` interface. Includes `InMemorySsoProvider` for tests. OIDC and SAML reference impls land in follow-ups. |
 
@@ -55,4 +58,5 @@ await withTenant({ orgId: makeOrgId("org_acme") }, async () => {
 
 ## License
 
-Apache-2.0
+Apache-2.0. You can use, modify, redistribute, bundle, and host this package
+commercially, subject to the Apache-2.0 notice and attribution requirements.

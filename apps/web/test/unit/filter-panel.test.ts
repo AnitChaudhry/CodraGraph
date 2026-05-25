@@ -6,6 +6,7 @@ import * as lucideIcons from '../../src/lib/lucide-icons';
 const LEGEND_LABELS: NodeLabel[] = [
   'Folder',
   'File',
+  'FeatureCluster',
   'Class',
   'Interface',
   'Enum',
@@ -19,6 +20,7 @@ const LEGEND_LABELS: NodeLabel[] = [
 const ICON_MAP: Record<string, string> = {
   Folder: 'Folder',
   File: 'FileCode',
+  FeatureCluster: 'Layers',
   Class: 'Box',
   Function: 'Braces',
   Method: 'Braces',
@@ -51,6 +53,7 @@ describe('filter panel icon mappings', () => {
     expect(ICON_MAP.Enum).toBe('List');
     expect(ICON_MAP.Type).toBe('Type');
     expect(ICON_MAP.Decorator).toBe('AtSign');
+    expect(ICON_MAP.FeatureCluster).toBe('Layers');
   });
 });
 
@@ -60,6 +63,7 @@ describe('color legend', () => {
     expect(LEGEND_LABELS).toContain('Type');
     expect(LEGEND_LABELS).toContain('Decorator');
     expect(LEGEND_LABELS).toContain('Variable');
+    expect(LEGEND_LABELS).toContain('FeatureCluster');
   });
 
   it('every legend label has a color defined', () => {
@@ -73,6 +77,7 @@ describe('color legend', () => {
     const expected: NodeLabel[] = [
       'Folder',
       'File',
+      'FeatureCluster',
       'Class',
       'Interface',
       'Enum',

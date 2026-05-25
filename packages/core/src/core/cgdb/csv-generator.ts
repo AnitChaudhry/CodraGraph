@@ -51,6 +51,14 @@ export const escapeCSVNumber = (
   return String(value);
 };
 
+const toCgdbStringArray = (value: unknown): string => {
+  const values = Array.isArray(value) ? value : [];
+  return `[${values
+    .map((item) => String(item).replace(/\\/g, '\\\\').replace(/'/g, "''").replace(/,/g, '\\,'))
+    .map((item) => `'${item}'`)
+    .join(',')}]`;
+};
+
 // ============================================================================
 // CONTENT EXTRACTION (lazy — reads from disk on demand)
 // ============================================================================
@@ -288,6 +296,10 @@ export const streamAllCSVsToDisk = async (
     path.join(csvDir, 'process.csv'),
     'id,label,heuristicLabel,processType,stepCount,communities,entryPointId,terminalId',
   );
+  const featureClusterWriter = new BufferedCSVWriter(
+    path.join(csvDir, 'featurecluster.csv'),
+    'id,name,slug,featureKind,summary,description,repo,service,signals,memberCount,entryPointIds,routes,tools,testCoverageHints,lastIndexedCommit,confidence,source',
+  );
 
   // Section nodes have an extra 'level' column
   const sectionWriter = new BufferedCSVWriter(
@@ -397,8 +409,7 @@ export const streamAllCSVsToDisk = async (
         break;
       }
       case 'Process': {
-        const communities = node.properties.communities || [];
-        const communitiesStr = `[${communities.map((c: string) => `'${c.replace(/'/g, "''")}'`).join(',')}]`;
+        const communitiesStr = toCgdbStringArray(node.properties.communities);
         await processWriter.addRow(
           [
             escapeCSVField(node.id),
@@ -409,6 +420,30 @@ export const streamAllCSVsToDisk = async (
             escapeCSVField(communitiesStr),
             escapeCSVField(node.properties.entryPointId || ''),
             escapeCSVField(node.properties.terminalId || ''),
+          ].join(','),
+        );
+        break;
+      }
+      case 'FeatureCluster': {
+        await featureClusterWriter.addRow(
+          [
+            escapeCSVField(node.id),
+            escapeCSVField(node.properties.name || ''),
+            escapeCSVField(node.properties.slug || ''),
+            escapeCSVField(node.properties.featureKind || 'feature'),
+            escapeCSVField(node.properties.summary || ''),
+            escapeCSVField(node.properties.description || ''),
+            escapeCSVField(node.properties.repo || ''),
+            escapeCSVField(node.properties.service || ''),
+            escapeCSVField(toCgdbStringArray(node.properties.signals)),
+            escapeCSVNumber(node.properties.memberCount, 0),
+            escapeCSVField(toCgdbStringArray(node.properties.entryPointIds)),
+            escapeCSVField(toCgdbStringArray(node.properties.routes)),
+            escapeCSVField(toCgdbStringArray(node.properties.tools)),
+            escapeCSVField(toCgdbStringArray(node.properties.testCoverageHints)),
+            escapeCSVField(node.properties.lastIndexedCommit || ''),
+            escapeCSVNumber(node.properties.confidence, 0),
+            escapeCSVField(node.properties.source || 'heuristic'),
           ].join(','),
         );
         break;
@@ -537,6 +572,7 @@ export const streamAllCSVsToDisk = async (
     codeElemWriter,
     communityWriter,
     processWriter,
+    featureClusterWriter,
     sectionWriter,
     routeWriter,
     toolWriter,
@@ -573,6 +609,7 @@ export const streamAllCSVsToDisk = async (
     ['CodeElement', codeElemWriter],
     ['Community', communityWriter],
     ['Process', processWriter],
+    ['FeatureCluster', featureClusterWriter],
     ['Section' as NodeTableName, sectionWriter],
     ['Route' as NodeTableName, routeWriter],
     ['Tool' as NodeTableName, toolWriter],

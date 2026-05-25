@@ -5,7 +5,7 @@
 | Status | Scaffold landed (2026-04-29) |
 | Phase | 5 of 5 (Org features) |
 | Author | Anit Chaudhary |
-| Unblocked by | 2026-04-29 relicense to Apache-2.0 |
+| License | Apache-2.0 |
 | Approach | Scaffold first, RFC second (per AskUserQuestion 2026-04-29) |
 
 ## 1. Goals
@@ -46,7 +46,7 @@ Out of scope for the MVP scaffold (deferred):
 
 ```
 packages/org/
-├── package.json                     v0.1.0; PolyForm-Noncommercial → Apache-2.0
+├── package.json                     Apache-2.0 package metadata
 ├── tsconfig.json                    ESM, NodeNext, strict + noUncheckedIndexedAccess
 ├── vitest.config.ts                 test runner config
 ├── README.md                        user-facing intro

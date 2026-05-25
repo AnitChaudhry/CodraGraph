@@ -63,7 +63,7 @@ export const CommandPalette = ({
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Search sections, repos, commits, recipes…" />
+      <CommandInput placeholder="Search sections, repos, commits, recipes..." />
       <CommandList>
         <CommandEmpty>No matches.</CommandEmpty>
 
@@ -81,6 +81,14 @@ export const CommandPalette = ({
             label="Graph"
             onSelect={() => {
               onJumpToSection('graph');
+              close();
+            }}
+          />
+          <NavItem
+            icon={Layers}
+            label="Features"
+            onSelect={() => {
+              onJumpToSection('features');
               close();
             }}
           />
@@ -115,7 +123,7 @@ export const CommandPalette = ({
               onOpenSettings();
               close();
             }}
-            shortcut="⌘,"
+            shortcut="Ctrl ,"
           />
         </CommandGroup>
 

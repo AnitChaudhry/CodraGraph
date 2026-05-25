@@ -14,6 +14,7 @@ import { OverviewSection } from './components/dashboard/OverviewSection';
 import { HistorySection } from './components/dashboard/HistorySection';
 import { RecipesSection } from './components/dashboard/RecipesSection';
 import { ProjectsSection } from './components/dashboard/ProjectsSection';
+import { FeatureClustersSection } from './components/dashboard/FeatureClustersSection';
 import { CommandPalette } from './components/dashboard/CommandPalette';
 import { useDashboardSection } from './hooks/useDashboardSection';
 import { TooltipProvider } from './components/ui/tooltip';
@@ -248,7 +249,7 @@ const AppContent = () => {
   // Exploring view
   return (
     <TooltipProvider>
-      <div className="flex h-screen flex-col overflow-hidden bg-void">
+      <div className="flex h-screen w-screen min-w-0 flex-col overflow-hidden bg-void">
         <Header
           onFocusNode={handleFocusNode}
           availableRepos={availableRepos}
@@ -287,19 +288,19 @@ const AppContent = () => {
 
         <DashboardTabs section={section} onChange={setSection} />
 
-        <main className="flex min-h-0 flex-1">
+        <main className="flex min-h-0 w-full min-w-0 flex-1 overflow-hidden">
           {section === 'graph' ? (
             <>
               {/* Left Panel - File Tree */}
               <FileTreePanel onFocusNode={handleFocusNode} />
 
               {/* Graph area - takes remaining space */}
-              <div className="relative min-w-0 flex-1">
+              <div className="relative min-w-0 flex-1 overflow-hidden">
                 <GraphCanvas ref={graphCanvasRef} />
 
                 {/* Code References Panel (overlay) - does NOT resize the graph, it overlaps on top */}
                 {isCodePanelOpen && (codeReferences.length > 0 || !!selectedNode) && (
-                  <div className="pointer-events-auto absolute inset-y-0 left-0 z-30">
+                  <div className="pointer-events-auto absolute inset-y-0 left-0 z-30 max-w-full overflow-hidden">
                     <CodeReferencesPanel onFocusNode={handleFocusNode} />
                   </div>
                 )}
@@ -315,6 +316,10 @@ const AppContent = () => {
           ) : section === 'history' ? (
             <div className="min-w-0 flex-1">
               <HistorySection />
+            </div>
+          ) : section === 'features' ? (
+            <div className="min-w-0 flex-1">
+              <FeatureClustersSection />
             </div>
           ) : section === 'projects' ? (
             <div className="min-w-0 flex-1">

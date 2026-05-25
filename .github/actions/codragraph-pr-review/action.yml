@@ -33,9 +33,9 @@ inputs:
     required: false
     default: 'claude-sonnet-4-6'
   codragraph-version:
-    description: 'Version of `@codragraph/cli` to install (npm dist-tag or exact).'
+    description: 'Version of `@codragraph/cli` to install (exact version recommended; npm dist-tags are accepted).'
     required: false
-    default: 'latest'
+    default: '2.1.0'
   comment-marker:
     description: 'HTML comment marker used to find/update a sticky comment across pushes.'
     required: false

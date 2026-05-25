@@ -19,6 +19,7 @@ export const NODE_COLORS: Record<NodeLabel, string> = {
   CodeElement: '#64748b', // Slate - muted
   Community: '#818cf8', // Indigo light - cluster indicator
   Process: '#f43f5e', // Rose - execution flow indicator
+  FeatureCluster: '#22d3ee', // Cyan - human-facing feature area
   Section: '#60a5fa', // Blue light - structural section
   Struct: '#f59e0b', // Amber - like Class
   Trait: '#ec4899', // Pink - like Interface
@@ -60,6 +61,7 @@ export const NODE_SIZES: Record<NodeLabel, number> = {
   CodeElement: 2, // Generic small
   Community: 0, // Hidden by default - metadata node
   Process: 0, // Hidden by default - metadata node
+  FeatureCluster: 12, // Human-facing feature area
   Section: 8, // Structural section - similar to Folder
   Struct: 8, // Like Class
   Trait: 7, // Like Interface
@@ -108,6 +110,7 @@ export const DEFAULT_VISIBLE_LABELS: NodeLabel[] = [
   'Module',
   'Folder',
   'File',
+  'FeatureCluster',
   'Class',
   'Function',
   'Method',
@@ -120,6 +123,7 @@ export const DEFAULT_VISIBLE_LABELS: NodeLabel[] = [
 export const FILTERABLE_LABELS: NodeLabel[] = [
   'Folder',
   'File',
+  'FeatureCluster',
   'Class',
   'Interface',
   'Enum',
@@ -132,7 +136,15 @@ export const FILTERABLE_LABELS: NodeLabel[] = [
 ];
 
 // Edge/Relation types
-export type EdgeType = 'CONTAINS' | 'DEFINES' | 'IMPORTS' | 'CALLS' | 'EXTENDS' | 'IMPLEMENTS';
+export type EdgeType =
+  | 'CONTAINS'
+  | 'DEFINES'
+  | 'IMPORTS'
+  | 'CALLS'
+  | 'EXTENDS'
+  | 'IMPLEMENTS'
+  | 'FEATURE_MEMBER_OF'
+  | 'FEATURE_DEPENDS_ON';
 
 export const ALL_EDGE_TYPES: EdgeType[] = [
   'CONTAINS',
@@ -141,6 +153,8 @@ export const ALL_EDGE_TYPES: EdgeType[] = [
   'CALLS',
   'EXTENDS',
   'IMPLEMENTS',
+  'FEATURE_MEMBER_OF',
+  'FEATURE_DEPENDS_ON',
 ];
 
 // Default visible edges (CALLS hidden by default to reduce clutter)
@@ -151,6 +165,7 @@ export const DEFAULT_VISIBLE_EDGES: EdgeType[] = [
   'EXTENDS',
   'IMPLEMENTS',
   'CALLS',
+  'FEATURE_DEPENDS_ON',
 ];
 
 // Edge display info for UI
@@ -161,4 +176,6 @@ export const EDGE_INFO: Record<EdgeType, { color: string; label: string }> = {
   CALLS: { color: '#7c3aed', label: 'Calls' },
   EXTENDS: { color: '#c2410c', label: 'Extends' },
   IMPLEMENTS: { color: '#be185d', label: 'Implements' },
+  FEATURE_MEMBER_OF: { color: '#0891b2', label: 'Feature member' },
+  FEATURE_DEPENDS_ON: { color: '#0f766e', label: 'Feature depends' },
 };

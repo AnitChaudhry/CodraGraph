@@ -114,6 +114,11 @@ export interface GraphClient {
   query(input: GraphQueryInput): Promise<GraphQueryResult>;
   context(input: GraphContextInput): Promise<GraphContextResult>;
   impact(input: GraphImpactInput): Promise<GraphImpactResult>;
+  featureClusters(input?: GraphFeatureClustersInput): Promise<GraphFeatureClustersResult>;
+  featureContext(input: GraphFeatureContextInput): Promise<GraphFeatureContextResult>;
+  clusters(input?: GraphFeatureClustersInput): Promise<GraphFeatureClustersResult>;
+  contextPack(input: GraphFeatureContextInput): Promise<GraphFeatureContextResult>;
+  clusterImpact(input: GraphClusterImpactInput): Promise<GraphClusterImpactResult>;
 }
 
 export interface GraphQueryInput {
@@ -152,6 +157,89 @@ export interface GraphImpactResult {
   target: string;
   affected: Array<{ name: string; depth: number; file?: string }>;
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+}
+
+export interface GraphFeatureClustersInput {
+  repo?: string;
+  limit?: number;
+  query?: string;
+}
+export interface GraphFeatureClusterSummary {
+  id?: string;
+  name: string;
+  slug?: string;
+  featureKind?: string;
+  summary?: string;
+  description?: string;
+  repo?: string;
+  service?: string;
+  signals?: string[];
+  memberCount?: number;
+  entryPointIds?: string[];
+  routes?: string[];
+  tools?: string[];
+  testCoverageHints?: string[];
+  lastIndexedCommit?: string;
+  confidence?: number;
+}
+export interface GraphFeatureClustersResult {
+  clusters: GraphFeatureClusterSummary[];
+}
+export interface GraphFeatureContextInput {
+  name: string;
+  repo?: string;
+  limit?: number;
+}
+export interface GraphFeatureContextMember {
+  id?: string;
+  name?: string;
+  type?: string;
+  file?: string;
+  startLine?: number;
+  endLine?: number;
+  role?: string;
+  confidence?: number;
+}
+export interface GraphFeatureContextResult {
+  cluster: GraphFeatureClusterSummary;
+  members: GraphFeatureContextMember[];
+  dependencies: {
+    incoming: GraphFeatureClusterSummary[];
+    outgoing: GraphFeatureClusterSummary[];
+  };
+  entryPoints?: GraphFeatureContextMember[];
+  routes?: GraphFeatureContextMember[];
+  tools?: GraphFeatureContextMember[];
+  processes?: Array<{
+    id?: string;
+    name: string;
+    type?: string;
+    stepCount?: number;
+  }>;
+  tests?: GraphFeatureContextMember[];
+  docs?: GraphFeatureContextMember[];
+  safeEditSurface?: {
+    files: string[];
+    symbols: string[];
+    warnings: string[];
+  };
+}
+export interface GraphClusterImpactInput extends GraphFeatureContextInput {
+  direction?: 'upstream' | 'downstream' | 'both';
+}
+export interface GraphClusterImpactResult {
+  cluster: GraphFeatureClusterSummary;
+  direction: 'upstream' | 'downstream' | 'both';
+  impactedClusters: GraphFeatureClusterSummary[];
+  impactSummary: {
+    affectedMembers: number;
+    dependencyCount: number;
+    incomingDependencies: number;
+    outgoingDependencies: number;
+    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  };
+  safeEditSurface?: GraphFeatureContextResult['safeEditSurface'];
+  contextPack?: GraphFeatureContextResult;
 }
 
 /** Append-only structured trace recorder, persisted to the candidate's traces/ dir. */

@@ -1,9 +1,9 @@
 # PR #626 HIGH-Priority Fixes Design
 
 **Date:** 2026-04-02
-**PR:** #626 â€” Intra-repo service communication tracking
+**PR:** #626 -- Intra-repo service communication tracking
 **Scope:** 4 HIGH-priority issues identified during review
-**Approach:** Minimal targeted fixes (option A) â€” no refactoring, no scope creep
+**Approach:** Minimal targeted fixes (option A) -- no refactoring, no scope creep
 
 ---
 
@@ -46,11 +46,11 @@ All paths flow through `getGroupDir` (which validates), so coverage is implicit.
 | `group create` | `cli/group.ts` action | `createGroupDir` -> `getGroupDir` |
 | `group add` | `cli/group.ts` action | `getGroupDir` |
 | `group remove` | `cli/group.ts` action | `getGroupDir` |
-| `group list` | `cli/group.ts` action | reads `groups/` dir directly â€” no traversal risk (reads, not writes) |
+| `group list` | `cli/group.ts` action | reads `groups/` dir directly -- no traversal risk (reads, not writes) |
 | `group status` | `cli/group.ts` action | `getGroupDir` |
 | `group sync` | `cli/group.ts` action | `getGroupDir` |
 
-**`listGroups`:** Reads directory names from disk without validation. Not a write path, so no traversal risk. May surface manually-created directories with non-conforming names â€” accepted as-is, not in scope.
+**`listGroups`:** Reads directory names from disk without validation. Not a write path, so no traversal risk. May surface manually-created directories with non-conforming names -- accepted as-is, not in scope.
 
 ---
 
@@ -69,11 +69,11 @@ Replace `serviceRe` regex with `extractServiceBlocks(content: string): Array<{ n
 4. Stop when depth reaches 0 (the matching closing `}`)
 5. Return name + body pairs
 
-Inner `rpcRe` regex remains unchanged â€” it operates on the already-extracted body.
+Inner `rpcRe` regex remains unchanged -- it operates on the already-extracted body.
 
 **Malformed input:** If EOF is reached before `depth` returns to 0, skip the incomplete service (do not add to results). Lock this in the test.
 
-**Scope limitation (v1):** Brace-depth only â€” no lexer for string literals or comments containing `{`/`}`. Sufficient for `google.api.http` annotations. Known false positive: braces inside `//` comments or quoted strings within proto options. Accepted for v1; a proper proto lexer is out of scope.
+**Scope limitation (v1):** Brace-depth only -- no lexer for string literals or comments containing `{`/`}`. Sufficient for `google.api.http` annotations. Known false positive: braces inside `//` comments or quoted strings within proto options. Accepted for v1; a proper proto lexer is out of scope.
 
 ### Tests
 
@@ -100,19 +100,19 @@ __pycache__, .venv, venv, .tox, .mypy_cache,
 .gradle, .mvn, out, bin
 ```
 
-(Implement as `new Set([...])` â€” the list above is the membership, not a string literal.)
+(Implement as `new Set([...])` -- the list above is the membership, not a string literal.)
 
 Apply in both:
-- `walkForBoundaries` (line 77-78) â€” replace current inline `=== 'node_modules'` check with `EXCLUDED_DIRS.has(entry.name)`
-- `hasSourceFilesInSubdirs` (line 130) â€” replace `entry.name !== 'node_modules'` with `!EXCLUDED_DIRS.has(entry.name)`
+- `walkForBoundaries` (line 77-78) -- replace current inline `=== 'node_modules'` check with `EXCLUDED_DIRS.has(entry.name)`
+- `hasSourceFilesInSubdirs` (line 130) -- replace `entry.name !== 'node_modules'` with `!EXCLUDED_DIRS.has(entry.name)`
 
-Note: remove the old `=== 'node_modules'` literal from both locations â€” it is covered by `EXCLUDED_DIRS`.
+Note: remove the old `=== 'node_modules'` literal from both locations -- it is covered by `EXCLUDED_DIRS`.
 Dotfile exclusion (`.` prefix) remains as a separate check since it's a pattern, not a name.
-Exclusions apply only to `isDirectory()` entries â€” file names are never checked against `EXCLUDED_DIRS`.
+Exclusions apply only to `isDirectory()` entries -- file names are never checked against `EXCLUDED_DIRS`.
 
 **Tradeoff:** Rare layouts that keep source under names like `out/` or `bin/` will be skipped; accepted for performance on typical monorepos.
 
-**Case sensitivity:** `Set.has` is case-sensitive (matches current `=== 'node_modules'` behavior). Windows case-insensitive FS not handled â€” accepted as-is, consistent with existing code.
+**Case sensitivity:** `Set.has` is case-sensitive (matches current `=== 'node_modules'` behavior). Windows case-insensitive FS not handled -- accepted as-is, consistent with existing code.
 
 ### Tests
 
@@ -127,8 +127,8 @@ Exclusions apply only to `isDirectory()` entries â€” file names are never c
 ## Fix 4: Double-Close of LadybugDB Pools
 
 **Files:**
-- `packages/core/src/core/group/sync.ts` (lines 155-157) â€” per-id cleanup (KEEP)
-- `packages/core/src/cli/group.ts` (line 188) â€” blanket `closeCgdb()` (REMOVE)
+- `packages/core/src/core/group/sync.ts` (lines 155-157) -- per-id cleanup (KEEP)
+- `packages/core/src/cli/group.ts` (line 188) -- blanket `closeCgdb()` (REMOVE)
 
 **Risk:** In MCP server context, `closeCgdb()` without arguments tears down ALL active pools, including ones from unrelated operations.
 
@@ -137,7 +137,7 @@ Exclusions apply only to `isDirectory()` entries â€” file names are never c
 Remove the `closeCgdb()` call (no arguments) from `cli/group.ts` finally block. The per-id cleanup in `sync.ts` is sufficient:
 
 ```typescript
-// sync.ts â€” KEEP: cleans up only pools opened by this sync
+// sync.ts -- KEEP: cleans up only pools opened by this sync
 finally {
   for (const id of [...new Set(openPoolIds)]) {
     await closeCgdb(id).catch(() => {});
@@ -146,19 +146,19 @@ finally {
 ```
 
 ```typescript
-// cli/group.ts â€” REMOVE: blanket close that kills all pools
+// cli/group.ts -- REMOVE: blanket close that kills all pools
 finally {
   await closeCgdb().catch(() => {});  // DELETE THIS
 }
 ```
 
-Remove the `closeCgdb` import from `cli/group.ts` â€” after removing the `finally` call it has no remaining usages.
+Remove the `closeCgdb` import from `cli/group.ts` -- after removing the `finally` call it has no remaining usages.
 
-### Tests (unit level â€” mock pool adapter)
+### Tests (unit level -- mock pool adapter)
 
 - `syncGroup` closes only the pools it opened (mock `closeCgdb`, assert called with specific ids)
 - Two-pool scenario: sync opens pools A and B, both closed in finally; pool C (opened elsewhere) not touched
-- CLI `sync` command does not call blanket `closeCgdb()` (verify no zero-arg call in source â€” static check or grep-based test)
+- CLI `sync` command does not call blanket `closeCgdb()` (verify no zero-arg call in source -- static check or grep-based test)
 
 ---
 
@@ -171,5 +171,5 @@ Remove the `closeCgdb` import from `cli/group.ts` â€” after removing the `f
 
 ## Execution Order
 
-Fixes are independent â€” can be implemented in parallel or any order.
+Fixes are independent -- can be implemented in parallel or any order.
 Recommended order for review clarity: 1 -> 3 -> 4 -> 2 (simplest to most complex).

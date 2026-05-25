@@ -4,6 +4,7 @@ import {
   Key,
   Server,
   Brain,
+  Bot,
   Check,
   AlertCircle,
   Eye,
@@ -12,6 +13,14 @@ import {
   ChevronDown,
   Loader2,
   Search,
+  Cloud,
+  Cpu,
+  Diamond,
+  Globe,
+  LockKeyhole,
+  Sparkles,
+  Terminal,
+  Zap,
 } from '@/lib/lucide-icons';
 import {
   loadSettings,
@@ -23,6 +32,7 @@ import {
 import type { LLMSettings, LLMProvider } from '../core/llm/types';
 import { DEFAULT_OLLAMA_BASE_URL } from '../config/ui-constants';
 import { ProviderConfigCard } from './settings/ProviderConfigCard';
+import type { LucideIcon } from 'lucide-react';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -32,6 +42,82 @@ interface SettingsPanelProps {
   isBackendConnected?: boolean;
   onBackendUrlChange?: (url: string) => void;
 }
+
+type ProviderVisual = {
+  label: string;
+  sublabel: string;
+  icon: LucideIcon;
+  markClassName: string;
+  iconClassName: string;
+  activeClassName: string;
+};
+
+const PROVIDER_VISUALS: Record<LLMProvider, ProviderVisual> = {
+  openai: {
+    label: 'OpenAI',
+    sublabel: 'GPT models',
+    icon: Bot,
+    markClassName: 'border-emerald-400/20 bg-emerald-400/10',
+    iconClassName: 'text-emerald-300',
+    activeClassName: 'border-emerald-400/60 bg-emerald-400/10',
+  },
+  gemini: {
+    label: 'Google Gemini',
+    sublabel: 'Google AI',
+    icon: Diamond,
+    markClassName: 'border-sky-400/20 bg-sky-400/10',
+    iconClassName: 'text-sky-300',
+    activeClassName: 'border-sky-400/60 bg-sky-400/10',
+  },
+  anthropic: {
+    label: 'Anthropic',
+    sublabel: 'Claude',
+    icon: Brain,
+    markClassName: 'border-rose-400/20 bg-rose-400/10',
+    iconClassName: 'text-rose-300',
+    activeClassName: 'border-rose-400/60 bg-rose-400/10',
+  },
+  'azure-openai': {
+    label: 'Azure OpenAI',
+    sublabel: 'Enterprise',
+    icon: Cloud,
+    markClassName: 'border-blue-400/20 bg-blue-400/10',
+    iconClassName: 'text-blue-300',
+    activeClassName: 'border-blue-400/60 bg-blue-400/10',
+  },
+  ollama: {
+    label: 'Ollama',
+    sublabel: 'Local runtime',
+    icon: Cpu,
+    markClassName: 'border-amber-400/20 bg-amber-400/10',
+    iconClassName: 'text-amber-300',
+    activeClassName: 'border-amber-400/60 bg-amber-400/10',
+  },
+  openrouter: {
+    label: 'OpenRouter',
+    sublabel: 'Model routing',
+    icon: Globe,
+    markClassName: 'border-cyan-400/20 bg-cyan-400/10',
+    iconClassName: 'text-cyan-300',
+    activeClassName: 'border-cyan-400/60 bg-cyan-400/10',
+  },
+  minimax: {
+    label: 'MiniMax',
+    sublabel: 'Fast coding',
+    icon: Zap,
+    markClassName: 'border-orange-400/20 bg-orange-400/10',
+    iconClassName: 'text-orange-300',
+    activeClassName: 'border-orange-400/60 bg-orange-400/10',
+  },
+  glm: {
+    label: 'GLM',
+    sublabel: 'Z.AI',
+    icon: Sparkles,
+    markClassName: 'border-violet-400/20 bg-violet-400/10',
+    iconClassName: 'text-violet-300',
+    activeClassName: 'border-violet-400/60 bg-violet-400/10',
+  },
+};
 
 /**
  * Searchable combobox for OpenRouter model selection
@@ -346,16 +432,16 @@ export const SettingsPanel = ({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Panel */}
-      <div className="relative mx-4 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface shadow-2xl">
+      <div className="relative mx-4 flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-border-default bg-surface shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border-subtle bg-elevated/50 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-border-subtle bg-elevated/40 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-accent/20 bg-accent/15">
               <Brain className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-text-primary">AI Settings</h2>
-              <p className="text-xs text-text-muted">Configure your LLM provider</p>
+              <h2 className="text-base font-semibold text-text-primary">AI Settings</h2>
+              <p className="text-xs text-text-muted">Configure the active LLM provider</p>
             </div>
           </div>
           <button
@@ -367,7 +453,7 @@ export const SettingsPanel = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 space-y-6 overflow-y-auto p-6">
+        <div className="scrollbar-canvas flex-1 space-y-6 overflow-y-auto p-6 pr-5">
           {/* Local Server */}
           {backendUrl !== undefined && onBackendUrlChange && (
             <div className="space-y-3">
@@ -401,39 +487,41 @@ export const SettingsPanel = ({
           {/* Provider Selection */}
           <div className="space-y-3">
             <label className="block text-sm font-medium text-text-secondary">Provider</label>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {providers.map((provider) => (
-                <button
-                  key={provider}
-                  onClick={() => handleProviderChange(provider)}
-                  className={`flex items-center gap-3 rounded-xl border-2 p-4 transition-all ${
-                    settings.activeProvider === provider
-                      ? 'border-accent bg-accent/10 text-text-primary'
-                      : 'border-border-subtle bg-elevated text-text-secondary hover:border-accent/50'
-                  } `}
-                >
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg text-lg ${settings.activeProvider === provider ? 'bg-accent/20' : 'bg-surface'} `}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {providers.map((provider) => {
+                const visual = PROVIDER_VISUALS[provider];
+                const ProviderIcon = visual.icon;
+                const isActive = settings.activeProvider === provider;
+
+                return (
+                  <button
+                    key={provider}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => handleProviderChange(provider)}
+                    className={`group flex min-h-[74px] items-center gap-3 rounded-lg border p-3 text-left transition-all duration-200 ${
+                      isActive
+                        ? `${visual.activeClassName} text-text-primary shadow-glow-soft`
+                        : 'border-border-subtle bg-elevated/70 text-text-secondary hover:border-border-default hover:bg-hover/80 hover:text-text-primary'
+                    }`}
+                    title={getProviderDisplayName(provider)}
                   >
-                    {provider === 'openai'
-                      ? '🤖'
-                      : provider === 'gemini'
-                        ? '💎'
-                        : provider === 'anthropic'
-                          ? '🧠'
-                          : provider === 'ollama'
-                            ? '🦙'
-                            : provider === 'openrouter'
-                              ? '🌐'
-                              : provider === 'minimax'
-                                ? '⚡'
-                                : provider === 'glm'
-                                  ? '🔮'
-                                  : '☁️'}
-                  </div>
-                  <span className="font-medium">{getProviderDisplayName(provider)}</span>
-                </button>
-              ))}
+                    <span
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:scale-105 ${visual.markClassName}`}
+                    >
+                      <ProviderIcon className={`h-5 w-5 ${visual.iconClassName}`} aria-hidden />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm leading-tight font-semibold">
+                        {visual.label}
+                      </span>
+                      <span className="mt-0.5 block text-xs leading-tight text-text-muted">
+                        {visual.sublabel}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -678,7 +766,8 @@ export const SettingsPanel = ({
               {/* How to run Ollama */}
               <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
                 <p className="text-xs leading-relaxed text-amber-300">
-                  <span className="font-medium">📋 Quick Start:</span> Install Ollama from{' '}
+                  <Terminal className="mr-1.5 inline h-3.5 w-3.5 align-[-2px]" />
+                  <span className="font-medium">Quick Start:</span> Install Ollama from{' '}
                   <a
                     href="https://ollama.ai"
                     target="_blank"
@@ -931,7 +1020,7 @@ export const SettingsPanel = ({
           <div className="rounded-xl border border-border-subtle bg-elevated/50 p-4">
             <div className="flex gap-3">
               <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-green-500/20 text-green-400">
-                🔒
+                <LockKeyhole className="h-4 w-4" />
               </div>
               <div className="text-xs leading-relaxed text-text-muted">
                 <span className="font-medium text-text-secondary">Privacy:</span> Your API keys are

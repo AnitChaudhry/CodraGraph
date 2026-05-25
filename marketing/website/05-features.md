@@ -8,7 +8,8 @@
 
 ### 🧭 Graph-aware code intelligence
 - 16 languages: TypeScript, JavaScript, Python, Go, Rust, Java, C#, C++, C, Ruby, PHP, Swift, Kotlin, Dart, COBOL, Markdown
-- 44 node types, 21 relationship types — typed graph, not stringly-typed search
+- 45 node types, 23 relationship types — typed graph, not stringly-typed search
+- FeatureCluster context packs group product areas like Settings, Auth, AI, Billing, or Admin with files, line ranges, dependencies, and flows
 - Hybrid BM25 + vector search via Reciprocal Rank Fusion
 - Cross-repo groups: query across multiple indexed projects with `repo: "@<group>"`
 

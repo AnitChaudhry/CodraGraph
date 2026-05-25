@@ -171,6 +171,7 @@ const LABEL_BEHAVIOR = {
   CodeElement: 'inert',
   Community: 'inert',
   Process: 'inert',
+  FeatureCluster: 'inert',
   Typedef: 'inert',
   Union: 'inert',
   Namespace: 'inert',

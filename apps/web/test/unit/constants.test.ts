@@ -49,6 +49,7 @@ describe('getCommunityColor', () => {
 describe('DEFAULT_VISIBLE_LABELS', () => {
   it('includes common structural and code labels', () => {
     expect(DEFAULT_VISIBLE_LABELS).toContain('File');
+    expect(DEFAULT_VISIBLE_LABELS).toContain('FeatureCluster');
     expect(DEFAULT_VISIBLE_LABELS).toContain('Function');
     expect(DEFAULT_VISIBLE_LABELS).toContain('Class');
   });
@@ -62,6 +63,7 @@ describe('DEFAULT_VISIBLE_LABELS', () => {
 describe('FILTERABLE_LABELS', () => {
   it('includes all newly added node types', () => {
     expect(FILTERABLE_LABELS).toContain('Enum');
+    expect(FILTERABLE_LABELS).toContain('FeatureCluster');
     expect(FILTERABLE_LABELS).toContain('Type');
     expect(FILTERABLE_LABELS).toContain('Decorator');
     expect(FILTERABLE_LABELS).toContain('Variable');
@@ -112,5 +114,12 @@ describe('edge types', () => {
       expect(info.color).toMatch(/^#[0-9a-f]{6}$/i);
       expect(info.label.length).toBeGreaterThan(0);
     }
+  });
+
+  it('includes feature-cluster graph edges', () => {
+    expect(ALL_EDGE_TYPES).toContain('FEATURE_MEMBER_OF');
+    expect(ALL_EDGE_TYPES).toContain('FEATURE_DEPENDS_ON');
+    expect(EDGE_INFO.FEATURE_MEMBER_OF.label).toBe('Feature member');
+    expect(EDGE_INFO.FEATURE_DEPENDS_ON.label).toBe('Feature depends');
   });
 });

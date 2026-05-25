@@ -62,6 +62,10 @@ export const canonicalizePath = (p: string): string => {
  *        opt into compression via `--compress brotli|zstd` (compression
  *        is OFF by default, so existing readers keep working). Readers
  *        decode based on the per-row encoding tag.
+ *   3  - FeatureCluster layer: adds FeatureCluster nodes plus
+ *        FEATURE_MEMBER_OF / FEATURE_DEPENDS_ON relation rows.
+ *   4  - FeatureCluster context-pack metadata: summary, repo/service,
+ *        routes, tools, test coverage hints, and indexed commit fields.
  *
  * Bumping this is the migration trigger: `runFullAnalysis` forces a
  * full re-analyze when an existing index has a missing or older
@@ -69,7 +73,7 @@ export const canonicalizePath = (p: string): string => {
  * LadybugDB table via ALTER is not validated end-to-end yet — fresh
  * `CREATE NODE TABLE` is the supported path.
  */
-export const INDEX_SCHEMA_VERSION = 2 as const;
+export const INDEX_SCHEMA_VERSION = 4 as const;
 
 export interface RepoMeta {
   repoPath: string;
@@ -119,6 +123,7 @@ export interface RepoMeta {
     nodes?: number;
     edges?: number;
     communities?: number;
+    featureClusters?: number;
     processes?: number;
     embeddings?: number;
   };

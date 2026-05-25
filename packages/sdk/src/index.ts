@@ -5,6 +5,7 @@
 //
 //   const frontier = await harness.search({ ... });
 //   const ctx       = await graph.context({ name: "validateUser" });
+//   const settings  = await graph.featureContext({ name: "Settings" });
 //   const snap      = await graphstore.serializeSnapshot({ source, cas });
 //   const cached    = await recipes.findReusableRecipes({ store, snapshotId, taskFamily });
 //
@@ -29,10 +30,18 @@ export type {
   TokenUsage,
   Message,
   GraphClient,
+  GraphClusterImpactInput,
+  GraphClusterImpactResult,
   GraphQueryInput,
   GraphQueryResult,
   GraphContextInput,
   GraphContextResult,
+  GraphFeatureClustersInput,
+  GraphFeatureClustersResult,
+  GraphFeatureClusterSummary,
+  GraphFeatureContextInput,
+  GraphFeatureContextMember,
+  GraphFeatureContextResult,
   GraphImpactInput,
   GraphImpactResult,
 } from '@codragraph/harness/types';

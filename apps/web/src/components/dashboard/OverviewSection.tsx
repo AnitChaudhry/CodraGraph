@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {
   Activity,
+  ArrowRight,
   Boxes,
   Coins,
   Files,
@@ -34,7 +35,7 @@ import { useGraphstoreContext } from '@/hooks/useGraphstoreContext';
  *   - Recipes summary (via harness_recipes_list)
  *
  * All async data calls degrade gracefully when the server hasn't yet
- * exposed the endpoints — empty states with explanatory hints replace
+ * exposed the endpoints: empty states with explanatory hints replace
  * the data panels rather than blocking the page.
  */
 export interface OverviewSectionProps {
@@ -104,13 +105,13 @@ export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX
           </h1>
           <p className="mt-1 text-sm text-text-secondary">
             {repo
-              ? `${repo.repoPath ?? repo.path}${repo.indexedAt ? ` · indexed ${formatRelative(repo.indexedAt)}` : ''}`
+              ? `${repo.repoPath ?? repo.path}${repo.indexedAt ? ` - indexed ${formatRelative(repo.indexedAt)}` : ''}`
               : 'Connect to a server and pick a repo to see its knowledge-graph overview.'}
           </p>
         </div>
 
         {/* Stat row */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Files"
             value={stats.files}
@@ -152,13 +153,13 @@ export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX
               Capabilities
             </h2>
             <Badge variant="outline" className="text-text-muted">
-              4 co-equal
+              graph workspace
             </Badge>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <CapabilityCard
               title="Token savings"
-              tagline='"Use the right 4k tokens, not the wrong 32k."'
+              tagline="Cluster-aware context packs for smaller, sharper prompts."
               icon={Coins}
               status={
                 recipesState.status === 'available' && (recipesState.data?.length ?? 0) > 0
@@ -171,7 +172,7 @@ export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX
                 recipesState.status === 'available'
                   ? `${recipesState.data?.length ?? 0} recipes`
                   : recipesState.status === 'loading'
-                    ? '—'
+                    ? '-'
                     : undefined
               }
               detail={
@@ -183,18 +184,18 @@ export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX
             />
             <CapabilityCard
               title="Dynamic harness"
-              tagline='"Your agent self-improves on your tasks."'
+              tagline="Tune retrieval and prompts against task families."
               icon={Sparkles}
               status="ready"
-              metric={recipesState.status === 'available' ? 'ready' : '—'}
-              detail="Run swarm-search to learn a harness for a task family"
+              metric={recipesState.status === 'available' ? 'ready' : '-'}
+              detail="Run swarm-search to learn a harness for a task family."
             />
             <CapabilityCard
               title="Versioned code graph"
-              tagline='"Your codebase has git history; your agent should too."'
+              tagline="Snapshot, diff, and review graph history over time."
               icon={GitCommit}
               status={repo?.headCommit ? 'active' : 'ready'}
-              metric={repo?.headCommit ? repo.headCommit.replace(/^sha256:/, '').slice(0, 12) : '—'}
+              metric={repo?.headCommit ? repo.headCommit.replace(/^sha256:/, '').slice(0, 12) : '-'}
               detail={
                 repo?.currentBranch
                   ? `HEAD on ${repo.currentBranch}`
@@ -204,11 +205,11 @@ export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX
             />
             <CapabilityCard
               title="Agent swarm"
-              tagline='"Explorer + Exploiter + Critic working in parallel."'
+              tagline="Explore, exploit, and critique candidate harnesses."
               icon={Activity}
               status="ready"
               metric="ready"
-              detail="harness_swarm_run with --task-family to start"
+              detail="harness_swarm_run with --task-family to start."
             />
           </div>
         </div>
@@ -227,7 +228,8 @@ export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX
                   onClick={() => onNavigate('history')}
                   className="text-text-secondary"
                 >
-                  View all →
+                  View all
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </CardHeader>
@@ -245,7 +247,8 @@ export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX
                   onClick={() => onNavigate('recipes')}
                   className="text-text-secondary"
                 >
-                  View all →
+                  View all
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </CardHeader>
@@ -361,7 +364,7 @@ const RecipesList = ({
                   {r.harnessName}
                 </div>
                 <div className="text-xs text-text-secondary">
-                  {r.taskFamily} · {formatRelative(r.searchedAt)}
+                  {r.taskFamily} - {formatRelative(r.searchedAt)}
                 </div>
               </div>
               <div className="ml-3 flex shrink-0 items-center gap-2 font-mono text-xs">

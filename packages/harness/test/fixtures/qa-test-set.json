@@ -205,9 +205,9 @@
     },
     {
       "id": "qa-035",
-      "question": "Which package consumes the codragraph-shared types directly?",
-      "expectedAnswer": "Both codragraph and codragraph-web depend on codragraph-shared via file: link",
-      "acceptParaphrases": ["codragraph and codragraph-web"]
+      "question": "Which packages consume the @codragraph/shared types directly?",
+      "expectedAnswer": "@codragraph/cli, codragraph-web, @codragraph/harness, @codragraph/compress, @codragraph/graphstore, and @codragraph/org consume @codragraph/shared via workspace/package links",
+      "acceptParaphrases": ["cli, web, harness, compress, graphstore, and org"]
     },
     {
       "id": "qa-036",
@@ -488,8 +488,10 @@
     {
       "id": "qa-083",
       "question": "What workspace packages are listed in the top-level package.json?",
-      "expectedAnswer": "codragraph, codragraph-shared, codragraph-web, codragraph-harness, codragraph-sdk",
-      "acceptParaphrases": ["five packages including harness and sdk"]
+      "expectedAnswer": "@codragraph/cli, @codragraph/shared, @codragraph/harness, @codragraph/compress, @codragraph/sdk, @codragraph/graphstore, @codragraph/org, codragraph-web, @codragraph/claude-plugin, and @codragraph/codex",
+      "acceptParaphrases": [
+        "ten workspaces including cli, shared, web, sdk, graphstore, org, claude plugin, and codex"
+      ]
     },
     {
       "id": "qa-084",
@@ -521,8 +523,8 @@
     },
     {
       "id": "qa-089",
-      "question": "What does the prepare script in codragraph/package.json do?",
-      "expectedAnswer": "Runs node scripts/build.js to compile both codragraph-shared and codragraph",
+      "question": "What does the prepare script in @codragraph/cli package.json do?",
+      "expectedAnswer": "Runs node scripts/build.js to compile @codragraph/shared, @codragraph/graphstore, and @codragraph/cli, then rewrites @codragraph/shared imports for the published CLI dist",
       "acceptParaphrases": ["compiles via scripts/build.js"]
     },
     {

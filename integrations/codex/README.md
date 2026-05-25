@@ -2,7 +2,8 @@
 
 OpenAI Codex CLI integration for CodraGraph. Enriches every Codex tool
 call with graph-aware context (callers, impact, process participation)
-so Codex doesn't blindly grep its way through the codebase.
+and FeatureCluster packs for product areas like Settings/Auth/AI, so Codex
+doesn't blindly grep its way through the codebase.
 
 ## Install
 
@@ -35,7 +36,7 @@ codragraph-codex
   to flag whether the index needs refreshing.
 - **MCP server**: registers a `codragraph` Codex MCP server (launching
   `codragraph mcp`, or `cmd /c codragraph mcp` on Windows) so Codex can
-  call query / context / impact / cypher directly.
+  call query / context / impact / feature_clusters / feature_context / cypher directly.
 
 ## Configuration
 
@@ -48,4 +49,6 @@ codragraph config set openai --api-key sk-...
 
 ## License
 
-Apache-2.0
+Apache-2.0. You can use, modify, redistribute, bundle, and host this
+integration commercially, subject to the Apache-2.0 notice and attribution
+requirements.

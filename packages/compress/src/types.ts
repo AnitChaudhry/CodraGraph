@@ -1,6 +1,7 @@
 // Public contracts for codragraph-compress.
 
 import type { InferenceProvider } from '@codragraph/harness';
+import type { ClusterContextPack } from '@codragraph/shared';
 
 /** Compression aggressiveness; affects the prompt and target token-reduction ratio. */
 export type CompressionLevel = 'min' | 'balanced' | 'max';
@@ -59,3 +60,16 @@ export interface DecompressResult {
   /** Token expansion ratio (decompressed / compressed). */
   expansion: number;
 }
+
+export interface CompressContextPackOptions extends CompressOptions {
+  /** Prefer compact stable JSON over a human-readable text outline. */
+  format?: 'outline' | 'json';
+}
+
+export interface CompressContextPackResult extends CompressResult {
+  /** Deterministic context-pack text that was sent to the compressor. */
+  contextPackText: string;
+  clusterName?: string;
+}
+
+export type CompressibleContextPack = ClusterContextPack | Record<string, unknown>;

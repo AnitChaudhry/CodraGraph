@@ -130,3 +130,5 @@ Three commitments:
 ## License
 
 This benchmarking infrastructure inherits the monorepo's Apache-2.0 license.
+You can use, modify, redistribute, and run it commercially, subject to the
+Apache-2.0 notice and attribution requirements.

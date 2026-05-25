@@ -16,78 +16,78 @@ description: "Use when the user wants to rename, extract, split, move, or restru
 ## Workflow
 
 ```
-1. codragraph_impact({target: "X", direction: "upstream"})  â†’ Map all dependents
-2. codragraph_query({query: "X"})                            â†’ Find execution flows involving X
-3. codragraph_context({name: "X"})                           â†’ See all incoming/outgoing refs
-4. Plan update order: interfaces â†’ implementations â†’ callers â†’ tests
+1. codragraph_impact({target: "X", direction: "upstream"})  -> Map all dependents
+2. codragraph_query({query: "X"})                            -> Find execution flows involving X
+3. codragraph_context({name: "X"})                           -> See all incoming/outgoing refs
+4. Plan update order: interfaces -> implementations -> callers -> tests
 ```
 
-> If "Index is stale" â†’ run `npx @codragraph/cli analyze` in terminal.
+> If "Index is stale" -> run `npx @codragraph/cli analyze` in terminal.
 
 ## Checklists
 
 ### Rename Symbol
 
 ```
-- [ ] codragraph_rename({symbol_name: "oldName", new_name: "newName", dry_run: true}) â€” preview all edits
+- [ ] codragraph_rename({symbol_name: "oldName", new_name: "newName", dry_run: true}) -- preview all edits
 - [ ] Review graph edits (high confidence) and ast_search edits (review carefully)
-- [ ] If satisfied: codragraph_rename({..., dry_run: false}) â€” apply edits
-- [ ] codragraph_detect_changes() â€” verify only expected files changed
+- [ ] If satisfied: codragraph_rename({..., dry_run: false}) -- apply edits
+- [ ] codragraph_detect_changes() -- verify only expected files changed
 - [ ] Run tests for affected processes
 ```
 
 ### Extract Module
 
 ```
-- [ ] codragraph_context({name: target}) â€” see all incoming/outgoing refs
-- [ ] codragraph_impact({target, direction: "upstream"}) â€” find all external callers
+- [ ] codragraph_context({name: target}) -- see all incoming/outgoing refs
+- [ ] codragraph_impact({target, direction: "upstream"}) -- find all external callers
 - [ ] Define new module interface
 - [ ] Extract code, update imports
-- [ ] codragraph_detect_changes() â€” verify affected scope
+- [ ] codragraph_detect_changes() -- verify affected scope
 - [ ] Run tests for affected processes
 ```
 
 ### Split Function/Service
 
 ```
-- [ ] codragraph_context({name: target}) â€” understand all callees
+- [ ] codragraph_context({name: target}) -- understand all callees
 - [ ] Group callees by responsibility
-- [ ] codragraph_impact({target, direction: "upstream"}) â€” map callers to update
+- [ ] codragraph_impact({target, direction: "upstream"}) -- map callers to update
 - [ ] Create new functions/services
 - [ ] Update callers
-- [ ] codragraph_detect_changes() â€” verify affected scope
+- [ ] codragraph_detect_changes() -- verify affected scope
 - [ ] Run tests for affected processes
 ```
 
 ## Tools
 
-**codragraph_rename** â€” automated multi-file rename:
+**codragraph_rename** -- automated multi-file rename:
 
 ```
 codragraph_rename({symbol_name: "validateUser", new_name: "authenticateUser", dry_run: true})
-â†’ 12 edits across 8 files
-â†’ 10 graph edits (high confidence), 2 ast_search edits (review)
-â†’ Changes: [{file_path, edits: [{line, old_text, new_text, confidence}]}]
+-> 12 edits across 8 files
+-> 10 graph edits (high confidence), 2 ast_search edits (review)
+-> Changes: [{file_path, edits: [{line, old_text, new_text, confidence}]}]
 ```
 
-**codragraph_impact** â€” map all dependents first:
+**codragraph_impact** -- map all dependents first:
 
 ```
 codragraph_impact({target: "validateUser", direction: "upstream"})
-â†’ d=1: loginHandler, apiMiddleware, testUtils
-â†’ Affected Processes: LoginFlow, TokenRefresh
+-> d=1: loginHandler, apiMiddleware, testUtils
+-> Affected Processes: LoginFlow, TokenRefresh
 ```
 
-**codragraph_detect_changes** â€” verify your changes after refactoring:
+**codragraph_detect_changes** -- verify your changes after refactoring:
 
 ```
 codragraph_detect_changes({scope: "all"})
-â†’ Changed: 8 files, 12 symbols
-â†’ Affected processes: LoginFlow, TokenRefresh
-â†’ Risk: MEDIUM
+-> Changed: 8 files, 12 symbols
+-> Affected processes: LoginFlow, TokenRefresh
+-> Risk: MEDIUM
 ```
 
-**codragraph_cypher** â€” custom reference queries:
+**codragraph_cypher** -- custom reference queries:
 
 ```cypher
 MATCH (caller)-[:CodeRelation {type: 'CALLS'}]->(f:Function {name: "validateUser"})
@@ -107,15 +107,15 @@ RETURN caller.name, caller.filePath ORDER BY caller.filePath
 
 ```
 1. codragraph_rename({symbol_name: "validateUser", new_name: "authenticateUser", dry_run: true})
-   â†’ 12 edits: 10 graph (safe), 2 ast_search (review)
-   â†’ Files: validator.ts, login.ts, middleware.ts, config.json...
+   -> 12 edits: 10 graph (safe), 2 ast_search (review)
+   -> Files: validator.ts, login.ts, middleware.ts, config.json...
 
 2. Review ast_search edits (config.json: dynamic reference!)
 
 3. codragraph_rename({symbol_name: "validateUser", new_name: "authenticateUser", dry_run: false})
-   â†’ Applied 12 edits across 8 files
+   -> Applied 12 edits across 8 files
 
 4. codragraph_detect_changes({scope: "all"})
-   â†’ Affected: LoginFlow, TokenRefresh
-   â†’ Risk: MEDIUM â€” run tests for these flows
+   -> Affected: LoginFlow, TokenRefresh
+   -> Risk: MEDIUM -- run tests for these flows
 ```

@@ -26,6 +26,8 @@ function createMockBackend(overrides: Record<string, any> = {}): any {
       .mockResolvedValue({ name: 'test', repoPath: '/tmp/test', lastCommit: 'abc' }),
     getContext: vi.fn().mockReturnValue(null),
     queryClusters: vi.fn().mockResolvedValue({ clusters: [] }),
+    queryFeatureClusters: vi.fn().mockResolvedValue({ clusters: [] }),
+    queryFeatureContext: vi.fn().mockResolvedValue({ error: 'not found' }),
     queryProcesses: vi.fn().mockResolvedValue({ processes: [] }),
     queryClusterDetail: vi.fn().mockResolvedValue({ error: 'not found' }),
     queryProcessDetail: vi.fn().mockResolvedValue({ error: 'not found' }),

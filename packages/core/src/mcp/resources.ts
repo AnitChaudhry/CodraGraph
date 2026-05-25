@@ -61,6 +61,12 @@ export function getResourceTemplates(): ResourceTemplate[] {
       mimeType: 'text/yaml',
     },
     {
+      uriTemplate: 'codragraph://repo/{name}/feature-clusters',
+      name: 'Repo Feature Clusters',
+      description: 'Human-facing product/domain feature areas with members and dependencies',
+      mimeType: 'text/yaml',
+    },
+    {
       uriTemplate: 'codragraph://repo/{name}/processes',
       name: 'Repo Processes',
       description: 'All execution flows',
@@ -76,6 +82,12 @@ export function getResourceTemplates(): ResourceTemplate[] {
       uriTemplate: 'codragraph://repo/{name}/cluster/{clusterName}',
       name: 'Module Detail',
       description: 'Deep dive into a specific functional area',
+      mimeType: 'text/yaml',
+    },
+    {
+      uriTemplate: 'codragraph://repo/{name}/feature/{featureName}',
+      name: 'Feature Context',
+      description: 'Members, line ranges, dependencies, and flows for one feature cluster',
       mimeType: 'text/yaml',
     },
     {
@@ -244,6 +256,14 @@ export function parseResourceUri(uri: string): ParsedCodragraphResource {
         param: rest.replace(/^cluster\//, ''),
       };
     }
+    if (rest.startsWith('feature/')) {
+      return {
+        kind: 'repo',
+        repoName,
+        resourceType: 'feature',
+        param: rest.replace(/^feature\//, ''),
+      };
+    }
     if (rest.startsWith('process/')) {
       return {
         kind: 'repo',
@@ -287,12 +307,16 @@ export async function readResource(uri: string, backend: LocalBackend): Promise<
       return getContextResource(backend, repoName);
     case 'clusters':
       return getClustersResource(backend, repoName);
+    case 'feature-clusters':
+      return getFeatureClustersResource(backend, repoName);
     case 'processes':
       return getProcessesResource(backend, repoName);
     case 'schema':
       return getSchemaResource();
     case 'cluster':
       return getClusterDetailResource(parsed.param!, backend, repoName);
+    case 'feature':
+      return getFeatureDetailResource(parsed.param!, backend, repoName);
     case 'process':
       return getProcessDetailResource(parsed.param!, backend, repoName);
     case 'graphstore/log':
@@ -378,6 +402,7 @@ async function getContextResource(backend: LocalBackend, repoName?: string): Pro
   lines.push(`  files: ${context.stats.fileCount}`);
   lines.push(`  symbols: ${context.stats.functionCount}`);
   lines.push(`  processes: ${context.stats.processCount}`);
+  lines.push(`  feature_clusters: ${repo.stats?.featureClusters || 0}`);
   lines.push('');
   lines.push('tools_available:');
   lines.push('  - query: Process-grouped code intelligence (execution flows related to a concept)');
@@ -393,8 +418,12 @@ async function getContextResource(backend: LocalBackend, repoName?: string): Pro
   lines.push('resources_available:');
   lines.push('  - codragraph://repos: All indexed repositories');
   lines.push(`  - codragraph://repo/${context.projectName}/clusters: All functional areas`);
+  lines.push(
+    `  - codragraph://repo/${context.projectName}/feature-clusters: Human-facing feature areas`,
+  );
   lines.push(`  - codragraph://repo/${context.projectName}/processes: All execution flows`);
   lines.push(`  - codragraph://repo/${context.projectName}/cluster/{name}: Module details`);
+  lines.push(`  - codragraph://repo/${context.projectName}/feature/{name}: Feature context pack`);
   lines.push(`  - codragraph://repo/${context.projectName}/process/{name}: Process trace`);
   lines.push(
     '  - codragraph://group/{name}/contracts: Group contract registry (optional ?type=&repo=&unmatchedOnly=)',
@@ -443,6 +472,45 @@ async function getClustersResource(backend: LocalBackend, repoName?: string): Pr
 /**
  * Processes resource — queries graph directly via backend.queryProcesses()
  */
+/**
+ * Feature clusters resource - human-facing product/domain areas.
+ */
+async function getFeatureClustersResource(
+  backend: LocalBackend,
+  repoName?: string,
+): Promise<string> {
+  try {
+    const result = await backend.queryFeatureClusters(repoName, 100);
+
+    if (!result.clusters || result.clusters.length === 0) {
+      return 'feature_clusters: []\n# No feature clusters detected. Run: codragraph analyze';
+    }
+
+    const displayLimit = 30;
+    const lines: string[] = ['feature_clusters:'];
+    for (const cluster of result.clusters.slice(0, displayLimit)) {
+      lines.push(`  - name: "${cluster.name || cluster.slug || cluster.id}"`);
+      lines.push(`    slug: "${cluster.slug || ''}"`);
+      lines.push(`    kind: ${cluster.featureKind || 'feature'}`);
+      if (cluster.summary) lines.push(`    summary: "${cluster.summary}"`);
+      lines.push(`    members: ${cluster.memberCount || 0}`);
+      if (cluster.routes?.length) lines.push(`    routes: ${cluster.routes.length}`);
+      if (cluster.tools?.length) lines.push(`    tools: ${cluster.tools.length}`);
+      lines.push(`    confidence: ${Math.round((cluster.confidence || 0) * 100)}%`);
+    }
+
+    if (result.clusters.length > displayLimit) {
+      lines.push(
+        `\n# Showing top ${displayLimit} of ${result.clusters.length} feature clusters. Use feature_context for details.`,
+      );
+    }
+
+    return lines.join('\n');
+  } catch (err: any) {
+    return `error: ${err.message}`;
+  }
+}
+
 async function getProcessesResource(backend: LocalBackend, repoName?: string): Promise<string> {
   try {
     const result = await backend.queryProcesses(repoName, 50);
@@ -490,6 +558,7 @@ nodes:
   - CodeElement: Catch-all for other code elements
   - Community: Auto-detected functional area (Leiden algorithm)
   - Process: Execution flow trace
+  - FeatureCluster: Human-facing feature/domain cluster for targeted context
 
 additional_node_types: "Multi-language: Struct, Enum, Macro, Typedef, Union, Namespace, Trait, Impl, TypeAlias, Const, Static, Property, Record, Delegate, Annotation, Constructor, Template, Module (use backticks in queries: \`Struct\`, \`Enum\`, etc.)"
 
@@ -499,6 +568,7 @@ node_properties:
   Function: "parameterCount (INT32), returnType (STRING), isVariadic (BOOL), visibility (STRING), isStatic (BOOL), isAbstract (BOOL), isFinal (BOOL), isAsync (BOOL), parameterTypes (STRING[]), annotations (STRING[])"
   Property: "declaredType (STRING) — the field's type annotation (e.g., 'Address', 'City'). Used for field-access chain resolution."
   Constructor: "parameterCount (INT32), visibility (STRING), isStatic (BOOL), parameterTypes (STRING[])"
+  FeatureCluster: "name (STRING), slug (STRING), featureKind (STRING), summary (STRING), repo (STRING), service (STRING), memberCount (INT32), entryPointIds (STRING[]), routes (STRING[]), tools (STRING[]), testCoverageHints (STRING[]), lastIndexedCommit (STRING), confidence (DOUBLE), signals (STRING[])"
   Community: "heuristicLabel (STRING), cohesion (DOUBLE), symbolCount (INT32), keywords (STRING[]), description (STRING), enrichedBy (STRING)"
   Process: "heuristicLabel (STRING), processType (STRING — 'intra_community' or 'cross_community'), stepCount (INT32), communities (STRING[]), entryPointId (STRING), terminalId (STRING)"
 
@@ -516,6 +586,10 @@ relationships:
   - METHOD_IMPLEMENTS: ConcreteMethod implements InterfaceMethod (matched by name + parameterTypes)
   - MEMBER_OF: Symbol belongs to community
   - STEP_IN_PROCESS: Symbol is step N in process
+  - WRAPS: Wrapper/decorator relationship
+  - QUERIES: Data/query relationship
+  - FEATURE_MEMBER_OF: Symbol/file belongs to a FeatureCluster
+  - FEATURE_DEPENDS_ON: FeatureCluster depends on another FeatureCluster via member edges
 
 relationship_table: "All relationships use a single CodeRelation table with a 'type' property. Properties: type (STRING), confidence (DOUBLE), reason (STRING), step (INT32)"
 
@@ -586,6 +660,75 @@ async function getClusterDetailResource(
 /**
  * Process detail resource — queries graph directly via backend.queryProcessDetail()
  */
+async function getFeatureDetailResource(
+  name: string,
+  backend: LocalBackend,
+  repoName?: string,
+): Promise<string> {
+  try {
+    const result = await backend.queryFeatureContext(name, repoName);
+
+    if (result.error) {
+      return `error: ${result.error}`;
+    }
+
+    const cluster = result.cluster;
+    const members = result.members || [];
+    const outgoing = result.dependencies?.outgoing || [];
+    const incoming = result.dependencies?.incoming || [];
+    const processes = result.processes || [];
+
+    const lines: string[] = [
+      `feature: "${cluster.name || cluster.slug || cluster.id}"`,
+      `slug: "${cluster.slug || ''}"`,
+      `kind: ${cluster.featureKind || 'feature'}`,
+      `members: ${cluster.memberCount || members.length}`,
+      `confidence: ${Math.round((cluster.confidence || 0) * 100)}%`,
+    ];
+
+    if (members.length > 0) {
+      lines.push('');
+      lines.push('members:');
+      for (const member of members.slice(0, 30)) {
+        lines.push(`  - name: ${member.name}`);
+        lines.push(`    type: ${member.type}`);
+        lines.push(`    file: ${member.filePath || ''}`);
+        if (member.startLine !== undefined) lines.push(`    startLine: ${member.startLine}`);
+        if (member.endLine !== undefined) lines.push(`    endLine: ${member.endLine}`);
+      }
+    }
+
+    if (outgoing.length > 0 || incoming.length > 0) {
+      lines.push('');
+      lines.push('dependencies:');
+      if (outgoing.length > 0) {
+        lines.push('  outgoing:');
+        for (const dep of outgoing.slice(0, 15)) {
+          lines.push(`    - ${dep.name || dep.slug || dep.id}`);
+        }
+      }
+      if (incoming.length > 0) {
+        lines.push('  incoming:');
+        for (const dep of incoming.slice(0, 15)) {
+          lines.push(`    - ${dep.name || dep.slug || dep.id}`);
+        }
+      }
+    }
+
+    if (processes.length > 0) {
+      lines.push('');
+      lines.push('processes:');
+      for (const proc of processes.slice(0, 10)) {
+        lines.push(`  - ${proc.heuristicLabel || proc.label || proc.id}`);
+      }
+    }
+
+    return lines.join('\n');
+  } catch (err: any) {
+    return `error: ${err.message}`;
+  }
+}
+
 async function getProcessDetailResource(
   name: string,
   backend: LocalBackend,
@@ -650,6 +793,12 @@ async function getSetupResource(backend: LocalBackend): Promise<string> {
       '| `impact` | Symbol blast radius — what breaks at depth 1/2/3 with confidence |',
       '| `detect_changes` | Git-diff impact — what do your current changes affect |',
       '| `rename` | Multi-file coordinated rename with confidence-tagged edits |',
+      '| `feature_clusters` | Product/domain feature map for targeted context |',
+      '| `feature_context` | Members, line ranges, dependencies, and flows for one feature |',
+      '| `cluster_query` | Cluster-first alias for `feature_clusters` |',
+      '| `cluster_context` | Cluster-first alias for `feature_context` |',
+      '| `context_pack` | Compact context pack for one feature cluster |',
+      '| `cluster_impact` | Feature-level blast radius across cluster dependencies |',
       '| `cypher` | Raw graph queries |',
       '| `list_repos` | Discover indexed repos |',
       '',
@@ -657,8 +806,15 @@ async function getSetupResource(backend: LocalBackend): Promise<string> {
       '',
       `- \`codragraph://repo/${repo.name}/context\` — Stats, staleness check`,
       `- \`codragraph://repo/${repo.name}/clusters\` — All functional areas`,
+      `- \`codragraph://repo/${repo.name}/feature-clusters\` — Human-facing feature areas`,
+      `- \`codragraph://repo/${repo.name}/feature/{name}\` — Feature context pack`,
       `- \`codragraph://repo/${repo.name}/processes\` — All execution flows`,
       `- \`codragraph://repo/${repo.name}/schema\` — Graph schema for Cypher`,
+      '',
+      '## Cross-platform commands',
+      '',
+      '- Use `npx @codragraph/cli ...` or `codragraph ...` in Windows PowerShell, macOS bash/zsh, and Linux shells.',
+      '- Prefer `npm --prefix <package> <script>` from repo root for package checks instead of shell-specific `cd dir && ...` chains.',
     ];
     sections.push(lines.join('\n'));
   }

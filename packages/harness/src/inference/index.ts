@@ -7,9 +7,9 @@
 //   3. ~/.codragraph/config.json legacy flat fields (when `provider === name`)
 //   4. process.env[<PROVIDER>_API_KEY]
 //
-// The codragraph-shared module owns step 2/3 — we lazy-import so this
-// package stays usable even when codragraph isn't installed (tests +
-// stand-alone harness use cases). When the codragraph file lookup
+// @codragraph/cli owns step 2/3 — we lazy-import so this
+// package stays usable even when @codragraph/cli isn't installed (tests +
+// stand-alone harness use cases). When the CLI config lookup
 // fails, we silently fall back to step 4.
 
 import { ClaudeInferenceProvider } from './claude.js';

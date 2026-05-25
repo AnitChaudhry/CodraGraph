@@ -141,6 +141,8 @@ This project is indexed by CodraGraph as **${projectName}**${noStats ? '' : ` ($
 |----------|---------|
 | \`codragraph://repo/${projectName}/context\` | Codebase overview, check index freshness |
 | \`codragraph://repo/${projectName}/clusters\` | All functional areas |
+| \`codragraph://repo/${projectName}/feature-clusters\` | Product/domain feature areas |
+| \`codragraph://repo/${projectName}/feature/{name}\` | Focused files, line ranges, flows, dependencies |
 | \`codragraph://repo/${projectName}/processes\` | All execution flows |
 | \`codragraph://repo/${projectName}/process/{name}\` | Step-by-step execution trace |
 
@@ -153,6 +155,8 @@ This repository is listed under CodraGraph **group(s): ${groupNames.join(', ')}*
 `
     : ''
 }## CLI
+
+Commands are cross-platform: use \`npx @codragraph/cli ...\` or \`codragraph ...\` in Windows PowerShell, macOS bash/zsh, and Linux shells. Prefer package commands like \`npm --prefix packages/core test\` from repo root instead of shell-specific \`cd dir && ...\` chains.
 
 ${skillsTable}
 

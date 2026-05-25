@@ -7,26 +7,15 @@ The `extractCobolSymbolsWithRegex()` function in `cobol-preprocessor.ts` perform
 The extractor tracks which COBOL division is currently being processed. Division transitions are detected by the `RE_DIVISION` pattern.
 
 ```mermaid
-stateDiagram-v2
-    [*] --> null : Start of file
-    null --> identification : IDENTIFICATION DIVISION
-    identification --> environment : ENVIRONMENT DIVISION
-    environment --> data : DATA DIVISION
-    data --> procedure : PROCEDURE DIVISION
-
-    note right of identification
-        Extracts: PROGRAM-ID, AUTHOR, DATE-WRITTEN
-    end note
-    note right of environment
-        Extracts: SELECT ... ASSIGN ... (file declarations)
-    end note
-    note right of data
-        Extracts: FD entries, data items (01-77, 88), COPY
-    end note
-    note right of procedure
-        Extracts: paragraphs, sections, PERFORM, CALL,
-        ENTRY, MOVE, EXEC SQL/CICS
-    end note
+flowchart LR
+    Start["Start"] --> ID["Identification"]
+    ID --> ENV["Environment"]
+    ENV --> DATA["Data"]
+    DATA --> PROC["Procedure"]
+    ID --> IDOut["Program metadata"]
+    ENV --> ENVOut["File declarations"]
+    DATA --> DATAOut["FD, data items, COPY"]
+    PROC --> PROCOut["Paragraphs, CALL, PERFORM, EXEC"]
 ```
 
 ## State Machine: Data Section Tracking
@@ -34,18 +23,16 @@ stateDiagram-v2
 Within the DATA DIVISION, a secondary state machine tracks the current section to tag data items with their origin.
 
 ```mermaid
-stateDiagram-v2
-    [*] --> unknown : DATA DIVISION entered
-    unknown --> working_storage : WORKING-STORAGE SECTION
-    unknown --> linkage : LINKAGE SECTION
-    unknown --> file : FILE SECTION
-    unknown --> local_storage : LOCAL-STORAGE SECTION
-    working_storage --> linkage : LINKAGE SECTION
-    working_storage --> file : FILE SECTION
-    linkage --> working_storage : WORKING-STORAGE SECTION
-    file --> working_storage : WORKING-STORAGE SECTION
-    file --> linkage : LINKAGE SECTION
-    local_storage --> working_storage : WORKING-STORAGE SECTION
+flowchart LR
+    Data["DATA DIVISION"] --> Unknown["Unknown section"]
+    Unknown --> WS["Working-Storage"]
+    Unknown --> Linkage["Linkage"]
+    Unknown --> File["File"]
+    Unknown --> Local["Local-Storage"]
+    WS --> Items["Tag data items with section"]
+    Linkage --> Items
+    File --> Items
+    Local --> Items
 ```
 
 Within the ENVIRONMENT DIVISION, the `currentEnvSection` tracks whether we are in `INPUT-OUTPUT` or `CONFIGURATION` section. SELECT statement accumulation only occurs in `INPUT-OUTPUT`.

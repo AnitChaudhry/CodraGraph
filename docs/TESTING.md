@@ -17,26 +17,28 @@ From repository root, unless noted:
 **`codragraph` (CLI / library)**
 
 ```bash
-cd packages/core
 npm install
-npm run build
-npm test                    # full suite: vitest run
-npm run test:unit           # unit only: vitest run test/unit
-npm run test:integration    # integration suite
-npm run test:coverage
-npx tsc --noEmit            # typecheck (matches CI)
+npm --prefix packages/core run build
+npm --prefix packages/core test                    # full suite: vitest run
+npm --prefix packages/core run test:unit           # unit only: vitest run test/unit
+npm --prefix packages/core run test:integration    # integration suite
+npm --prefix packages/core run test:coverage
+npm --prefix packages/core exec tsc -- --noEmit    # typecheck (matches CI)
 ```
 
 **`apps/web`**
 
 ```bash
-cd apps/web
 npm install
-npm test                    # unit tests (vitest)
-npx tsc -b --noEmit         # typecheck (matches CI)
-npm run test:coverage
-npm run test:e2e            # Playwright (requires codragraph serve + npm run dev)
+npm --prefix apps/web test                         # unit tests (vitest)
+npm --prefix apps/web exec tsc -- -b --noEmit      # typecheck (matches CI)
+npm --prefix apps/web run test:coverage
+npm --prefix apps/web run test:e2e                 # Playwright (requires codragraph serve + npm --prefix apps/web run dev)
 ```
+
+These command forms work in Windows PowerShell, macOS bash/zsh, and Linux
+shells. Prefer `npm --prefix <package> <script>` in docs and PRs so copied
+commands do not depend on a specific shell's directory-change syntax.
 
 ## Pre-commit hook
 
@@ -87,11 +89,15 @@ GitHub Actions (`.github/workflows/ci.yml`) orchestrate:
 Local checks before pushing:
 
 ```bash
-cd packages/core && npx tsc --noEmit && npm test
-cd ../apps/web && npx tsc -b --noEmit && npm test
+npm --prefix packages/core exec tsc -- --noEmit
+npm --prefix packages/core test
+npm --prefix apps/web exec tsc -- -b --noEmit
+npm --prefix apps/web test
 ```
 
-Or rely on the pre-commit hook which runs these automatically for staged files.
+The pre-commit hook runs formatting plus affected typechecks. It does not run the
+full tests above, so run the relevant `npm --prefix ... test` command before
+opening a PR that changes runtime behavior.
 
 ## User acceptance / beta (optional)
 

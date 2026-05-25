@@ -81,6 +81,7 @@ describe('validLabel – NODE_TABLES membership', () => {
       'CodeElement',
       'Community',
       'Process',
+      'FeatureCluster',
     ];
     for (const label of core) {
       expect((NODE_TABLES as readonly string[]).includes(label)).toBe(true);

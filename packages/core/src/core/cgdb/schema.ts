@@ -154,6 +154,32 @@ CREATE NODE TABLE Process (
 )`;
 
 // ============================================================================
+// FEATURE CLUSTER NODE TABLE (human-facing feature/domain clusters)
+// ============================================================================
+
+export const FEATURE_CLUSTER_SCHEMA = `
+CREATE NODE TABLE FeatureCluster (
+  id STRING,
+  name STRING,
+  slug STRING,
+  featureKind STRING,
+  summary STRING,
+  description STRING,
+  repo STRING,
+  service STRING,
+  signals STRING[],
+  memberCount INT32,
+  entryPointIds STRING[],
+  routes STRING[],
+  tools STRING[],
+  testCoverageHints STRING[],
+  lastIndexedCommit STRING,
+  confidence DOUBLE,
+  source STRING,
+  PRIMARY KEY (id)
+)`;
+
+// ============================================================================
 // MULTI-LANGUAGE NODE TABLE SCHEMAS
 // ============================================================================
 
@@ -438,6 +464,36 @@ CREATE REL TABLE ${REL_TABLE_NAME} (
   FROM CodeElement TO Process,
   FROM Route TO Process,
   FROM Tool TO Process,
+  FROM File TO FeatureCluster,
+  FROM Function TO FeatureCluster,
+  FROM Method TO FeatureCluster,
+  FROM Class TO FeatureCluster,
+  FROM Interface TO FeatureCluster,
+  FROM CodeElement TO FeatureCluster,
+  FROM Section TO FeatureCluster,
+  FROM Route TO FeatureCluster,
+  FROM Tool TO FeatureCluster,
+  FROM Process TO FeatureCluster,
+  FROM \`Struct\` TO FeatureCluster,
+  FROM \`Enum\` TO FeatureCluster,
+  FROM \`Macro\` TO FeatureCluster,
+  FROM \`Typedef\` TO FeatureCluster,
+  FROM \`Union\` TO FeatureCluster,
+  FROM \`Namespace\` TO FeatureCluster,
+  FROM \`Trait\` TO FeatureCluster,
+  FROM \`Impl\` TO FeatureCluster,
+  FROM \`TypeAlias\` TO FeatureCluster,
+  FROM \`Const\` TO FeatureCluster,
+  FROM \`Static\` TO FeatureCluster,
+  FROM \`Variable\` TO FeatureCluster,
+  FROM \`Property\` TO FeatureCluster,
+  FROM \`Record\` TO FeatureCluster,
+  FROM \`Delegate\` TO FeatureCluster,
+  FROM \`Annotation\` TO FeatureCluster,
+  FROM \`Constructor\` TO FeatureCluster,
+  FROM \`Template\` TO FeatureCluster,
+  FROM \`Module\` TO FeatureCluster,
+  FROM FeatureCluster TO FeatureCluster,
   type STRING,
   confidence DOUBLE,
   reason STRING,
@@ -502,6 +558,7 @@ export const NODE_SCHEMA_QUERIES = [
   CODE_ELEMENT_SCHEMA,
   COMMUNITY_SCHEMA,
   PROCESS_SCHEMA,
+  FEATURE_CLUSTER_SCHEMA,
   // Multi-language support
   STRUCT_SCHEMA,
   ENUM_SCHEMA,

@@ -18,7 +18,7 @@ import {
 } from '../src/core/cgdb/schema.js';
 
 export default async function setup({ provide }: GlobalSetupContext) {
-  const tmpHandle = await createTempDir('codragraph-shared-');
+  const tmpHandle = await createTempDir('codragraph-cgdb-');
   const dbPath = path.join(tmpHandle.dbPath, 'cgdb');
 
   // Create DB with full schema

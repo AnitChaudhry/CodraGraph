@@ -111,6 +111,177 @@ SERVICE: optional monorepo path prefix (POSIX-style, case-sensitive segments). W
     },
   },
   {
+    name: 'feature_clusters',
+    description: `List human-facing feature clusters such as Settings, AI, Auth, Billing, MCP, or Ingestion.
+
+WHEN TO USE: First step for targeted implementation/refactoring when you need the functional area map before loading files. This is the product/domain layer above algorithmic Community nodes.
+AFTER THIS: Use feature_context(name) for members with file paths and line ranges, then context() or impact() on specific symbols.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Optional cluster owner search term (e.g. "settings", "AI", "billing").',
+        },
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max feature clusters to return (default: 100)',
+          default: 100,
+          minimum: 1,
+          maximum: 500,
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'feature_context',
+    description: `Get a complete context pack for one FeatureCluster.
+
+Returns the cluster metadata, member symbols/files with line ranges, outgoing/incoming feature dependencies, and related execution processes.
+
+WHEN TO USE: Before editing a feature area like Settings or AI. This narrows exploration to the exact files and symbols in that feature cluster.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: 'Feature cluster name, slug, or id (e.g. "Settings", "settings").',
+        },
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max members to return (default: 100)',
+          default: 100,
+          minimum: 1,
+          maximum: 500,
+        },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'cluster_query',
+    description: `Cluster-first alias for feature_clusters.
+
+WHEN TO USE: Ask which product/domain cluster owns an area like Settings, AI, Auth, or Billing before loading files.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Optional cluster owner search term (e.g. "settings", "AI", "billing").',
+        },
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max feature clusters to return (default: 100)',
+          default: 100,
+          minimum: 1,
+          maximum: 500,
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'cluster_context',
+    description: `Cluster-first alias for feature_context.
+
+Returns a FeatureCluster context pack with members, entry points, routes, tools, tests, docs, dependencies, and safe edit surface.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: 'Feature cluster name, slug, or id (e.g. "Settings", "settings").',
+        },
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max members to return (default: 100)',
+          default: 100,
+          minimum: 1,
+          maximum: 500,
+        },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'context_pack',
+    description: `Get the compact agent context pack for a FeatureCluster.
+
+WHEN TO USE: Before a refactor or implementation task where the agent should avoid re-exploring the full repo.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: 'Feature cluster name, slug, or id (e.g. "AI", "ai").',
+        },
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max members to return (default: 100)',
+          default: 100,
+          minimum: 1,
+          maximum: 500,
+        },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'cluster_impact',
+    description: `Assess feature-level blast radius for a FeatureCluster.
+
+Returns upstream/downstream cluster dependencies plus the same context pack and safe edit surface used for targeted edits.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: 'Feature cluster name, slug, or id.',
+        },
+        direction: {
+          type: 'string',
+          enum: ['upstream', 'downstream', 'both'],
+          description: 'Dependency direction to inspect.',
+          default: 'upstream',
+        },
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max members to include in the context pack (default: 100)',
+          default: 100,
+          minimum: 1,
+          maximum: 500,
+        },
+      },
+      required: ['name'],
+    },
+  },
+  {
     name: 'cypher',
     description: `Execute Cypher query against the code knowledge graph.
 
@@ -118,10 +289,10 @@ WHEN TO USE: Complex structural queries that search/explore can't answer. READ c
 AFTER THIS: Use context() on result symbols for deeper context.
 
 SCHEMA:
-- Nodes: File, Folder, Function, Class, Interface, Method, CodeElement, Community, Process, Route, Tool
+- Nodes: File, Folder, Function, Class, Interface, Method, CodeElement, Community, Process, FeatureCluster, Route, Tool
 - Multi-language nodes (use backticks): \`Struct\`, \`Enum\`, \`Trait\`, \`Impl\`, etc.
 - All edges via single CodeRelation table with 'type' property
-- Edge types: CONTAINS, DEFINES, CALLS, IMPORTS, EXTENDS, IMPLEMENTS, HAS_METHOD, HAS_PROPERTY, ACCESSES, METHOD_OVERRIDES, METHOD_IMPLEMENTS, MEMBER_OF, STEP_IN_PROCESS, HANDLES_ROUTE, FETCHES, HANDLES_TOOL, ENTRY_POINT_OF
+- Edge types: CONTAINS, DEFINES, CALLS, IMPORTS, EXTENDS, IMPLEMENTS, HAS_METHOD, HAS_PROPERTY, ACCESSES, METHOD_OVERRIDES, METHOD_IMPLEMENTS, MEMBER_OF, STEP_IN_PROCESS, HANDLES_ROUTE, FETCHES, HANDLES_TOOL, ENTRY_POINT_OF, WRAPS, QUERIES, FEATURE_MEMBER_OF, FEATURE_DEPENDS_ON
 - Edge properties: type (STRING), confidence (DOUBLE), reason (STRING), step (INT32)
 
 EXAMPLES:
@@ -155,6 +326,7 @@ TIPS:
 - All relationships use single CodeRelation table — filter with {type: 'CALLS'} etc.
 - Community = auto-detected functional area (Leiden algorithm). Properties: heuristicLabel, cohesion, symbolCount, keywords, description, enrichedBy
 - Process = execution flow trace from entry point to terminal. Properties: heuristicLabel, processType, stepCount, communities, entryPointId, terminalId
+- FeatureCluster = product/domain area for targeted context packs. Properties: name, slug, featureKind, summary, repo, service, memberCount, entryPointIds, routes, tools, testCoverageHints, lastIndexedCommit, confidence, signals
 - Use heuristicLabel (not label) for human-readable community/process names`,
     inputSchema: {
       type: 'object',

@@ -17,7 +17,7 @@
  *
  * Dependency direction (strictly enforced):
  *
- *     codragraph-shared (NodeLabel)       — leaf type
+ *     @codragraph/shared (NodeLabel)      — leaf type
  *          ↑
  *     symbol-table.ts                   — THIS FILE (pure storage)
  *          ↑

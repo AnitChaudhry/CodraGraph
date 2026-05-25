@@ -583,7 +583,8 @@ const getCopyQuery = (table: NodeTableName, filePath: string): string => {
   // RFC 0001 Phase 2: every content-bearing table also lists
   // `contentEncoding` immediately after `content` to match the schema +
   // CSV layout. Tables without a content column (Folder, Community,
-  // Process, Route, Tool) are unchanged.
+  // Process, Route, Tool) are unchanged. FeatureCluster carries rich metadata
+  // but still has no content/file snippet column.
   if (table === 'File') {
     return `COPY ${t}(id, name, filePath, content, contentEncoding) FROM "${filePath}" ${COPY_CSV_OPTS}`;
   }
@@ -595,6 +596,9 @@ const getCopyQuery = (table: NodeTableName, filePath: string): string => {
   }
   if (table === 'Process') {
     return `COPY ${t}(id, label, heuristicLabel, processType, stepCount, communities, entryPointId, terminalId) FROM "${filePath}" ${COPY_CSV_OPTS}`;
+  }
+  if (table === 'FeatureCluster') {
+    return `COPY ${t}(id, name, slug, featureKind, summary, description, repo, service, signals, memberCount, entryPointIds, routes, tools, testCoverageHints, lastIndexedCommit, confidence, source) FROM "${filePath}" ${COPY_CSV_OPTS}`;
   }
   if (table === 'Section') {
     return `COPY ${t}(id, name, filePath, startLine, endLine, level, content, contentEncoding, description) FROM "${filePath}" ${COPY_CSV_OPTS}`;
@@ -637,6 +641,9 @@ export const insertNodeToCgdb = async (
     const escapeValue = (v: any): string => {
       if (v === null || v === undefined) return 'NULL';
       if (typeof v === 'number') return String(v);
+      if (Array.isArray(v)) {
+        return `[${v.map((item) => `'${String(item).replace(/\\/g, '\\\\').replace(/'/g, "''")}'`).join(',')}]`;
+      }
       // Escape backslashes first (for Windows paths), then single quotes
       return `'${String(v).replace(/\\/g, '\\\\').replace(/'/g, "''").replace(/\n/g, '\\n').replace(/\r/g, '\\r')}'`;
     };
@@ -654,6 +661,8 @@ export const insertNodeToCgdb = async (
         ? `, description: ${escapeValue(properties.description)}`
         : '';
       query = `CREATE (n:Section {id: ${escapeValue(properties.id)}, name: ${escapeValue(properties.name)}, filePath: ${escapeValue(properties.filePath)}, startLine: ${properties.startLine || 0}, endLine: ${properties.endLine || 0}, level: ${properties.level || 1}, content: ${escapeValue(properties.content || '')}${descPart}})`;
+    } else if (label === 'FeatureCluster') {
+      query = `CREATE (n:FeatureCluster {id: ${escapeValue(properties.id)}, name: ${escapeValue(properties.name)}, slug: ${escapeValue(properties.slug)}, featureKind: ${escapeValue(properties.featureKind || 'feature')}, summary: ${escapeValue(properties.summary || '')}, description: ${escapeValue(properties.description || '')}, repo: ${escapeValue(properties.repo || '')}, service: ${escapeValue(properties.service || '')}, signals: ${escapeValue(properties.signals || [])}, memberCount: ${properties.memberCount || 0}, entryPointIds: ${escapeValue(properties.entryPointIds || [])}, routes: ${escapeValue(properties.routes || [])}, tools: ${escapeValue(properties.tools || [])}, testCoverageHints: ${escapeValue(properties.testCoverageHints || [])}, lastIndexedCommit: ${escapeValue(properties.lastIndexedCommit || '')}, confidence: ${properties.confidence || 0}, source: ${escapeValue(properties.source || 'heuristic')}})`;
     } else if (TABLES_WITH_EXPORTED.has(label)) {
       const descPart = properties.description
         ? `, description: ${escapeValue(properties.description)}`
@@ -712,6 +721,9 @@ export const batchInsertNodesToCgdb = async (
   const escapeValue = (v: any): string => {
     if (v === null || v === undefined) return 'NULL';
     if (typeof v === 'number') return String(v);
+    if (Array.isArray(v)) {
+      return `[${v.map((item) => `'${String(item).replace(/\\/g, '\\\\').replace(/'/g, "''")}'`).join(',')}]`;
+    }
     // Escape backslashes first (for Windows paths), then single quotes, then newlines
     return `'${String(v).replace(/\\/g, '\\\\').replace(/'/g, "''").replace(/\n/g, '\\n').replace(/\r/g, '\\r')}'`;
   };
@@ -739,6 +751,8 @@ export const batchInsertNodesToCgdb = async (
             ? `, n.description = ${escapeValue(properties.description)}`
             : '';
           query = `MERGE (n:Section {id: ${escapeValue(properties.id)}}) SET n.name = ${escapeValue(properties.name)}, n.filePath = ${escapeValue(properties.filePath)}, n.startLine = ${properties.startLine || 0}, n.endLine = ${properties.endLine || 0}, n.level = ${properties.level || 1}, n.content = ${escapeValue(properties.content || '')}${descPart}`;
+        } else if (label === 'FeatureCluster') {
+          query = `MERGE (n:FeatureCluster {id: ${escapeValue(properties.id)}}) SET n.name = ${escapeValue(properties.name)}, n.slug = ${escapeValue(properties.slug)}, n.featureKind = ${escapeValue(properties.featureKind || 'feature')}, n.summary = ${escapeValue(properties.summary || '')}, n.description = ${escapeValue(properties.description || '')}, n.repo = ${escapeValue(properties.repo || '')}, n.service = ${escapeValue(properties.service || '')}, n.signals = ${escapeValue(properties.signals || [])}, n.memberCount = ${properties.memberCount || 0}, n.entryPointIds = ${escapeValue(properties.entryPointIds || [])}, n.routes = ${escapeValue(properties.routes || [])}, n.tools = ${escapeValue(properties.tools || [])}, n.testCoverageHints = ${escapeValue(properties.testCoverageHints || [])}, n.lastIndexedCommit = ${escapeValue(properties.lastIndexedCommit || '')}, n.confidence = ${properties.confidence || 0}, n.source = ${escapeValue(properties.source || 'heuristic')}`;
         } else if (TABLES_WITH_EXPORTED.has(label)) {
           const descPart = properties.description
             ? `, n.description = ${escapeValue(properties.description)}`
@@ -1200,8 +1214,9 @@ export const deleteNodesForFile = async (
     // Delete nodes from each table that has filePath
     // DETACH DELETE removes the node and all its relationships
     for (const tableName of NODE_TABLES) {
-      // Skip tables that don't have filePath (Community, Process)
-      if (tableName === 'Community' || tableName === 'Process') continue;
+      // Skip tables that don't have filePath (Community, Process, FeatureCluster)
+      if (tableName === 'Community' || tableName === 'Process' || tableName === 'FeatureCluster')
+        continue;
 
       try {
         // First count how many we'll delete

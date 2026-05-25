@@ -285,7 +285,7 @@ const buildParentMapFromHeritage = (
  * All strategies respect `argCount` for overload narrowing.
  * `ancestryOverride` replaces the default walk; caller must compute it correctly.
  *
- * Strategy summary (full docs in codragraph-shared/mro-strategy.ts):
+ * Strategy summary (full docs in packages/shared/src/mro-strategy.ts):
  * - `first-wins` / `leftmost-base` / `implements-split`: BFS, first match wins.
  * - `c3`: C3-linearized order; falls back to BFS on cycle/inconsistency.
  * - `qualified-syntax`: returns undefined immediately (Rust requires explicit syntax).
@@ -294,7 +294,7 @@ const buildParentMapFromHeritage = (
  * Internal API: exported for call-processor resolvers and tests.
  * External callers should use resolveMemberCall instead.
  *
- * @see codragraph-shared/mro-strategy.ts § 'ruby-mixin'
+ * @see packages/shared/src/mro-strategy.ts § 'ruby-mixin'
  * @see call-processor.ts § resolveMemberCall
  */
 export const lookupMethodByOwnerWithMRO = (
@@ -321,7 +321,7 @@ export const lookupMethodByOwnerWithMRO = (
   // Instance dispatch: prepend (reverse) → direct → include (reverse) → transitive BFS.
   // Singleton dispatch: caller supplies ancestryOverride (extend providers only);
   //   simple left-to-right scan. Miss NEVER falls through to file-scoped fallback.
-  // See codragraph-shared/mro-strategy.ts § 'ruby-mixin' for full strategy docs.
+  // See packages/shared/src/mro-strategy.ts § 'ruby-mixin' for full strategy docs.
   if (strategy === 'ruby-mixin') {
     if (ancestryOverride) {
       // Singleton dispatch: scan pre-computed ancestry only. Miss null-routes.

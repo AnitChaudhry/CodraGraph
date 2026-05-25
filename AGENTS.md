@@ -1,7 +1,7 @@
-<!-- version: 1.6.0 -->
-<!-- Last updated: 2026-04-20 -->
+<!-- version: 1.7.0 -->
+<!-- Last updated: 2026-05-25 -->
 
-Last reviewed: 2026-04-20
+Last reviewed: 2026-05-25
 
 **Project:** CodraGraph · **Environment:** dev · **Maintainer:** repository maintainers (see GitHub)
 
@@ -24,13 +24,13 @@ Last reviewed: 2026-04-20
 For multi-step work, state up front:
 1. Which rules in this file and **[GUARDRAILS.md](docs/GUARDRAILS.md)** apply (and any relevant Signs).
 2. Current **Scope** boundaries.
-3. Which **validation commands** you will run (`cd packages/core && npm test`, `npx tsc --noEmit`).
+3. Which **validation commands** you will run (`npm --prefix packages/core test`, `npm --prefix packages/core exec tsc -- --noEmit`).
 
 On long threads, *"Remember: apply all AGENTS.md rules"* re-weights these instructions against context dilution.
 
 ## Claude Code hooks
 
-**PreToolUse** hooks can block tools (e.g. `git_commit`) until checks pass. Adapt to this repo: `cd packages/core && npm test` before commit.
+**PreToolUse** hooks can block tools (e.g. `git_commit`) until checks pass. Adapt to this repo: `npm --prefix packages/core test` before commit.
 
 ## Context budget
 
@@ -48,6 +48,7 @@ Commands and gotchas live under **Repo reference** below and in **[CONTRIBUTING.
 
 | Date | Version | Change |
 |------|---------|--------|
+| 2026-05-25 | 1.7.0 | Added FeatureCluster context-pack guidance and cross-platform command forms. |
 | 2026-04-20 | 1.6.0 | Added scope-resolution pipeline pointer (RFC #909 Ring 3); Python migrated to registry-primary. |
 | 2026-04-19 | 1.5.0 | Cross-repo impact (#794): `impact`/`query`/`context` accept `repo: "@<group>"` + `service`. Removed `group_query`/`group_contracts`/`group_status` MCP tools; added `codragraph://group/{name}/contracts` and `codragraph://group/{name}/status` resources. |
 | 2026-04-16 | 1.4.0 | Fixed: web UI description, pre-commit behavior, MCP tools (7->16), added packages/shared, removed stale vite-plugin-wasm gotcha. |
@@ -104,6 +105,8 @@ Indexed as **CodraGraph** (4325 symbols, 10556 relationships, 300 execution flow
 | `impact` | Blast radius before editing | `codragraph_impact({target: "X", direction: "upstream"})` |
 | `detect_changes` | Pre-commit scope check | `codragraph_detect_changes({scope: "staged"})` |
 | `rename` | Safe multi-file rename | `codragraph_rename({symbol_name: "old", new_name: "new", dry_run: true})` |
+| `feature_clusters` | Product/domain feature map | `codragraph_feature_clusters({limit: 25})` |
+| `feature_context` | Focused files, line ranges, dependencies, flows | `codragraph_feature_context({name: "Settings"})` |
 | `cypher` | Custom graph queries | `codragraph_cypher({query: "MATCH ..."})` |
 | `api_impact` | Pre-change API route impact | `codragraph_api_impact({route: "/api/users", method: "GET"})` |
 | `route_map` | Route → handler → consumer map | `codragraph_route_map({})` |
@@ -133,6 +136,8 @@ Indexed as **CodraGraph** (4325 symbols, 10556 relationships, 300 execution flow
 |----------|---------|
 | `codragraph://repo/CodraGraph/context` | Codebase overview, index freshness |
 | `codragraph://repo/CodraGraph/clusters` | All functional areas |
+| `codragraph://repo/CodraGraph/feature-clusters` | Product/domain feature areas |
+| `codragraph://repo/CodraGraph/feature/{name}` | Focused feature context pack |
 | `codragraph://repo/CodraGraph/processes` | All execution flows |
 | `codragraph://repo/CodraGraph/process/{name}` | Step-by-step execution trace |
 | `codragraph://group/{name}/contracts` | Group Contract Registry (provider/consumer rows + cross-links) |
@@ -185,23 +190,25 @@ Check `.codragraph/meta.json` `stats.embeddings` (0 = none). Running without `--
 ### Running services
 
 ```bash
-cd packages/core && npm run dev                 # CLI: tsx watch mode
-cd apps/web && npm run dev             # Web UI: Vite on port 5173
+npm --prefix packages/core run dev              # CLI: tsx watch mode
+npm --prefix apps/web run dev                   # Web UI: Vite on port 5173
 npx @codragraph/cli serve                         # HTTP API on port 4747 (from any indexed repo)
 ```
+
+Use the same command forms in Windows PowerShell, macOS bash/zsh, and Linux shells. Prefer `npm --prefix <package> <script>` from repo root instead of `cd dir && ...` when documenting or sharing commands.
 
 ### Testing
 
 **CLI / Core (`packages/core/`)**
-- `npm test` — full vitest suite (~2000 tests)
-- `npm run test:unit` — unit tests only
-- `npm run test:integration` — integration (~1850 tests). LadybugDB file-locking tests may fail in containers (known env issue).
-- `npx tsc --noEmit` — typecheck
+- `npm --prefix packages/core test` — full vitest suite (~2000 tests)
+- `npm --prefix packages/core run test:unit` — unit tests only
+- `npm --prefix packages/core run test:integration` — integration (~1850 tests). LadybugDB file-locking tests may fail in containers (known env issue).
+- `npm --prefix packages/core exec tsc -- --noEmit` — typecheck
 
 **Web UI (`apps/web/`)**
-- `npm test` — vitest (~200 tests)
-- `npm run test:e2e` — Playwright (7 spec files; requires `codragraph serve` + `npm run dev`)
-- `npx tsc -b --noEmit` — typecheck
+- `npm --prefix apps/web test` — vitest (~200 tests)
+- `npm --prefix apps/web run test:e2e` — Playwright (7 spec files; requires `codragraph serve` + `npm --prefix apps/web run dev`)
+- `npm --prefix apps/web exec tsc -- -b --noEmit` — typecheck
 
 **Pre-commit hook** (`.husky/pre-commit`): formatting (prettier via lint-staged) + typecheck for staged packages. Tests do **not** run in pre-commit — CI only.
 

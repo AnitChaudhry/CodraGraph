@@ -38,6 +38,12 @@ export const DEFAULT_POLICY: PermissionPolicy = {
     ['repo.analyze', 'member'],
     ['repo.delete', 'admin'],
 
+    // Feature clusters / context packs
+    ['cluster.read', 'viewer'],
+    ['cluster.context_pack', 'viewer'],
+    ['cluster.impact', 'member'],
+    ['cluster.audit', 'admin'],
+
     // Recipes
     ['recipe.read', 'viewer'],
     ['recipe.create', 'member'],

@@ -248,6 +248,9 @@ const getNodeQuery = (table: string, includeContent: boolean): string => {
   if (table === 'Process') {
     return `MATCH (n:${tableLabel}) RETURN n.id AS id, n.label AS label, n.heuristicLabel AS heuristicLabel, n.processType AS processType, n.stepCount AS stepCount, n.communities AS communities, n.entryPointId AS entryPointId, n.terminalId AS terminalId`;
   }
+  if (table === 'FeatureCluster') {
+    return `MATCH (n:${tableLabel}) RETURN n.id AS id, n.name AS name, n.slug AS slug, n.featureKind AS featureKind, n.summary AS summary, n.description AS description, n.repo AS repo, n.service AS service, n.signals AS signals, n.memberCount AS memberCount, n.entryPointIds AS entryPointIds, n.routes AS routes, n.tools AS tools, n.testCoverageHints AS testCoverageHints, n.lastIndexedCommit AS lastIndexedCommit, n.confidence AS confidence, n.source AS source`;
+  }
   if (table === 'Route') {
     return `MATCH (n:${tableLabel}) RETURN n.id AS id, n.name AS name, n.filePath AS filePath, n.responseKeys AS responseKeys, n.errorKeys AS errorKeys, n.middleware AS middleware`;
   }
@@ -280,6 +283,20 @@ const mapGraphNodeRow = (table: string, row: any, includeContent: boolean): Grap
     communities: row.communities,
     entryPointId: row.entryPointId,
     terminalId: row.terminalId,
+    slug: row.slug,
+    featureKind: row.featureKind,
+    summary: row.summary,
+    repo: row.repo,
+    service: row.service,
+    signals: row.signals,
+    memberCount: row.memberCount,
+    entryPointIds: row.entryPointIds,
+    routes: row.routes,
+    tools: row.tools,
+    testCoverageHints: row.testCoverageHints,
+    lastIndexedCommit: row.lastIndexedCommit,
+    confidence: row.confidence,
+    source: row.source,
   } as GraphNode['properties'],
 });
 
@@ -1137,6 +1154,47 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
     }
   });
 
+  // Symbol context through the same LocalBackend path as MCP `context`
+  app.post('/api/context', async (req, res) => {
+    try {
+      const name = String(req.body?.name ?? '').trim();
+      if (!name) {
+        res.status(400).json({ error: 'Missing "name" in request body' });
+        return;
+      }
+
+      const result = await backend.callTool('context', {
+        ...req.body,
+        name,
+        repo: requestedRepo(req),
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(statusFromError(err)).json({ error: err.message || 'Context query failed' });
+    }
+  });
+
+  // Symbol impact through the same LocalBackend path as MCP `impact`
+  app.post('/api/impact', async (req, res) => {
+    try {
+      const target = String(req.body?.target ?? '').trim();
+      if (!target) {
+        res.status(400).json({ error: 'Missing "target" in request body' });
+        return;
+      }
+
+      const result = await backend.callTool('impact', {
+        ...req.body,
+        target,
+        direction: req.body?.direction ?? 'upstream',
+        repo: requestedRepo(req),
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(statusFromError(err)).json({ error: err.message || 'Impact query failed' });
+    }
+  });
+
   // Search (supports mode: 'hybrid' | 'semantic' | 'bm25', and optional enrichment)
   app.post('/api/search', async (req, res) => {
     try {
@@ -1477,6 +1535,69 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
       res
         .status(statusFromError(err))
         .json({ error: err.message || 'Failed to query cluster detail' });
+    }
+  });
+
+  // List all feature clusters
+  app.get('/api/feature-clusters', async (req, res) => {
+    try {
+      const limit = req.query.limit ? Number.parseInt(String(req.query.limit), 10) : undefined;
+      const query = String(req.query.query ?? '');
+      const result = await backend.queryFeatureClusters(requestedRepo(req), limit, query);
+      res.json(result);
+    } catch (err: any) {
+      res
+        .status(statusFromError(err))
+        .json({ error: err.message || 'Failed to query feature clusters' });
+    }
+  });
+
+  // Feature cluster detail
+  app.get('/api/feature-cluster', async (req, res) => {
+    try {
+      const name = String(req.query.name ?? '').trim();
+      if (!name) {
+        res.status(400).json({ error: 'Missing "name" query parameter' });
+        return;
+      }
+
+      const limit = req.query.limit ? Number.parseInt(String(req.query.limit), 10) : undefined;
+      const result = await backend.queryFeatureContext(name, requestedRepo(req), limit);
+      if (result?.error) {
+        res.status(404).json({ error: result.error });
+        return;
+      }
+      res.json(result);
+    } catch (err: any) {
+      res
+        .status(statusFromError(err))
+        .json({ error: err.message || 'Failed to query feature cluster detail' });
+    }
+  });
+
+  // Feature cluster impact/context pack
+  app.get(['/api/feature-impact', '/api/cluster-impact'], async (req, res) => {
+    try {
+      const name = String(req.query.name ?? '').trim();
+      if (!name) {
+        res.status(400).json({ error: 'Missing "name" query parameter' });
+        return;
+      }
+
+      const limit = req.query.limit ? Number.parseInt(String(req.query.limit), 10) : undefined;
+      const directionText = String(req.query.direction ?? 'upstream');
+      const direction =
+        directionText === 'downstream' || directionText === 'both' ? directionText : 'upstream';
+      const result = await backend.queryFeatureImpact(name, requestedRepo(req), direction, limit);
+      if (result?.error) {
+        res.status(404).json({ error: result.error });
+        return;
+      }
+      res.json(result);
+    } catch (err: any) {
+      res
+        .status(statusFromError(err))
+        .json({ error: err.message || 'Failed to query feature cluster impact' });
     }
   });
 

@@ -24,6 +24,7 @@ interface TabDef {
 const TABS: TabDef[] = [
   { value: 'overview', label: 'Overview', icon: LayoutDashboard },
   { value: 'graph', label: 'Graph', icon: Network },
+  { value: 'features', label: 'Features', icon: Layers },
   { value: 'projects', label: 'Projects', icon: Layers },
   { value: 'history', label: 'History', icon: History },
   { value: 'recipes', label: 'Recipes', icon: Sparkles },
@@ -31,9 +32,9 @@ const TABS: TabDef[] = [
 
 export const DashboardTabs = ({ section, onChange }: DashboardTabsProps): React.JSX.Element => (
   <div className="border-b border-border-subtle bg-deep">
-    <div className="mx-auto flex max-w-screen-2xl items-center gap-2 px-4 py-2">
+    <div className="scrollbar-none mx-auto flex max-w-screen-2xl items-center gap-2 overflow-x-auto px-4 py-2">
       <Tabs value={section} onValueChange={(v) => onChange(v as DashboardSection)}>
-        <TabsList>
+        <TabsList className="shrink-0">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -45,7 +46,7 @@ export const DashboardTabs = ({ section, onChange }: DashboardTabsProps): React.
           })}
         </TabsList>
       </Tabs>
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex shrink-0 items-center gap-3">
         <span className="flex items-center gap-2 text-xs text-text-muted">
           <GitBranch className="h-3.5 w-3.5" />
           <span className="font-mono">main</span>

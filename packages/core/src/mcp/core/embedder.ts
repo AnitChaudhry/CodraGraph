@@ -11,6 +11,8 @@ import {
   getHttpDimensions,
   httpEmbedQuery,
 } from '../../core/embeddings/http-client.js';
+import { homedir } from 'os';
+import { join } from 'path';
 import { silenceStdout, restoreStdout, realStderrWrite } from '../../core/cgdb/pool-adapter.js';
 
 // Model config
@@ -45,8 +47,9 @@ export const initEmbedder = async (): Promise<FeatureExtractionPipeline> => {
       // Default cache to user-writable location. transformers.js defaults to
       // ./node_modules/.cache inside its own install dir, which is unwritable
       // when codragraph is installed globally (e.g. /usr/lib/node_modules/).
-      // Respect HF_HOME if set, otherwise fall back to ~/.cache/huggingface.
-      env.cacheDir = process.env.HF_HOME ?? `${process.env.HOME}/.cache/huggingface`;
+      // Respect HF_HOME if set, otherwise fall back to a user-writable cache
+      // path using Node's OS-aware home directory resolution.
+      env.cacheDir = process.env.HF_HOME ?? join(homedir(), '.cache', 'huggingface');
 
       console.error('CodraGraph: Loading embedding model (first search may take a moment)...');
 

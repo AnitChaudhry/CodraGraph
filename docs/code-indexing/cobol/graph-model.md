@@ -5,38 +5,17 @@ This document describes the graph nodes and edges that CodraGraph creates for CO
 ## Entity-Relationship Diagram
 
 ```mermaid
-erDiagram
-    File ||--o{ Module : DEFINES
-    File ||--o{ Function : DEFINES
-    File ||--o{ Namespace : DEFINES
-    File ||--o{ Record : DEFINES
-    File ||--o{ Property : DEFINES
-    File ||--o{ Const : DEFINES
-    File ||--o{ CodeElement : DEFINES
-    File ||--o{ Constructor : DEFINES
-    File }o--o{ File : IMPORTS
-
-    Module ||--o{ Record : CONTAINS
-    Module ||--o{ Constructor : CONTAINS
-    Module }o--o{ CodeElement : ACCESSES
-    Module }o--o{ Module : CALLS
-    Module }o--o{ Module : CONTRACTS
-    Module }o--o{ Property : RECEIVES
-
-    Record ||--o{ Property : CONTAINS
-    Record ||--o{ Const : CONTAINS
-    Record }o--o{ Record : REDEFINES
-
-    Property ||--o{ Property : CONTAINS
-    Property ||--o{ Const : CONTAINS
-    Property }o--o{ Property : REDEFINES
-    Property }o--o{ CodeElement : RECORD_KEY_OF
-    Property }o--o{ CodeElement : FILE_STATUS_OF
-
-    CodeElement ||--o{ CodeElement : CONTAINS
-    CodeElement ||--o{ Record : CONTAINS
-
-    Function }o--o{ Function : CALLS
+flowchart LR
+    File["File"] --> Module["Program module"]
+    File --> Function["Paragraphs"]
+    File --> Data["Records and fields"]
+    File --> IO["SELECT, FD, SQL, CICS"]
+    File --> Copy["COPY imports"]
+    Module --> Calls["CALL / LINK targets"]
+    Module --> Uses["USING parameters"]
+    Data --> Keys["Record keys and file status"]
+    IO --> Data
+    Function --> Function
 ```
 
 ## Node Types

@@ -22,6 +22,7 @@ import { syncGroup } from './sync.js';
 import type {
   ContractRegistry,
   CrossLink,
+  CrossLinkEndpoint,
   GroupConfig,
   GroupContextResult,
   StoredContract,
@@ -80,6 +81,28 @@ export interface GroupToolPort {
       include_content?: boolean;
     },
   ): Promise<unknown>;
+  featureClusters?(
+    repo: GroupRepoHandle,
+    params: {
+      query?: string;
+      limit?: number;
+    },
+  ): Promise<unknown>;
+  featureContext?(
+    repo: GroupRepoHandle,
+    params: {
+      name: string;
+      limit?: number;
+    },
+  ): Promise<unknown>;
+  featureImpact?(
+    repo: GroupRepoHandle,
+    params: {
+      name: string;
+      direction?: 'upstream' | 'downstream' | 'both';
+      limit?: number;
+    },
+  ): Promise<unknown>;
 }
 
 function isStoredContract(raw: unknown): raw is StoredContract {
@@ -123,6 +146,161 @@ function filterQueryByServicePrefix(
   );
   const processes = (queryResult.processes || []).filter((p) => allowed.has(String(p.id)));
   return { processes, process_symbols: symbols };
+}
+
+type FeatureClusterRecord = Record<string, unknown> & {
+  id?: string;
+  name?: string;
+  slug?: string;
+  repoPath?: string;
+  registryName?: string;
+  memberCount?: number;
+  entryPointIds?: string[];
+  routes?: string[];
+  tools?: string[];
+};
+
+interface CrossRepoClusterLink {
+  sourceRepo: string;
+  sourceService?: string;
+  sourceClusterId?: string;
+  sourceClusterName?: string;
+  targetRepo: string;
+  targetService?: string;
+  targetClusterId?: string;
+  targetClusterName?: string;
+  contractName?: string;
+  relationship: 'shared-contract' | 'depends-on';
+  confidence: number;
+  evidence: string[];
+}
+
+function normalizeClusterToken(value: unknown): string {
+  return String(value ?? '')
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function featureClusterKey(cluster: FeatureClusterRecord): string {
+  return normalizeClusterToken(cluster.slug || cluster.name || cluster.id || 'unknown');
+}
+
+function normalizeStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => item !== null && item !== undefined)
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+  }
+  if (typeof value !== 'string' || value.trim() === '') return [];
+  return value
+    .replace(/^\[|\]$/g, '')
+    .split(/,(?=(?:[^']*'[^']*')*[^']*$)/)
+    .map((item) =>
+      item
+        .trim()
+        .replace(/^['"]|['"]$/g, '')
+        .replace(/\\,/g, ','),
+    )
+    .filter(Boolean);
+}
+
+function clusterOwnsEndpoint(cluster: FeatureClusterRecord, endpoint: CrossLinkEndpoint): boolean {
+  const entryPointIds = normalizeStringList(cluster.entryPointIds);
+  if (entryPointIds.includes(endpoint.symbolUid)) return true;
+
+  const key = featureClusterKey(cluster);
+  if (!key || key === 'unknown') return false;
+  const filePath = normalizeClusterToken(endpoint.symbolRef.filePath);
+  const symbolName = normalizeClusterToken(endpoint.symbolRef.name);
+  return filePath.includes(key) || symbolName.includes(key);
+}
+
+function resolveEndpointCluster(
+  endpoint: CrossLinkEndpoint,
+  clusters: FeatureClusterRecord[],
+): FeatureClusterRecord | undefined {
+  const sameRepo = clusters.filter((cluster) => cluster.repoPath === endpoint.repo);
+  return sameRepo.find((cluster) => clusterOwnsEndpoint(cluster, endpoint));
+}
+
+function buildCrossRepoClusterLinks(
+  registry: ContractRegistry | null,
+  clusters: FeatureClusterRecord[],
+): CrossRepoClusterLink[] {
+  if (!registry) return [];
+  const links: CrossRepoClusterLink[] = [];
+  for (const link of registry.crossLinks) {
+    const sourceCluster = resolveEndpointCluster(link.from, clusters);
+    const targetCluster = resolveEndpointCluster(link.to, clusters);
+    if (!sourceCluster || !targetCluster) continue;
+    links.push({
+      sourceRepo: link.from.repo,
+      sourceService: link.from.service,
+      sourceClusterId: sourceCluster.id,
+      sourceClusterName: String(sourceCluster.name || sourceCluster.slug || sourceCluster.id || ''),
+      targetRepo: link.to.repo,
+      targetService: link.to.service,
+      targetClusterId: targetCluster.id,
+      targetClusterName: String(targetCluster.name || targetCluster.slug || targetCluster.id || ''),
+      contractName: link.contractId,
+      relationship: 'shared-contract',
+      confidence: link.confidence,
+      evidence: [
+        `${link.type}:${link.contractId}`,
+        `${link.from.symbolRef.filePath} -> ${link.to.symbolRef.filePath}`,
+        `match:${link.matchType}`,
+      ],
+    });
+  }
+  return links;
+}
+
+function aggregateCrossRepoFeatureClusters(
+  clusters: FeatureClusterRecord[],
+  links: CrossRepoClusterLink[],
+): Array<Record<string, unknown>> {
+  const byKey = new Map<string, FeatureClusterRecord[]>();
+  for (const cluster of clusters) {
+    const key = featureClusterKey(cluster);
+    const list = byKey.get(key) ?? [];
+    list.push(cluster);
+    byKey.set(key, list);
+  }
+
+  return [...byKey.entries()]
+    .map(([key, group]) => {
+      const clusterIds = new Set(group.map((cluster) => String(cluster.id || '')).filter(Boolean));
+      const crossRepoLinks = links.filter(
+        (link) =>
+          (link.sourceClusterId && clusterIds.has(link.sourceClusterId)) ||
+          (link.targetClusterId && clusterIds.has(link.targetClusterId)),
+      );
+      const routes = new Set<string>();
+      const tools = new Set<string>();
+      for (const cluster of group) {
+        normalizeStringList(cluster.routes).forEach((route) => routes.add(route));
+        normalizeStringList(cluster.tools).forEach((tool) => tools.add(tool));
+      }
+      return {
+        key,
+        name: String(group[0]?.name || group[0]?.slug || key),
+        repos: group.map((cluster) => ({
+          repoPath: cluster.repoPath,
+          registryName: cluster.registryName,
+          cluster,
+        })),
+        repoCount: new Set(group.map((cluster) => cluster.repoPath)).size,
+        memberCount: group.reduce((sum, cluster) => sum + Number(cluster.memberCount ?? 0), 0),
+        routes: [...routes].sort(),
+        tools: [...tools].sort(),
+        crossRepoLinks,
+      };
+    })
+    .sort((a, b) => Number(b.memberCount) - Number(a.memberCount));
 }
 
 function isCrossLink(raw: unknown): raw is CrossLink {
@@ -458,6 +636,278 @@ export class GroupService {
       query: queryText,
       results: topN,
       per_repo: perRepo.map((r) => ({ repo: r.repo, count: r.processes.length })),
+    };
+  }
+
+  async groupFeatureClusters(params: Record<string, unknown>): Promise<unknown> {
+    const name = String(params.name ?? '').trim();
+    if (!name) return { error: 'name is required' };
+    const featureClusters = this.port.featureClusters;
+    if (!featureClusters) return { error: 'feature cluster query is unavailable' };
+    const query = typeof params.query === 'string' ? params.query.trim() : '';
+    const limit = typeof params.limit === 'number' && params.limit > 0 ? params.limit : 100;
+    const subgroup = typeof params.subgroup === 'string' ? params.subgroup : undefined;
+    const subgroupExact = params.subgroupExact === true;
+    const groupDir = getGroupDir(getDefaultCodragraphDir(), name);
+    let config: GroupConfig;
+    try {
+      config = await loadGroupConfig(groupDir);
+    } catch (err) {
+      if (err instanceof GroupNotFoundError)
+        return { error: `Group "${name}" not found. Run group_list to see configured groups.` };
+      throw err;
+    }
+
+    const memberEntries = Object.entries(config.repos).filter(([repoPath]) =>
+      repoInSubgroup(repoPath, subgroup, subgroupExact),
+    );
+    const registryResult = await loadContractRegistryResilient(groupDir);
+    const registry = registryResult.ok ? registryResult.registry : null;
+    const perRepo = await Promise.all(
+      memberEntries.map(async ([repoPath, registryName]) => {
+        try {
+          const repoObj = await this.port.resolveRepo(registryName);
+          const payload = (await featureClusters(repoObj, {
+            query,
+            limit,
+          })) as { clusters?: Array<Record<string, unknown>>; error?: string };
+          const clusters = (payload.clusters ?? []).map((cluster) => ({
+            ...cluster,
+            repoPath,
+            registryName,
+          }));
+          return { repo: repoPath, registryName, clusters };
+        } catch (e) {
+          return {
+            repo: repoPath,
+            registryName,
+            clusters: [],
+            error: e instanceof Error ? e.message : String(e),
+          };
+        }
+      }),
+    );
+    const clusters = perRepo
+      .flatMap((entry) => entry.clusters)
+      .sort((a, b) => Number(b.memberCount ?? 0) - Number(a.memberCount ?? 0))
+      .slice(0, limit);
+    const allClusters = perRepo.flatMap((entry) => entry.clusters);
+    const crossRepoLinks = buildCrossRepoClusterLinks(registry, allClusters);
+    const crossRepoClusters = aggregateCrossRepoFeatureClusters(allClusters, crossRepoLinks);
+
+    return {
+      group: name,
+      query,
+      clusters,
+      cross_repo_clusters: crossRepoClusters,
+      cross_repo_links: crossRepoLinks,
+      ...(registryResult.ok === true && registryResult.skippedCorrupt > 0
+        ? { skippedCorruptContracts: registryResult.skippedCorrupt }
+        : {}),
+      per_repo: perRepo.map((entry) => ({
+        repo: entry.repo,
+        registryName: entry.registryName,
+        count: entry.clusters.length,
+        ...(entry.error ? { error: entry.error } : {}),
+      })),
+    };
+  }
+
+  async groupFeatureContext(params: Record<string, unknown>): Promise<unknown> {
+    const name = String(params.name ?? '').trim();
+    const clusterName = String(params.cluster ?? params.target ?? params.feature ?? '').trim();
+    if (!name || !clusterName) return { error: 'name and cluster are required' };
+    const featureContext = this.port.featureContext;
+    if (!featureContext) return { error: 'feature cluster context is unavailable' };
+    const limit = typeof params.limit === 'number' && params.limit > 0 ? params.limit : 100;
+    const subgroup = typeof params.subgroup === 'string' ? params.subgroup : undefined;
+    const subgroupExact = params.subgroupExact === true;
+    const groupDir = getGroupDir(getDefaultCodragraphDir(), name);
+    let config: GroupConfig;
+    try {
+      config = await loadGroupConfig(groupDir);
+    } catch (err) {
+      if (err instanceof GroupNotFoundError)
+        return { error: `Group "${name}" not found. Run group_list to see configured groups.` };
+      throw err;
+    }
+
+    const memberEntries = Object.entries(config.repos).filter(([repoPath]) =>
+      repoInSubgroup(repoPath, subgroup, subgroupExact),
+    );
+    const registryResult = await loadContractRegistryResilient(groupDir);
+    const registry = registryResult.ok ? registryResult.registry : null;
+    const results = await Promise.all(
+      memberEntries.map(async ([repoPath, registryName]) => {
+        try {
+          const repoObj = await this.port.resolveRepo(registryName);
+          const payload = await featureContext(repoObj, {
+            name: clusterName,
+            limit,
+          });
+          return { repoPath, registryName, payload };
+        } catch (e) {
+          return {
+            repoPath,
+            registryName,
+            payload: { error: e instanceof Error ? e.message : String(e) },
+          };
+        }
+      }),
+    );
+    const contexts = results.filter((result) => !(result.payload as { error?: string })?.error);
+    const memberIdsByRepo = new Map<string, Set<string>>();
+    for (const result of contexts) {
+      const payload = result.payload as { members?: Array<{ id?: string }> };
+      memberIdsByRepo.set(
+        result.repoPath,
+        new Set((payload.members ?? []).map((member) => String(member.id || '')).filter(Boolean)),
+      );
+    }
+    const crossRepoLinks = (registry?.crossLinks ?? [])
+      .filter((link) => {
+        const fromIds = memberIdsByRepo.get(link.from.repo);
+        const toIds = memberIdsByRepo.get(link.to.repo);
+        return fromIds?.has(link.from.symbolUid) || toIds?.has(link.to.symbolUid);
+      })
+      .map((link) => ({
+        sourceRepo: link.from.repo,
+        sourceService: link.from.service,
+        targetRepo: link.to.repo,
+        targetService: link.to.service,
+        contractName: link.contractId,
+        relationship: 'shared-contract' as const,
+        confidence: link.confidence,
+        evidence: [
+          `${link.type}:${link.contractId}`,
+          `${link.from.symbolRef.filePath} -> ${link.to.symbolRef.filePath}`,
+          `match:${link.matchType}`,
+        ],
+      }));
+
+    return {
+      group: name,
+      cluster: clusterName,
+      results: contexts,
+      cross_repo_links: crossRepoLinks,
+      ...(registryResult.ok === true && registryResult.skippedCorrupt > 0
+        ? { skippedCorruptContracts: registryResult.skippedCorrupt }
+        : {}),
+      errors: results
+        .filter((result) => (result.payload as { error?: string })?.error)
+        .map((result) => ({
+          repoPath: result.repoPath,
+          registryName: result.registryName,
+          error: (result.payload as { error?: string }).error,
+        })),
+    };
+  }
+
+  async groupFeatureImpact(params: Record<string, unknown>): Promise<unknown> {
+    const name = String(params.name ?? '').trim();
+    const clusterName = String(params.cluster ?? params.target ?? params.feature ?? '').trim();
+    if (!name || !clusterName) return { error: 'name and cluster are required' };
+    const featureImpact = this.port.featureImpact;
+    if (!featureImpact) return { error: 'feature cluster impact is unavailable' };
+    const direction =
+      params.direction === 'downstream' || params.direction === 'both'
+        ? params.direction
+        : 'upstream';
+    const limit = typeof params.limit === 'number' && params.limit > 0 ? params.limit : 100;
+    const subgroup = typeof params.subgroup === 'string' ? params.subgroup : undefined;
+    const subgroupExact = params.subgroupExact === true;
+    const groupDir = getGroupDir(getDefaultCodragraphDir(), name);
+    let config: GroupConfig;
+    try {
+      config = await loadGroupConfig(groupDir);
+    } catch (err) {
+      if (err instanceof GroupNotFoundError)
+        return { error: `Group "${name}" not found. Run group_list to see configured groups.` };
+      throw err;
+    }
+
+    const memberEntries = Object.entries(config.repos).filter(([repoPath]) =>
+      repoInSubgroup(repoPath, subgroup, subgroupExact),
+    );
+    const registryResult = await loadContractRegistryResilient(groupDir);
+    const registry = registryResult.ok ? registryResult.registry : null;
+    const results = await Promise.all(
+      memberEntries.map(async ([repoPath, registryName]) => {
+        try {
+          const repoObj = await this.port.resolveRepo(registryName);
+          const payload = await featureImpact(repoObj, {
+            name: clusterName,
+            direction,
+            limit,
+          });
+          return { repoPath, registryName, payload };
+        } catch (e) {
+          return {
+            repoPath,
+            registryName,
+            payload: { error: e instanceof Error ? e.message : String(e) },
+          };
+        }
+      }),
+    );
+    const successfulResults = results.filter(
+      (result) => !(result.payload as { error?: string })?.error,
+    );
+    const memberIdsByRepo = new Map<string, Set<string>>();
+    for (const result of successfulResults) {
+      const payload = result.payload as {
+        contextPack?: { members?: Array<{ id?: string }> };
+      };
+      memberIdsByRepo.set(
+        result.repoPath,
+        new Set(
+          (payload.contextPack?.members ?? [])
+            .map((member) => String(member.id || ''))
+            .filter(Boolean),
+        ),
+      );
+    }
+    const crossRepoLinks = (registry?.crossLinks ?? [])
+      .filter((link) => {
+        const fromIds = memberIdsByRepo.get(link.from.repo);
+        const toIds = memberIdsByRepo.get(link.to.repo);
+        return fromIds?.has(link.from.symbolUid) || toIds?.has(link.to.symbolUid);
+      })
+      .map((link) => ({
+        sourceRepo: link.from.repo,
+        sourceService: link.from.service,
+        targetRepo: link.to.repo,
+        targetService: link.to.service,
+        contractName: link.contractId,
+        relationship: 'shared-contract' as const,
+        confidence: link.confidence,
+        evidence: [
+          `${link.type}:${link.contractId}`,
+          `${link.from.symbolRef.filePath} -> ${link.to.symbolRef.filePath}`,
+          `match:${link.matchType}`,
+        ],
+      }));
+
+    return {
+      group: name,
+      cluster: clusterName,
+      direction,
+      results: successfulResults,
+      cross_repo_links: crossRepoLinks,
+      summary: {
+        repos: successfulResults.length,
+        crossRepoLinks: crossRepoLinks.length,
+      },
+      ...(registryResult.ok === true && registryResult.skippedCorrupt > 0
+        ? { skippedCorruptContracts: registryResult.skippedCorrupt }
+        : {}),
+      errors: results
+        .filter((result) => (result.payload as { error?: string })?.error)
+        .map((result) => ({
+          repoPath: result.repoPath,
+          registryName: result.registryName,
+          error: (result.payload as { error?: string }).error,
+        })),
     };
   }
 

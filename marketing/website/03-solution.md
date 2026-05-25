@@ -11,7 +11,7 @@ Codragraph sits between your codebase and your agent. Four layers stack on top o
 ---
 
 ### Layer 1 — Code-aware Indexing
-**16 languages. 44 node types. 21 relationship types. One unified graph.**
+**16 languages. 45 node types. 23 relationship types. One unified graph.**
 
 Codragraph parses your repo with tree-sitter, builds a knowledge graph (call edges, type relationships, route handlers, ORM queries, process flows), and stores it in a local LadybugDB. When your agent asks "what calls `validateUser`?", it gets a structured answer in milliseconds — not a substring scan.
 

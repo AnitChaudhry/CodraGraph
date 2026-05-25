@@ -18,6 +18,7 @@ import { pipeline, env, type FeatureExtractionPipeline } from '@huggingface/tran
 import { existsSync } from 'fs';
 import { execFileSync } from 'child_process';
 import { join, dirname } from 'path';
+import { homedir } from 'os';
 import { createRequire } from 'module';
 import { DEFAULT_EMBEDDING_CONFIG, type EmbeddingConfig, type ModelProgress } from './types.js';
 import { isHttpMode, getHttpDimensions, httpEmbed } from './http-client.js';
@@ -160,8 +161,9 @@ export const initEmbedder = async (
       // Default cache to user-writable location. transformers.js defaults to
       // ./node_modules/.cache inside its own install dir, which is unwritable
       // when codragraph is installed globally (e.g. /usr/lib/node_modules/).
-      // Respect HF_HOME if set, otherwise fall back to ~/.cache/huggingface.
-      env.cacheDir = process.env.HF_HOME ?? `${process.env.HOME}/.cache/huggingface`;
+      // Respect HF_HOME if set, otherwise fall back to a user-writable cache
+      // path using Node's OS-aware home directory resolution.
+      env.cacheDir = process.env.HF_HOME ?? join(homedir(), '.cache', 'huggingface');
 
       const isDev = process.env.NODE_ENV === 'development';
       if (isDev) {

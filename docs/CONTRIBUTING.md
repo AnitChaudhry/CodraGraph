@@ -9,14 +9,20 @@ This project uses the [Apache License 2.0](https://www.apache.org/licenses/LICEN
 ## Where to discuss
 
 - **Issues & feature ideas:** use the project's issue tracker once a hosting location is set up.
-- **Community:** see the Discord link in the root [README.md](README.md).
+- **Community:** see the support section in the root [README.md](../README.md).
 
 ## Development setup
 
 1. Clone the repository.
-2. **CLI / MCP package:** `cd packages/core && npm install && npm run build`
-3. **Web UI (if needed):** `cd apps/web && npm install`
-4. Run tests as described in [TESTING.md](TESTING.md).
+2. Install workspace dependencies from the repo root: `npm install`
+3. **CLI / MCP package:** `npm --prefix packages/core run build`
+4. **Web UI (if needed):** `npm --prefix apps/web run build`
+5. Run tests as described in [TESTING.md](TESTING.md).
+
+The documented commands are written to work in Windows PowerShell,
+macOS bash/zsh, and Linux shells. Prefer `npm --prefix <package> <script>`
+from the repository root instead of shell-specific `cd dir && ...` chains
+when sharing commands in docs, issues, or PRs.
 
 ## Branch and pull requests
 
@@ -58,8 +64,8 @@ Commits within a PR may use any style — only the **merged PR title** shows up 
 
 ## Before you open a PR
 
-- [ ] Tests pass for the packages you touched (`codragraph` and/or `apps/web`).
-- [ ] Typecheck passes: `npx tsc --noEmit` in `packages/core/` and `npx tsc -b --noEmit` in `apps/web/`.
+- [ ] Tests pass for the packages you touched, for example `npm --prefix packages/core test` or `npm --prefix apps/web test`.
+- [ ] Typecheck passes: `npm --prefix packages/core exec tsc -- --noEmit` and `npm --prefix apps/web exec tsc -- -b --noEmit`.
 - [ ] No secrets, tokens, or machine-specific paths committed.
 - [ ] Documentation updated if behavior or public CLI/MCP contract changes.
 - [ ] Pre-commit hook runs clean (`.husky/pre-commit` — formatting via lint-staged + typecheck for staged packages; tests run in CI only).

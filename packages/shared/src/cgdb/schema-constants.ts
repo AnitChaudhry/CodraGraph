@@ -18,6 +18,7 @@ export const NODE_TABLES = [
   'CodeElement',
   'Community',
   'Process',
+  'FeatureCluster',
   'Section',
   'Struct',
   'Enum',
@@ -67,6 +68,8 @@ export const REL_TYPES = [
   'ENTRY_POINT_OF',
   'WRAPS',
   'QUERIES',
+  'FEATURE_MEMBER_OF',
+  'FEATURE_DEPENDS_ON',
 ] as const;
 
 export type RelType = (typeof REL_TYPES)[number];

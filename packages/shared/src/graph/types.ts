@@ -25,6 +25,7 @@ export type NodeLabel =
   | 'CodeElement'
   | 'Community'
   | 'Process'
+  | 'FeatureCluster'
   // Multi-language node types
   | 'Struct'
   | 'Macro'
@@ -89,6 +90,21 @@ export type NodeProperties = {
   responseKeys?: string[];
   errorKeys?: string[];
   middleware?: string[];
+  // Feature cluster
+  slug?: string;
+  featureKind?: string;
+  summary?: string;
+  repo?: string;
+  service?: string;
+  signals?: string[];
+  memberCount?: number;
+  entryPointIds?: string[];
+  routes?: string[];
+  tools?: string[];
+  testCoverageHints?: string[];
+  lastIndexedCommit?: string;
+  confidence?: number;
+  source?: string;
   // Extensible
   [key: string]: unknown;
 };
@@ -115,7 +131,9 @@ export type RelationshipType =
   | 'HANDLES_TOOL'
   | 'ENTRY_POINT_OF'
   | 'WRAPS'
-  | 'QUERIES';
+  | 'QUERIES'
+  | 'FEATURE_MEMBER_OF'
+  | 'FEATURE_DEPENDS_ON';
 
 export interface GraphNode {
   id: string;

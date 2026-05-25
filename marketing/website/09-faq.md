@@ -67,7 +67,11 @@ No competitor combines versioning + harness this way. Sourcegraph has search but
 
 ### Can I use this commercially?
 
-Internally at your company: **yes.** Reselling Codragraph itself or hosting it as a paid service: **no, not under the open license.** Commercial license available — contact us.
+Yes. Codragraph is Apache-2.0, so you can use it internally, modify it,
+bundle it in commercial products, or host it as a paid service. Keep the
+Apache-2.0 license and attribution notices with redistributed copies. Paid
+Codragraph offerings are for managed hosting, support, security reviews, and
+enterprise operations rather than license gates.
 
 ---
 
@@ -79,7 +83,9 @@ GitHub Discussions for questions, GitHub Issues for bugs. (Post-launch.)
 
 ### When is the hosted version available?
 
-Phase 5 ships a managed multi-tenant version. License decision pending. Join the waitlist on the Pricing page.
+Phase 5 ships a managed multi-tenant version. The open-source license remains
+Apache-2.0; the hosted product will add managed service terms, support, and
+team operations. Join the waitlist on the Pricing page.
 
 ---
 

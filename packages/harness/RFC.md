@@ -339,19 +339,17 @@ client.
 
 Tracked, not blockers for Phase 1 sign-off.
 
-1. **Wire `harness_run` handler dispatch** in `packages/core/src/mcp/local/` (the
-   codragraph MCP server's case statement). Currently the tool is declared
-   but the dispatcher needs to import `handleHarnessRun` and route to it.
-2. **Compile candidates before evaluation** — Phase 1 relies on the host
-   CLI being run under tsx. Production: add an esbuild step that produces
-   a sibling `index.js` per candidate before `loadCandidate()`.
+1. ~~**Wire `harness_run` handler dispatch**~~ — RESOLVED. The CodraGraph
+   MCP dispatcher imports `handleHarnessRun` from `@codragraph/harness`.
+2. ~~**Compile candidates before evaluation**~~ — RESOLVED. `loadCandidate()`
+   compiles each candidate with esbuild into `source/_compiled/index.js`.
 3. **Validate proposer output** — currently `loadCandidate` is the only
    gate. Add a syntactic check (TS parse) before persisting to 𝒟 so we
    catch malformed proposer output earlier and report a richer rejection
    reason.
-4. **Real graph wire-up** — `HttpGraphClient` assumes `codragraph serve`
-   exposes `/api/query`, `/api/context`, `/api/impact` over POST. Confirm
-   against codragraph's actual API shape and adjust.
+4. ~~**Real graph wire-up**~~ — RESOLVED 2026-05-26. `HttpGraphClient`
+   uses `codragraph serve` REST endpoints for search, context, impact,
+   feature clusters, context packs, and feature impact.
 5. **Heterogeneous search-set scoring** — current aggregator is mean.
    Hard tasks should get higher weight; needs a `difficulty` field in the
    task JSON.

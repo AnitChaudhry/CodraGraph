@@ -37,6 +37,8 @@ For any task involving code understanding, debugging, impact analysis, or refact
 | `impact`         | Symbol blast radius — what breaks at depth 1/2/3 with confidence         |
 | `detect_changes` | Git-diff impact — what do your current changes affect                    |
 | `rename`         | Multi-file coordinated rename with confidence-tagged edits               |
+| `feature_clusters` | Product/domain feature map for targeted context                       |
+| `feature_context` | Members, line ranges, dependencies, and flows for one feature          |
 | `cypher`         | Raw graph queries (read `codragraph://repo/{name}/schema` first)           |
 | `list_repos`     | Discover indexed repos                                                   |
 
@@ -48,6 +50,8 @@ Lightweight reads (~100-500 tokens) for navigation:
 | ---------------------------------------------- | ----------------------------------------- |
 | `codragraph://repo/{name}/context`               | Stats, staleness check                    |
 | `codragraph://repo/{name}/clusters`              | All functional areas with cohesion scores |
+| `codragraph://repo/{name}/feature-clusters`      | Product/domain feature areas              |
+| `codragraph://repo/{name}/feature/{featureName}` | Focused files, line ranges, flows, deps   |
 | `codragraph://repo/{name}/cluster/{clusterName}` | Area members                              |
 | `codragraph://repo/{name}/processes`             | All execution flows                       |
 | `codragraph://repo/{name}/process/{processName}` | Step-by-step trace                        |
@@ -55,8 +59,8 @@ Lightweight reads (~100-500 tokens) for navigation:
 
 ## Graph Schema
 
-**Nodes:** File, Function, Class, Interface, Method, Community, Process
-**Edges (via CodeRelation.type):** CALLS, IMPORTS, EXTENDS, IMPLEMENTS, DEFINES, MEMBER_OF, STEP_IN_PROCESS
+**Nodes:** File, Function, Class, Interface, Method, Community, Process, FeatureCluster
+**Edges (via CodeRelation.type):** CALLS, IMPORTS, EXTENDS, IMPLEMENTS, DEFINES, MEMBER_OF, STEP_IN_PROCESS, FEATURE_MEMBER_OF, FEATURE_DEPENDS_ON
 
 ```cypher
 MATCH (caller)-[:CodeRelation {type: 'CALLS'}]->(f:Function {name: "myFunc"})

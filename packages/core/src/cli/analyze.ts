@@ -13,6 +13,7 @@ import { execFileSync } from 'child_process';
 import v8 from 'v8';
 import cliProgress from 'cli-progress';
 import * as fsSync from 'node:fs';
+import { createRequire } from 'module';
 import { closeCgdb } from '../core/cgdb/cgdb-adapter.js';
 import {
   getStoragePaths,
@@ -24,6 +25,9 @@ import { runFullAnalysis } from '../core/run-analyze.js';
 import { getMaxFileSizeBannerMessage } from '../core/ingestion/utils/max-file-size.js';
 import fs from 'fs/promises';
 
+const require = createRequire(import.meta.url);
+const pkg = require('../../package.json') as { version: string };
+const CLI_PACKAGE_SPEC = `@codragraph/cli@${pkg.version}`;
 const HEAP_MB = 8192;
 const HEAP_FLAG = `--max-old-space-size=${HEAP_MB}`;
 /** Increase default stack size (KB) to prevent stack overflow on deep class hierarchies. */
@@ -176,25 +180,6 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
     });
   }
 
-  // ── First-run auto-setup ───────────────────────────────────────────
-  // Makes `npx @codragraph/cli analyze` a true one-command entry. We detect
-  // first-run by the absence of the global registry — analyze writes to it on
-  // every successful index, so it's a reliable "this user has never run us
-  // before" signal. Opt out with `--no-setup` for CI / headless contexts;
-  // commander maps `--no-setup` to `options.setup === false`.
-  if (options?.setup !== false) {
-    let registryExists = true;
-    try {
-      await fs.access(getGlobalRegistryPath());
-    } catch {
-      registryExists = false;
-    }
-    if (!registryExists) {
-      const { runSetup } = await import('./setup.js');
-      await runSetup({ skipNextSteps: true, compactHeader: true });
-    }
-  }
-
   console.log('\n  CodraGraph Analyzer\n');
 
   let repoPath: string;
@@ -229,6 +214,23 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
     console.log(
       '  Warning: no .git directory found \u2014 commit-tracking and incremental updates disabled.\n',
     );
+  }
+
+  // ── First-run auto-setup ───────────────────────────────────────────
+  // Makes `npx @codragraph/cli analyze` a true one-command entry. Validate
+  // the target repo first so invalid invocations fail fast without mutating
+  // editor/global config.
+  if (options?.setup !== false) {
+    let registryExists = true;
+    try {
+      await fs.access(getGlobalRegistryPath());
+    } catch {
+      registryExists = false;
+    }
+    if (!registryExists) {
+      const { runSetup } = await import('./setup.js');
+      await runSetup({ skipNextSteps: true, compactHeader: true });
+    }
   }
 
   // KuzuDB migration cleanup is handled by runFullAnalysis internally.
@@ -418,7 +420,9 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
               nodes: s.nodes ?? 0,
               edges: s.edges ?? 0,
               communities: s.communities,
-              clusters: aggregatedClusterCount,
+              clusters:
+                result.pipelineResult?.featureClusterResult?.stats.totalClusters ??
+                aggregatedClusterCount,
               processes: s.processes,
             },
             skillResult.skills,
@@ -526,8 +530,8 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
       console.error('  Suggestions:');
       console.error('    1. Clear the npm cache:    npm cache clean --force');
       console.error('    2. Update npm:             npm install -g npm@latest');
-      console.error('    3. Reinstall codragraph:     npm install -g @codragraph/cli@latest');
-      console.error('    4. Or try npx directly:    npx @codragraph/cli@latest analyze');
+      console.error(`    3. Reinstall codragraph:     npm install -g ${CLI_PACKAGE_SPEC}`);
+      console.error(`    4. Or try npx directly:    npx ${CLI_PACKAGE_SPEC} analyze`);
       console.error('');
     } else if (
       msg.includes('MODULE_NOT_FOUND') ||
@@ -536,9 +540,9 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
     ) {
       console.error('  A required module could not be loaded. The installation may be corrupt.');
       console.error('  Suggestions:');
-      console.error('    1. Reinstall:   npm install -g @codragraph/cli@latest');
+      console.error(`    1. Reinstall:   npm install -g ${CLI_PACKAGE_SPEC}`);
       console.error(
-        '    2. Clear cache: npm cache clean --force && npx @codragraph/cli@latest analyze',
+        `    2. Clear cache: npm cache clean --force && npx ${CLI_PACKAGE_SPEC} analyze`,
       );
       console.error('');
     }

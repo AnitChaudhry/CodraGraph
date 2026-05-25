@@ -18,6 +18,8 @@ dist/
 Thumbs.db
 
 .claude/settings.local.json
+.codex/
+.playwright-mcp/
 
 # Environment variables
 .env
@@ -61,8 +63,8 @@ assets/
 repomix-output*
 
 # Playwright artifacts
-codragraph-web/playwright-report/
-codragraph-web/test-results/
+apps/web/playwright-report/
+apps/web/test-results/
 
 # Python test artifacts
 eval/.coverage

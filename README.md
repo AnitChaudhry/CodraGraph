@@ -23,9 +23,9 @@
 
 AI coding agents don't *understand* your codebase — they grep through it.
 CodraGraph replaces that with a **precomputed knowledge graph** of every
-function, class, call, import, and execution flow, then exposes it to
-your agent over MCP / SDK / CLI / HTTP. Same query that took 32k tokens
-of grep now takes 4k tokens of structural answer.
+function, class, call, import, execution flow, and product/domain feature
+cluster, then exposes it to your agent over MCP / SDK / CLI / HTTP. Same
+query that took 32k tokens of grep now takes 4k tokens of structural answer.
 
 ```sh
 # One command. No global install, no separate setup step.
@@ -43,28 +43,14 @@ codragraph analyze .        # auto-runs setup on first invocation; --no-setup to
 
 ```mermaid
 flowchart LR
-    Code["Your repo"] -->|codragraph analyze| Graph[("Knowledge Graph<br/>44 node types<br/>21 edge types<br/>16 languages")]
-    Graph --> CLI["codragraph CLI"]
-    Graph --> MCP["MCP server"]
-    Graph --> HTTP["HTTP API :4747"]
-    Graph --> SDK["SDK / programmatic"]
-    Graph --> Harness["packages/harness CLI<br/>+ recipe memory"]
-    SDK --> Compress["packages/compress<br/>lossless context compression"]
-    Harness --> Compress
-
-    MCP --> Claude["Claude Code"]
-    MCP --> Cursor["Cursor"]
-    MCP --> Codex["OpenAI Codex CLI"]
-    MCP --> OpenCode["OpenCode"]
-    MCP --> Windsurf["Windsurf, Cline, others"]
-
-    HTTP --> Web["Web Dashboard<br/>localhost:4747"]
-    SDK --> CustomAgent["Your custom agent"]
-    SDK --> CustomTools["Your custom tools"]
-    Harness --> Frontier["Pareto-tuned harness<br/>per task family"]
-    Harness --> Recipes[("Recipe cache<br/>.codragraph/recipes/")]
-    Recipes -.->|reuse on cache hit| Harness
-    Compress --> LLM["LLM provider<br/>(Claude / OpenAI / Ollama / ...)"]
+    Repo["Your repo"] --> CLI["codragraph analyze"]
+    CLI --> Graph["Knowledge graph"]
+    Graph --> Features["FeatureCluster packs"]
+    Graph --> Tools["CLI / MCP / HTTP / SDK"]
+    Features --> Tools
+    Tools --> Agents["Claude, Cursor, Codex, OpenCode"]
+    Tools --> Web["Web dashboard"]
+    Tools --> SDK["Custom agents"]
 ```
 
 Four capabilities ship together — pick the ones that matter for your use
@@ -83,33 +69,26 @@ case, the rest are zero-cost when ignored:
 
 ```mermaid
 flowchart TD
-    Start{"What are you<br/>trying to do?"} --> A["Use an AI coding<br/>agent on your repo"]
-    Start --> B["Build my own<br/>agent or tool<br/>on top"]
-    Start --> C["Just need versioned<br/>graph storage"]
-    Start --> D["Auto-tune harnesses<br/>for my own task family"]
-    Start --> G["Compress LLM context<br/>for any agent"]
-    Start --> E["Run a multi-tenant<br/>hosted version"]
-    Start --> F["Wire CodraGraph<br/>into a specific IDE"]
-
-    A -->|primary| P1["<b>@codragraph/cli</b><br/>+ IDE plugin"]
-    B -->|primary| P2["<b>@codragraph/sdk</b>"]
-    C -->|primary| P3["<b>@codragraph/graphstore</b>"]
-    D -->|primary| P4["<b>@codragraph/harness</b>"]
-    G -->|primary| P9["<b>@codragraph/compress</b>"]
-    E -->|primary| P5["<b>@codragraph/org</b>"]
-    F -->|Claude Code| P6["<b>@codragraph/claude-plugin</b>"]
-    F -->|Cursor| P7["integrations/cursor"]
-    F -->|Codex CLI| P8["<b>@codragraph/codex</b>"]
+    Need["What do you need?"] --> Agent["Use an AI coding agent"]
+    Need --> Build["Build your own agent/tool"]
+    Need --> Store["Version graph history"]
+    Need --> Tune["Tune harness recipes"]
+    Need --> Host["Hosted/team boundaries"]
+    Agent --> CLI["@codragraph/cli + editor integration"]
+    Build --> SDK["@codragraph/sdk"]
+    Store --> Graphstore["@codragraph/graphstore"]
+    Tune --> Harness["@codragraph/harness + @codragraph/compress"]
+    Host --> Org["@codragraph/org"]
 ```
 
 ### Package matrix
 
 | Package | Audience | What it gives you | Install |
 |---|---|---|---|
-| **[`@codragraph/cli`](./packages/core)** | Solo devs, anyone with a coding agent | CLI + MCP server + HTTP API + indexer + web dashboard. The "everything in one bin" path. | `npm i -g @codragraph/cli` |
+| **[`@codragraph/cli`](./packages/core)** | Solo devs, anyone with a coding agent | CLI + MCP server + HTTP API + indexer + web dashboard + feature-cluster context packs. The "everything in one bin" path. | `npm i -g @codragraph/cli` |
 | **[`@codragraph/sdk`](./packages/sdk)** | Agent builders, tool authors | Single-import programmatic surface re-exporting `graph`, `harness`, `graphstore`, `compress`. Subpath imports for tree-shaking. | `npm i @codragraph/sdk` |
 | **[`@codragraph/graphstore`](./packages/graphstore)** | Anyone who wants snapshots/branches/diffs/merge over a property graph (no AI needed) | Engine-agnostic content-addressed versioning layer. Works with any RowSource. | `npm i @codragraph/graphstore` |
-| **[`@codragraph/harness`](./packages/harness)** | Researchers, agent infra teams | Meta-Harness Pareto search + 3-role swarm + recipe memory. CLI: `packages/harness`. | `npm i @codragraph/harness` |
+| **[`@codragraph/harness`](./packages/harness)** | Researchers, agent infra teams | Meta-Harness Pareto search + 3-role swarm + recipe memory. CLI: `codragraph-harness`. | `npm i @codragraph/harness` |
 | **[`@codragraph/compress`](./packages/compress)** | Anyone bottlenecked by LLM context | Lossless semantic compression for LLM contexts. Strip grammar, keep facts. | `npm i @codragraph/compress` |
 | **[`@codragraph/org`](./packages/org)** | SaaS / multi-tenant builders | Multi-tenant orgs, SSO, RBAC, tamper-evident audit log (built on graphstore CAS). | `npm i @codragraph/org` |
 | **[`@codragraph/codex`](./integrations/codex)** | OpenAI Codex CLI users | Codex hooks + MCP wiring. Bin: `codragraph-codex`. | `npm i -g @codragraph/codex` |
@@ -117,59 +96,65 @@ flowchart TD
 | [`integrations/cursor`](./integrations/cursor) | Cursor users | beforeShellExecution hook + 7 skills (drop into `.cursor/` of your repo) | manual copy |
 | `@codragraph/shared` | (internal) | Shared TypeScript types. Not consumed directly. | — |
 
+All public CodraGraph packages are licensed under Apache-2.0. You can use
+the CLI, SDK, graphstore, harness, compression layer, org helpers, and
+editor integrations for personal, internal, commercial, hosted, or
+redistributed products, subject to the Apache-2.0 notice and attribution
+requirements in the license section below.
+
+### How packages compose with the CLI
+
+`@codragraph/cli` is the base layer for most users: it indexes one repo or a
+multi-repo group, writes `.codragraph/`, serves MCP/HTTP, and exposes
+`feature_clusters` / `feature_context` so agents can jump straight to the
+right files and line ranges.
+
+| You are building | Install | Combine it with |
+|---|---|---|
+| Solo-dev agent workflow | `@codragraph/cli` plus your editor integration | `codragraph analyze`, then MCP tools in Claude/Cursor/Codex/OpenCode |
+| Custom agent or internal tool | `@codragraph/sdk` | A locally indexed repo from `@codragraph/cli`; use SDK graph clients for context/impact/feature context |
+| Versioned graph storage | `@codragraph/graphstore` | `@codragraph/cli` snapshots, or your own RowSource if no agent is involved |
+| Eval or self-improving agent harness | `@codragraph/harness` | `@codragraph/cli` graph data plus `@codragraph/sdk` for programmatic orchestration |
+| Token budget pressure | `@codragraph/compress` | Feature context packs from the CLI, compressed before an LLM prompt |
+| Hosted/multi-tenant deployment | `@codragraph/org` | CLI/indexing workers plus graphstore CAS under tenant/RBAC/audit boundaries |
+
 ### The dependency graph
 
 ```mermaid
 flowchart BT
-    shared["@codragraph/shared<br/><i>types only</i>"]
-    graphstore["@codragraph/graphstore<br/>versioning"]
-    cli["@codragraph/cli<br/>indexer + MCP + HTTP"]
-    harness["@codragraph/harness<br/>Pareto search"]
-    compress["@codragraph/compress<br/>token compression"]
-    sdk["@codragraph/sdk<br/>programmatic surface"]
-    org["@codragraph/org<br/>multi-tenant"]
-
-    graphstore --> shared
+    shared["@codragraph/shared"]
+    graphstore["@codragraph/graphstore"]
+    cli["@codragraph/cli"]
+    harness["@codragraph/harness"]
+    compress["@codragraph/compress"]
+    sdk["@codragraph/sdk"]
+    org["@codragraph/org"]
     cli --> shared
-    cli --> graphstore
+    graphstore --> shared
     harness --> cli
-    harness --> shared
     compress --> harness
-    compress --> shared
     sdk --> cli
-    sdk --> harness
-    sdk --> compress
-    sdk --> graphstore
     org --> graphstore
-    org --> shared
 ```
 
 ---
 
 ## How it works — the indexing pipeline
 
-`codragraph analyze` runs a 12-phase DAG that walks your tree, parses
+`codragraph analyze` runs a 14-phase DAG that walks your tree, parses
 every file with tree-sitter, resolves imports + types + call chains,
-clusters related symbols, traces execution flows, builds search indexes,
-and writes everything to a local LadybugDB graph database under
+clusters related symbols, traces execution flows, builds feature-level
+context packs, builds search indexes, and writes everything to a local
+LadybugDB graph database under
 `.codragraph/`:
 
 ```mermaid
-flowchart TD
-    A["1. Walk file tree"] --> B["2. Parse with tree-sitter<br/>16 languages"]
-    B --> C["3. Extract symbols<br/>functions, classes, methods, interfaces"]
-    C --> D["4. Resolve imports<br/>cross-file binding"]
-    D --> E["5. Resolve types<br/>field types, return types,<br/>constructor inference"]
-    E --> F["6. Resolve calls<br/>via type-aware variable binding"]
-    F --> G["7. Cluster<br/>Leiden communities"]
-    G --> H["8. Trace processes<br/>execution flows from entry points"]
-    H --> I["9. Build FTS indexes<br/>BM25 over name+content"]
-    I --> J["10. Build embeddings<br/>optional, --embeddings flag"]
-    J --> K["11. Snapshot to graphstore<br/>content-addressed"]
-    K --> M["11b. Encode content<br/>optional, --compress brotli or zstd"]
-    M --> L["12. Generate AGENTS.md /<br/>CLAUDE.md from the graph"]
-
-    L --> Disk[("Disk: .codragraph/<br/>cgdb/ + graphstore/ + meta.json")]
+flowchart LR
+    Scan["Scan + parse"] --> Resolve["Resolve imports, calls, scope"]
+    Resolve --> Flows["Communities + processes"]
+    Flows --> Features["FeatureCluster context packs"]
+    Features --> Persist["LadybugDB + graphstore"]
+    Persist --> Tools["CLI / MCP / HTTP / SDK"]
 ```
 
 Languages with full support: **TypeScript, JavaScript, Python, Java,
@@ -267,11 +252,12 @@ doesn't help.
 ## Per-area skill files (`--skills`)
 
 Generic project context (one big AGENTS.md / CLAUDE.md) is fine for an
-overview, but when the agent is actually working on the auth module it
-shouldn't have to re-derive what auth *is* every time. CodraGraph's
-Leiden clustering already groups your symbols into functional
-communities — `--skills` turns each significant community into its own
-`SKILL.md` so the agent loads only what it needs:
+overview, but when the agent is actually working on Settings, Auth, or
+an AI feature it shouldn't have to re-derive that area every time.
+CodraGraph now builds a FeatureCluster layer on top of structural
+communities, routes, tools, paths, and process traces — `--skills` turns
+each significant area into its own `SKILL.md` so the agent loads only
+what it needs:
 
 ```sh
 codragraph analyze --skills
@@ -354,12 +340,15 @@ index stale. Default behavior is to notify the agent so it can reindex
 at a quiet point. To enable background auto-reindex instead:
 
 ```sh
-# Either set the env var:
+# macOS/Linux bash/zsh:
 export CODRAGRAPH_AUTO_REINDEX=1
 
-# Or persist it in ~/.codragraph/config.json (survives Windows GUI launches):
-echo '{ "autoReindex": true }' > ~/.codragraph/config.json
+# Windows PowerShell:
+$env:CODRAGRAPH_AUTO_REINDEX = "1"
 ```
+
+Or persist `{ "autoReindex": true }` in `~/.codragraph/config.json`; that
+survives Windows GUI launches as well.
 
 When enabled, the hook spawns a detached `codragraph analyze --no-setup`
 in the background. A `.codragraph/.reindex.coalesce` file gates
@@ -411,9 +400,9 @@ load-bearing for content-addressed snapshot ids. Changing either is a
 wire-format break and a major-version bump. zstd readers on Node < 22.15
 get a clear forward-compat error rather than wrong content.
 
-`INDEX_SCHEMA_VERSION = 2`. Existing 1.7.x indexes are auto-detected and
-forced through a re-analyze the first time a 1.8+ CLI runs against them
-— there's a log line that says why so the re-index isn't a mystery.
+`INDEX_SCHEMA_VERSION = 4`. Existing pre-context-pack indexes are
+auto-detected and forced through a re-analyze the first time a current CLI
+runs against them, so FeatureCluster metadata columns are created cleanly.
 
 **Search behaviour under `--compress`.** BM25 / FTS skips the encoded
 `content` column when the repo was analysed with compression on — the
@@ -458,29 +447,13 @@ out which phase to focus on before reaching for the full snapshots.
 ### Flow 1 — Solo dev with a coding agent (most common)
 
 ```mermaid
-sequenceDiagram
-    actor Dev as "You"
-    participant Term as "Terminal"
-    participant Codra as "codragraph CLI"
-    participant IDE as "Claude Code Cursor Codex"
-    participant Agent as "Agent loop"
-    participant MCP as "codragraph MCP"
-
-    Dev->>Term: npm install codragraph cli
-    Dev->>Term: codragraph setup
-    Codra->>IDE: write claude cursor codex config files
-    Dev->>Term: cd my-repo and codragraph analyze
-    Codra->>Codra: 12-phase pipeline writes .codragraph
-    Dev->>IDE: ask the agent to rename validateUser safely
-    Agent->>MCP: codragraph_impact target validateUser upstream
-    MCP-->>Agent: 12 callers across 8 files, 2 processes, MEDIUM risk
-    Agent->>MCP: codragraph_rename validateUser authenticateUser dry_run true
-    MCP-->>Agent: 12 graph edits and 2 ast_search edits, confidence tagged
-    Agent->>Dev: here is what I would change, approve?
-    Dev->>Agent: yes
-    Agent->>MCP: codragraph_rename apply
-    Agent->>MCP: codragraph_detect_changes
-    MCP-->>Agent: 8 files changed, 2 processes affected, MEDIUM risk
+flowchart LR
+    Install["Install CLI"] --> Setup["codragraph setup"]
+    Setup --> Analyze["codragraph analyze"]
+    Analyze --> Ask["Ask agent about Settings"]
+    Ask --> Pack["feature_context pack"]
+    Pack --> Impact["impact + safe edit"]
+    Impact --> Verify["detect_changes"]
 ```
 
 ### Flow 2 — Programmatic / building your own agent on top
@@ -491,36 +464,13 @@ sequenceDiagram
 > analyze .` has been run at least once in the repo you're querying.
 
 ```mermaid
-sequenceDiagram
-    participant App as "Your code"
-    participant SDK as "codragraph SDK"
-    participant CLI as "codragraph CLI LocalBackend"
-    participant Cgdb as "LadybugDB"
-    participant FS as "Filesystem candidates and recipes"
-    participant LLM as "LLM provider"
-
-    App->>SDK: createLocalGraphClient
-    SDK->>CLI: open LocalBackend and init
-    CLI->>Cgdb: open registered repos
-    SDK-->>App: graphClient
-
-    Note over App,Cgdb: Direct query path — cheap, deterministic
-    App->>SDK: graphClient.context name validateUser
-    SDK->>CLI: callTool context
-    CLI->>Cgdb: Cypher query
-    Cgdb-->>CLI: rows
-    CLI-->>SDK: name file callers callees processes
-    SDK-->>App: GraphContextResult
-
-    Note over App,LLM: Harness search path — expensive, evolves a tuned harness
-    App->>SDK: harness.search with tasks seeds evaluator
-    loop iterations
-        SDK->>LLM: proposer generates candidate harness
-        SDK->>FS: write candidate source files
-        SDK->>LLM: evaluator runs candidate over tasks
-        SDK->>SDK: Pareto frontier add accuracy tokens latencyMs
-    end
-    SDK-->>App: SearchResult frontier totalEvaluated totalRejected
+flowchart LR
+    App["Your app"] --> SDK["@codragraph/sdk"]
+    SDK --> Graph["LocalGraphClient"]
+    Graph --> DB["Indexed repos"]
+    SDK --> Harness["Harness search"]
+    Harness --> LLM["Inference provider"]
+    Harness --> Recipes["Recipe cache"]
 ```
 
 **Inputs and outputs (real types from `@codragraph/sdk`):**
@@ -610,58 +560,23 @@ runs/today/candidates/
 ### Flow 3 — Versioned graph (graphstore on its own, no AI)
 
 ```mermaid
-sequenceDiagram
-    participant Repo as "Your repo"
-    participant Analyze as "codragraph analyze"
-    participant Cgdb as "LadybugDB runtime queries"
-    participant CAS as "graphstore CAS versioning"
-    participant Diff as "graphstore_diff"
-    participant Blame as "graphstore_blame_symbol"
-
-    Note over Repo,CAS: First analyze
-    Repo->>Analyze: codragraph analyze
-    Analyze->>Cgdb: write rows
-    Analyze->>CAS: serializeSnapshot rows yields sha256 abc
-    Analyze->>CAS: createCommit no parents yields sha256 def
-    Analyze->>CAS: setHead branch main commit def
-
-    Note over Repo,CAS: Time passes — code changes
-    Repo->>Analyze: codragraph analyze again
-    Analyze->>Cgdb: refresh
-    Analyze->>CAS: serializeSnapshot yields sha256 xyz
-    Analyze->>CAS: createCommit parent def yields sha256 111
-    Analyze->>CAS: setHead main 111
-
-    Note over Diff,Blame: Now you can diff and blame across history
-    Diff->>CAS: diffSnapshots abc xyz
-    CAS-->>Diff: addedNodes removedNodes modifiedSymbols addedProcesses
-    Blame->>CAS: walk commits backward find first to introduce symbol
-    CAS-->>Blame: commit author message
+flowchart LR
+    Analyze["codragraph analyze"] --> Snapshot["Graph snapshot"]
+    Snapshot --> Commit["Graph commit"]
+    Commit --> History["Branches + log"]
+    History --> Diff["diff"]
+    History --> Blame["blame"]
 ```
 
 ### Flow 4 — Auto-tuning a harness per task family
 
 ```mermaid
-sequenceDiagram
-    actor User as "User"
-    participant Harness as "packages/harness"
-    participant Swarm as "3-role swarm explorer exploiter critic"
-    participant Recipes as "Recipe store .codragraph recipes"
-    participant Snap as "graphstore HEAD snapshot"
-
-    User->>Harness: swarm-search task-family codebase-qa use-cache
-    Harness->>Snap: lookup HEAD snapshot id
-    Harness->>Recipes: findReusableRecipes snapshotId codebase-qa
-    alt cache hit subgraph unchanged
-        Recipes-->>Harness: prior recipe REUSE
-        Harness->>User: terminate early, return cached frontier
-    else cache miss or stale
-        Harness->>Swarm: parallel proposers and evaluator
-        Swarm->>Swarm: Pareto search over accuracy tokens latency
-        Swarm-->>Harness: top-K Pareto frontier
-        Harness->>Recipes: persist top-K keyed by snapshotId taskFamily
-        Harness->>User: return frontier
-    end
+flowchart LR
+    Task["Task family"] --> Lookup["Recipe lookup"]
+    Lookup --> Cache{"Reusable?"}
+    Cache -->|"yes"| Reuse["Return cached recipe"]
+    Cache -->|"no"| Search["Swarm search"]
+    Search --> Store["Persist top recipes"]
 ```
 
 ---
@@ -677,9 +592,11 @@ codragraph analyze --compress brotli   # opt-in per-row body compression (also: 
 codragraph profile-heap                # run analyze with heap-profile instrumentation
 codragraph query "auth flow"           # graph-aware search (returns processes, not just files)
 codragraph context authenticate        # 360° view of a symbol (callers, callees, processes)
+codragraph feature-clusters            # list product/domain feature areas
+codragraph feature-context Settings    # files, line ranges, flows, deps for one feature
 codragraph impact authenticate         # blast-radius analysis at depth 1/2/3
 codragraph detect-changes              # map current git diff to affected execution flows
-codragraph rename foo bar --dry-run    # multi-file coordinated rename
+# Multi-file rename is exposed as the `rename` MCP tool, not a CLI command.
 codragraph mcp                         # start MCP server (stdio)
 codragraph serve                       # start HTTP + web dashboard at :4747
 
@@ -693,13 +610,20 @@ codragraph blame fn:authenticate       # which commit changed this symbol last
 codragraph gc                          # mark-and-sweep unreachable objects
 
 # Auto-tuned harness (after npm i @codragraph/harness)
-packages/harness swarm-search \
+codragraph-harness swarm-search \
   --task ./tasks.json \
   --task-family codebase-qa \
   --use-cache                          # reuse cached recipe if subgraph unchanged
-packages/harness recipes list
-packages/harness recipes show <id>
+codragraph-harness recipes list
+codragraph-harness recipes show <id>
 ```
+
+These commands are intentionally shell-neutral: the same `codragraph ...`
+and `npx @codragraph/cli ...` forms work in Windows PowerShell, macOS
+bash/zsh, and Linux shells. For package-local development commands from
+the monorepo root, prefer `npm --prefix packages/core test` or
+`npm --prefix apps/web run build` instead of shell-specific directory
+chains.
 
 ---
 
@@ -709,6 +633,7 @@ packages/harness recipes show <id>
 
 - **Overview** — repo stats, recent commits, top recipes, capability cards
 - **Graph** — Sigma.js explorer with chat / file-tree / code panels
+- **Features** — product/domain clusters with members, dependencies, and focused context
 - **Projects** — cross-repo group view (provider→consumer contracts, linked repos, sync status)
 - **History** — branch picker, commit list, structural + semantic diff with breakage callouts (removed APIs, modified signatures, visibility changes)
 - **Recipes** — versioned harness-recipe browser with Pareto coords, snapshot id, provenance
@@ -744,6 +669,8 @@ After `codragraph setup`, your agent can call these tools natively:
 | `impact` | Blast-radius analysis with depth grouping and confidence per relationship |
 | `detect_changes` | Maps git diff to affected processes — pre-commit gate |
 | `rename` | Multi-file coordinated rename with confidence-tagged edits |
+| `feature_clusters` | Product/domain feature map for targeted context |
+| `feature_context` | Members, line ranges, dependencies, and flows for one feature |
 | `cypher` | Raw graph queries (read `codragraph://repo/{name}/schema` first) |
 | `route_map` / `tool_map` / `shape_check` | Service-mapping tools for microservice repos |
 | `api_impact` | Cross-service blast-radius for HTTP/gRPC contracts |
@@ -755,29 +682,29 @@ After `codragraph setup`, your agent can call these tools natively:
 
 ## Status
 
-**Developer preview** (2026-04). Cross-platform CI green on
+**Developer preview** (2026-05). Cross-platform CI green on
 Ubuntu/macOS/Windows × Node 20/22. The MCP / CLI / SDK / HTTP surfaces
 are stable for solo-dev usage; multi-tenant/org features (`@codragraph/org`)
 are scaffolded but not yet wired into the server (gated behind a future
 `CODRAGRAPH_REQUIRE_AUTH=1` flag).
 
-Currently published versions on npm:
+Current workspace versions:
 
 | Package | Version | Notes |
 |---|---|---|
-| `@codragraph/cli` | 2.0.0 | `--compress brotli/zstd`, `profile-heap`, compression-aware FTS, Windows cgdb fix; pre-2.0 indexes auto-re-analyze on first run |
-| `@codragraph/shared` | 1.0.1 | |
-| `@codragraph/graphstore` | 1.0.0 | brotli/zstd encoders + content-addressed hash-stability invariant |
-| `@codragraph/harness` | 0.2.0 | dep range bumped to `cli ^2.0.0` |
-| `@codragraph/compress` | 0.1.2 | LLM-context compression — distinct from `--compress` (storage) |
-| `@codragraph/sdk` | 0.2.0 | dep ranges bumped to `cli ^2.0.0`, `graphstore ^1.0.0`, `harness ^0.2.0` |
-| `@codragraph/org` | 0.2.0 | dep range bumped to `graphstore ^1.0.0` |
+| `@codragraph/cli` | 2.1.0 | CLI, MCP, HTTP, web dashboard, FeatureCluster context packs |
+| `@codragraph/shared` | 2.1.0 | Shared graph, schema, and FeatureCluster contracts |
+| `@codragraph/graphstore` | 2.1.0 | Content-addressed snapshots, diff, branch, merge, blame |
+| `@codragraph/harness` | 2.1.0 | Harness search, swarm, recipe memory, graph clients |
+| `@codragraph/compress` | 2.1.0 | LLM-context compression and FeatureCluster context-pack compression |
+| `@codragraph/sdk` | 2.1.0 | One-import programmatic surface over graph, harness, graphstore, compress |
+| `@codragraph/org` | 2.1.0 | Tenant, RBAC, and audit helpers for hosted/team deployments |
 | `@codragraph/codex` | 0.1.1 | |
 | `@codragraph/claude-plugin` | 0.1.1 | |
 
-Pre-2.0 indexes (`schemaVersion < 2`) are auto-detected and force a full
-re-analyze on first 2.0+ run; the on-disk format is otherwise byte-identical
-when `--compress` is unset.
+Pre-context-pack indexes (`schemaVersion < 4`) are auto-detected and force
+a full re-analyze on first 2.1+ run so the FeatureCluster table, feature
+edges, and cluster metadata/context-pack columns are populated.
 
 ---
 
@@ -809,13 +736,13 @@ enforced by tooling rather than process.
 git clone https://github.com/AnitChaudhry/CodraGraph
 cd CodraGraph
 npm install                                      # workspace install (all packages)
-cd packages/core && npm run build                   # build the CLI
-cd .. && npm test --workspace @codragraph/graphstore   # run a workspace's tests
+npm --prefix packages/core run build             # build the CLI
+npm test --workspace @codragraph/graphstore      # run a workspace's tests
 ```
 
 **Before you open a PR:**
 
-1. **Format + lint** must be clean: `npm run format:check && npm run lint`.
+1. **Format + lint** must be clean: run `npm run format:check`, then `npm run lint`.
 2. **Tests** for the workspace you touched must pass:
    `npm test --workspace @codragraph/<name>`.
 3. **Conventional-commit PR title** — enforced by `pr-labeler.yml` and
@@ -864,37 +791,32 @@ Reports go to `getintouch.anit@gmail.com`.
 
 CodraGraph is licensed under the **[Apache License, Version 2.0](./LICENSE)**.
 
-### What you can do
+### Permitted uses
 
-- ✅ **Use** the software for any purpose, including **commercial use**
-  (production, internal tools, hosted SaaS, on-prem).
-- ✅ **Modify** the source — fork it, vendor it, patch it, build a
-  proprietary product on top.
-- ✅ **Redistribute** the software, modified or unmodified, in source or
-  binary form. Sublicense within your distribution.
-- ✅ **Patent grant** — Apache-2.0 grants you a license to any patents
-  the contributors hold that read on the contributed code, automatically
-  terminated only if you sue a contributor for patent infringement
-  related to the project.
+- Use the software for any purpose, including production, internal tools,
+  on-prem deployments, hosted SaaS, and other commercial use.
+- Modify the source, fork it, vendor it, patch it, or build a proprietary
+  product on top.
+- Redistribute the software, modified or unmodified, in source or binary
+  form.
+- Rely on the Apache-2.0 patent grant for contributor patents that read on
+  contributed code, subject to the license terms.
 
-### What you must do
+### Requirements
 
-- 📋 **Include the license + NOTICE.** When you redistribute the
-  software (modified or not), include a copy of the [LICENSE](./LICENSE)
-  and any `NOTICE` file that ships with the distribution.
-- 📋 **State changes** in the modified files (Apache-2.0 §4(b)).
-- 📋 **Preserve attribution** — keep the existing copyright, patent,
-  trademark, and attribution notices intact.
+- Include a copy of [LICENSE](./LICENSE), and any `NOTICE` file that ships
+  with the distribution, when redistributing CodraGraph.
+- State significant changes in modified files as required by Apache-2.0
+  section 4(b).
+- Preserve existing copyright, patent, trademark, and attribution notices.
 
-### What you can NOT do
+### Not included
 
-- 🚫 **Use the CodraGraph trademark** to imply endorsement, official
-  status, or competitive parity. Apache-2.0 grants a copyright + patent
-  license but **not** a trademark license. "CodraGraph" is the project
-  name; using it for derivative or competing products without
-  permission would create user confusion.
-- 🚫 **Hold contributors liable** — the software is provided "AS IS"
-  without warranties. See LICENSE §7 + §8.
+- Apache-2.0 does not grant a trademark license. Do not use the
+  "CodraGraph" name or branding to imply endorsement, official status, or
+  competitive parity without permission.
+- The software is provided "AS IS" without warranties. See LICENSE
+  sections 7 and 8.
 
 ### Per-package licensing
 
@@ -916,15 +838,12 @@ tree-sitter family, `graphology`, `mermaid`, `@anthropic-ai/sdk`, and
 `react`). License texts ship in each package's `node_modules` after
 install; aggregated attribution is generated on each release.
 
-### Why Apache-2.0 (vs. MIT or PolyForm-NC)
+### Why Apache-2.0
 
-CodraGraph started under PolyForm-Noncommercial-1.0.0 and was
-relicensed to Apache-2.0 on 2026-04-29 to unblock hosted commercial
-offerings (Phase 5 — multi-tenant `@codragraph/org`). Apache-2.0 was
-chosen over MIT specifically for the **explicit patent grant** —
-important because the platform exposes ML-adjacent surfaces
-(harness search, recipe memory) where patent ambiguity could chill
-adoption.
+Apache-2.0 keeps CodraGraph permissive for commercial and hosted use while
+also providing an explicit patent grant. That matters for a platform with
+ML-adjacent surfaces such as harness search, recipe memory, and
+graph-powered agent context, where patent ambiguity can slow adoption.
 
 ---
 

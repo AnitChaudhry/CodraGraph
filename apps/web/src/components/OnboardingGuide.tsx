@@ -201,7 +201,9 @@ interface OnboardingGuideProps {
 }
 
 export const OnboardingGuide = ({ isPolling }: OnboardingGuideProps) => {
-  const primary = isDev ? 'npm run --prefix codragraph serve' : 'npx @codragraph/cli@latest serve';
+  const primary = isDev
+    ? 'npm --prefix packages/core run serve'
+    : 'npx @codragraph/cli@2.1.0 serve';
   const termLabel = isDev ? 'Start backend' : 'Terminal';
 
   // Step states: step 1 = copy command, step 2 = run/wait, step 3 = auto-connect

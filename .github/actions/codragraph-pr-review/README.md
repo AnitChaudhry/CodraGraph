@@ -21,6 +21,10 @@ This is the **automation side** of PR review. The interactive side
 (`codragraph-pr-review` skill) lets a human ask Claude to review a PR using
 the same MCP tools — both can run on the same PR.
 
+Indexes created by current `@codragraph/cli` builds include FeatureCluster
+nodes, so future semantic diffs can show when a PR changes the shape of a
+product area as well as individual symbols and flows.
+
 ## Quick start
 
 ```yaml
@@ -63,7 +67,7 @@ jobs:
 | `mode` | no | `deterministic` | `deterministic` or `review`. |
 | `anthropic-api-key` | when `mode=review` | — | Use a repo secret, never hardcode. |
 | `anthropic-model` | no | `claude-sonnet-4-6` | Any Anthropic model id. |
-| `codragraph-version` | no | `latest` | npm dist-tag or exact version of `@codragraph/cli`. |
+| `codragraph-version` | no | `2.1.0` | Exact version recommended; npm dist-tags are accepted when you intentionally want floating upgrades. |
 | `comment-marker` | no | `<!-- codragraph-pr-review -->` | HTML marker the action looks for to update its sticky comment. |
 | `github-token` | no | `github.token` | Needs `pull-requests: write`. |
 

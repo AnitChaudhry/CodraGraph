@@ -210,7 +210,7 @@ export const RightPanel = () => {
   if (!isRightPanelOpen) return null;
 
   return (
-    <aside className="relative z-30 flex w-[40%] max-w-[600px] min-w-[400px] flex-shrink-0 animate-slide-in flex-col border-l border-border-subtle bg-deep">
+    <aside className="relative z-30 flex w-[clamp(360px,38vw,560px)] min-w-0 flex-shrink-0 animate-slide-in flex-col border-l border-border-subtle bg-deep">
       {/* Header with Tabs */}
       <div className="flex items-center justify-between border-b border-border-subtle bg-surface px-4 py-2">
         <div className="flex items-center gap-1">
@@ -289,11 +289,11 @@ export const RightPanel = () => {
           )}
 
           {/* Messages */}
-          <div ref={scrollContainerRef} className="scrollbar-thin flex-1 overflow-y-auto p-4">
+          <div ref={scrollContainerRef} className="scrollbar-canvas flex-1 overflow-y-auto p-4">
             {chatMessages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-node-interface text-2xl shadow-glow">
-                  🧠
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-lg border border-accent/25 bg-accent/15 shadow-glow-soft">
+                  <Sparkles className="h-6 w-6 text-accent" />
                 </div>
                 <h3 className="mb-2 text-base font-medium">Ask me anything</h3>
                 <p className="mb-5 text-sm leading-relaxed text-text-secondary">
@@ -415,7 +415,7 @@ export const RightPanel = () => {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about the codebase..."
                 rows={1}
-                className="scrollbar-thin min-h-[36px] flex-1 resize-none border-none bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
+                className="scrollbar-canvas min-h-[36px] flex-1 resize-none border-none bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
                 style={{ height: '36px', overflowY: 'hidden' }}
               />
               <button

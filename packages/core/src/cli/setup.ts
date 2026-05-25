@@ -12,6 +12,7 @@ import os from 'os';
 import { execFile, execFileSync } from 'child_process';
 import { promisify } from 'util';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 import { glob } from 'glob';
 import { parseTree, modify, applyEdits, ParseError } from 'jsonc-parser';
 import { getGlobalDir } from '../storage/repo-manager.js';
@@ -19,6 +20,9 @@ import { getGlobalDir } from '../storage/repo-manager.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const execFileAsync = promisify(execFile);
+const require = createRequire(import.meta.url);
+const pkg = require('../../package.json') as { version: string };
+const CLI_PACKAGE_SPEC = `@codragraph/cli@${pkg.version}`;
 
 interface SetupResult {
   configured: string[];
@@ -69,7 +73,7 @@ function resolveCodragraphBin(): string | null {
  * The MCP server entry for all editors.
  *
  * Prefers the globally-installed `codragraph` binary (starts in ~1 s) over
- * `npx -y @codragraph/cli@latest` (cold-cache install of native deps can take
+ * `npx -y @codragraph/cli@<version>` (cold-cache install of native deps can take
  * >60 s, exceeding Claude Code's 30 s MCP connection timeout).
  *
  * Falls back to npx when the binary isn't on PATH — e.g. first-time
@@ -96,12 +100,12 @@ function getMcpEntry() {
   if (process.platform === 'win32') {
     return {
       command: 'cmd',
-      args: ['/c', 'npx', '-y', '@codragraph/cli@latest', 'mcp'],
+      args: ['/c', 'npx', '-y', CLI_PACKAGE_SPEC, 'mcp'],
     };
   }
   return {
     command: 'npx',
-    args: ['-y', '@codragraph/cli@latest', 'mcp'],
+    args: ['-y', CLI_PACKAGE_SPEC, 'mcp'],
   };
 }
 
@@ -122,10 +126,10 @@ function getOpenCodeMcpEntry() {
   if (process.platform === 'win32') {
     return {
       type: 'local',
-      command: ['cmd', '/c', 'npx', '-y', '@codragraph/cli@latest', 'mcp'],
+      command: ['cmd', '/c', 'npx', '-y', CLI_PACKAGE_SPEC, 'mcp'],
     };
   }
-  return { type: 'local', command: ['npx', '-y', '@codragraph/cli@latest', 'mcp'] };
+  return { type: 'local', command: ['npx', '-y', CLI_PACKAGE_SPEC, 'mcp'] };
 }
 
 /**

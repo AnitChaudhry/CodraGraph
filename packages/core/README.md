@@ -10,7 +10,7 @@ Works with **Cursor**, **Claude Code**, **Codex**, **Windsurf**, **Cline**, **Op
 
 ## Why?
 
-AI coding tools don't understand your codebase structure. They edit a function without knowing 47 other functions depend on it. CodraGraph fixes this by **precomputing every dependency, call chain, and relationship** into a queryable graph.
+AI coding tools don't understand your codebase structure. They edit a function without knowing 47 other functions depend on it, or which files make up a product area like Settings, Auth, AI, or Billing. CodraGraph fixes this by **precomputing every dependency, call chain, feature cluster, and relationship** into a queryable graph.
 
 **Three commands to give your AI agent full codebase awareness.**
 
@@ -22,6 +22,8 @@ npx @codragraph/cli analyze
 ```
 
 That's it. This indexes the codebase, installs agent skills, registers Claude Code hooks, and creates `AGENTS.md` / `CLAUDE.md` context files — all in one command.
+
+The same CLI commands work in Windows PowerShell, macOS bash/zsh, and Linux shells. Use `npx @codragraph/cli ...` for no-install runs or `codragraph ...` after a global install.
 
 To configure MCP for your editor, run `npx @codragraph/cli setup` once — or set it up manually below.
 
@@ -53,16 +55,16 @@ If you prefer to configure manually instead of using `codragraph setup`:
 
 ```bash
 # macOS / Linux
-claude mcp add codragraph -- npx -y @codragraph/cli@latest mcp
+claude mcp add codragraph -- npx -y @codragraph/cli@2.1.0 mcp
 
 # Windows
-claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@latest mcp
+claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@2.1.0 mcp
 ```
 
 ### Codex (full support — MCP + skills)
 
 ```bash
-codex mcp add codragraph -- npx -y @codragraph/cli@latest mcp
+codex mcp add codragraph -- npx -y @codragraph/cli@2.1.0 mcp
 ```
 
 ### Cursor / Windsurf
@@ -74,7 +76,7 @@ Add to `~/.cursor/mcp.json` (global — works for all projects):
   "mcpServers": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "@codragraph/cli@latest", "mcp"]
+      "args": ["-y", "@codragraph/cli@2.1.0", "mcp"]
     }
   }
 }
@@ -89,7 +91,7 @@ Add to `~/.config/opencode/config.json`:
   "mcp": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "@codragraph/cli@latest", "mcp"]
+      "args": ["-y", "@codragraph/cli@2.1.0", "mcp"]
     }
   }
 }
@@ -104,9 +106,10 @@ CodraGraph builds a complete knowledge graph of your codebase through a multi-ph
 3. **Resolution** — Resolves imports and function calls across files with language-aware logic
    - **Field & Property Type Resolution** — Tracks field types across classes and interfaces for deep chain resolution (e.g., `user.address.city.getName()`)
    - **Return-Type-Aware Variable Binding** — Infers variable types from function return types, enabling accurate call-result binding
-4. **Clustering** — Groups related symbols into functional communities
+4. **Clustering** — Groups related symbols into structural communities
 5. **Processes** — Traces execution flows from entry points through call chains
-6. **Search** — Builds hybrid search indexes for fast retrieval
+6. **Feature clusters** — Builds human-facing product/domain areas with members, dependencies, and line ranges
+7. **Search** — Builds hybrid search indexes for fast retrieval
 
 The result is a **LadybugDB graph database** stored locally in `.codragraph/` with full-text search and semantic embeddings.
 
@@ -122,6 +125,9 @@ Your AI agent gets these tools automatically:
 | `impact` | Blast radius analysis with depth grouping and confidence | Optional |
 | `detect_changes` | Git-diff impact — maps changed lines to affected processes | Optional |
 | `rename` | Multi-file coordinated rename with graph + text search | Optional |
+| `feature_clusters` / `cluster_query` | Product/domain feature map for targeted context | Optional |
+| `feature_context` / `cluster_context` / `context_pack` | Files, line ranges, dependencies, and flows for one feature | Optional |
+| `cluster_impact` | Feature-level blast radius and safe edit surface | Optional |
 | `cypher` | Raw Cypher graph queries | Optional |
 
 > With one indexed repo, the `repo` param is optional. With multiple, specify which: `query({query: "auth", repo: "my-app"})`.
@@ -133,6 +139,8 @@ Your AI agent gets these tools automatically:
 | `codragraph://repos` | List all indexed repositories (read first) |
 | `codragraph://repo/{name}/context` | Codebase stats, staleness check, and available tools |
 | `codragraph://repo/{name}/clusters` | All functional clusters with cohesion scores |
+| `codragraph://repo/{name}/feature-clusters` | Product/domain feature areas |
+| `codragraph://repo/{name}/feature/{name}` | Focused feature context pack |
 | `codragraph://repo/{name}/cluster/{name}` | Cluster members and details |
 | `codragraph://repo/{name}/processes` | All execution flows |
 | `codragraph://repo/{name}/process/{name}` | Full process trace with steps |
@@ -143,7 +151,7 @@ Your AI agent gets these tools automatically:
 | Prompt | What It Does |
 |--------|-------------|
 | `detect_impact` | Pre-commit change analysis — scope, affected processes, risk level |
-| `generate_map` | Architecture documentation from the knowledge graph with mermaid diagrams |
+| `generate_map` | Architecture documentation from the knowledge graph with simple Mermaid diagrams |
 
 ## CLI Commands
 
@@ -158,6 +166,11 @@ codragraph analyze --max-file-size 1024  # Skip files larger than N KB (default:
 codragraph analyze --compress brotli  # Per-row body compression. Also: zstd, none.
 codragraph profile-heap [path]     # Run analyze with v8 heap-snapshot instrumentation
 codragraph profile-heap --no-summary  # Same, but skip the post-run RSS / heapUsed table
+codragraph feature-clusters         # List product/domain feature areas
+codragraph cluster-query settings   # Search product/domain feature areas
+codragraph feature-context Settings # Focus files, line ranges, flows, dependencies for one feature
+codragraph context-pack Settings    # Compact agent context pack for one feature
+codragraph cluster-impact Settings --direction both  # Feature-level blast radius
 codragraph mcp                     # Start MCP server (stdio) — serves all indexed repos
 codragraph serve                   # Start local HTTP server (multi-repo) for web UI
 codragraph index                   # Register an existing .codragraph/ folder into the global registry
@@ -184,10 +197,18 @@ codragraph group status <name>     # Check staleness of repos in a group
 Set these env vars to use a remote OpenAI-compatible `/v1/embeddings` endpoint instead of the local model:
 
 ```bash
+# macOS/Linux bash/zsh
 export CODRAGRAPH_EMBEDDING_URL=http://your-server:8080/v1
 export CODRAGRAPH_EMBEDDING_MODEL=BAAI/bge-large-en-v1.5
 export CODRAGRAPH_EMBEDDING_DIMS=1024          # optional, default 384
 export CODRAGRAPH_EMBEDDING_API_KEY=your-key   # optional, default: "unused"
+codragraph analyze . --embeddings
+
+# Windows PowerShell
+$env:CODRAGRAPH_EMBEDDING_URL = "http://your-server:8080/v1"
+$env:CODRAGRAPH_EMBEDDING_MODEL = "BAAI/bge-large-en-v1.5"
+$env:CODRAGRAPH_EMBEDDING_DIMS = "1024"
+$env:CODRAGRAPH_EMBEDDING_API_KEY = "your-key"
 codragraph analyze . --embeddings
 ```
 
@@ -196,6 +217,12 @@ Works with Infinity, vLLM, TEI, llama.cpp, Ollama, LM Studio, or OpenAI. When un
 ## Multi-Repo Support
 
 CodraGraph supports indexing multiple repositories. Each `codragraph analyze` registers the repo in a global registry (`~/.codragraph/registry.json`). The MCP server serves all indexed repos automatically.
+
+For one product spread across many repos, use `codragraph group ...` plus
+`repo: "@<group>"` in MCP tools. `feature_clusters`, `feature_context`, and
+`cluster_impact` fan out across members and include contract-aware cross-repo
+cluster links when the group Contract Registry has matching provider/consumer
+edges.
 
 ## Supported Languages
 
@@ -234,7 +261,7 @@ Installed automatically by both `codragraph analyze` (per-repo) and `codragraph 
 
 ## Requirements
 
-- Node.js >= 18
+- Node.js >= 20
 - Git repository (uses git for commit tracking)
 
 ## Release candidates
@@ -265,19 +292,20 @@ bigger cycle) and `N` increments per published rc. Example sequence:
 
 This crash was caused by a dependency URL format that is incompatible with
 certain npm/arborist versions ([npm/cli#8126](https://github.com/npm/cli/issues/8126)).
-It is fixed in **codragraph v1.6.2+**. Upgrade to the latest version:
+It is fixed in **codragraph v1.6.2+**. Upgrade to the current workspace
+version, or pin the version your team has validated:
 
 ```bash
-npx @codragraph/cli@latest analyze          # always uses the newest release
-# — or —
-npm install -g @codragraph/cli@latest       # upgrade a global install
+npx @codragraph/cli@2.1.0 analyze          # no global install
+# or
+npm install -g @codragraph/cli@2.1.0       # upgrade a global install
 ```
 
 If you still hit npm install issues after upgrading, these generic workarounds
 may help:
 
 ```bash
-npm install -g npm@latest            # update npm itself
+npm install -g npm@10                # update npm within the Node 20 line
 npm cache clean --force              # clear a possibly corrupt cache
 ```
 
@@ -301,8 +329,12 @@ npm install -g @codragraph/cli
 For very large repositories:
 
 ```bash
-# Increase Node.js heap size
+# Increase Node.js heap size on macOS/Linux bash/zsh
 NODE_OPTIONS="--max-old-space-size=16384" npx @codragraph/cli analyze
+
+# Windows PowerShell
+$env:NODE_OPTIONS = "--max-old-space-size=16384"
+npx @codragraph/cli analyze
 
 # Exclude large directories
 echo "vendor/" >> .codragraphignore
@@ -348,8 +380,12 @@ By default the walker skips files larger than **512 KB** (see log line `Skipped 
 # CLI flag (takes precedence over the env var)
 npx @codragraph/cli analyze --max-file-size 2048     # skip only files > 2 MB
 
-# Environment variable (persists across commands)
+# Environment variable on macOS/Linux bash/zsh
 export CODRAGRAPH_MAX_FILE_SIZE=2048
+npx @codragraph/cli analyze
+
+# Windows PowerShell
+$env:CODRAGRAPH_MAX_FILE_SIZE = "2048"
 npx @codragraph/cli analyze
 ```
 
@@ -366,10 +402,12 @@ Values above **32768 KB (32 MB)** are clamped to the tree-sitter parser ceiling;
 
 CodraGraph also has a browser-based UI at [codragraph.vercel.app](https://codragraph.vercel.app) — 100% client-side, your code never leaves the browser.
 
-**Local Backend Mode:** Run `codragraph serve` and open the web UI locally — it auto-detects the server and shows all your indexed repos, with full AI chat support. No need to re-upload or re-index. The agent's tools (Cypher queries, search, code navigation) route through the backend HTTP API automatically.
+**Local Backend Mode:** Run `codragraph serve` and open the web UI locally — it auto-detects the server and shows all your indexed repos, feature clusters, dependency context, and full AI chat support. No need to re-upload or re-index. The agent's tools (Cypher queries, search, code navigation) route through the backend HTTP API automatically.
 
 ## License
 
-[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
-Permissive open source — use, modify, and distribute freely, including commercially.
+Permissive open source. You can use, modify, redistribute, bundle, and host
+the CLI commercially, subject to the Apache-2.0 notice and attribution
+requirements.

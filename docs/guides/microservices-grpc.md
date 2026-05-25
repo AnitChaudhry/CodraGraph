@@ -2,55 +2,52 @@
 
 ## When to use this guide
 
-This guide is for teams whose product lives in **several separate Git repositories** â€” one per service â€” and whose services talk to each other over **gRPC** (possibly alongside HTTP and message topics). CodraGraph indexes each repo independently, then a _group_ stitches the per-repo indexes into a single cross-repo view that the `impact`, `query`, and `context` tools can traverse. If your services live in one monorepo, much of this still applies â€” set each service as a member of a group and use the `service` prefix to scope queries â€” but the walkthrough assumes the harder multi-repo case.
+This guide is for teams whose product lives in **several separate Git repositories** -- one per service -- and whose services talk to each other over **gRPC** (possibly alongside HTTP and message topics). CodraGraph indexes each repo independently, then a _group_ stitches the per-repo indexes into a single cross-repo view that the `impact`, `query`, and `context` tools can traverse. If your services live in one monorepo, much of this still applies -- set each service as a member of a group and use the `service` prefix to scope queries -- but the walkthrough assumes the harder multi-repo case.
 
 ## Mental model
 
 - Each repository has its own `.codragraph/` index (a LadybugDB graph of symbols, relationships, processes). `codragraph analyze` in each repo produces that index completely independently.
 - A **group** is a higher-level construct stored at `~/.codragraph/groups/<group>/` that references the per-repo indexes by their registry name.
-- Sync-time extractors walk each member repo and emit **contracts** â€” provider or consumer records keyed by a canonical `contractId` (`grpc::auth.AuthService/Login`, `http::GET::/orders`, etc.).
+- Sync-time extractors walk each member repo and emit **contracts** -- provider or consumer records keyed by a canonical `contractId` (`grpc::auth.AuthService/Login`, `http::GET::/orders`, etc.).
 - The sync step matches providers and consumers that share a `contractId` and writes **cross-links** to `<groupDir>/contracts.json`. Those cross-links are what lets `impact({repo: "@<group>", target: "X"})` hop from one repo into another.
-- Contracts come from three places: automatic contract extractors (`grpc-extractor`, `http-route-extractor`, `topic-extractor`), a manifest escape hatch (`config.links` in `group.yaml`), and â€” for same-name symbol matches where no contract is declared â€” the exact-match matching cascade in [`matching.ts`](../../packages/core/src/core/group/matching.ts).
+- Contracts come from three places: automatic contract extractors (`grpc-extractor`, `http-route-extractor`, `topic-extractor`), a manifest escape hatch (`config.links` in `group.yaml`), and -- for same-name symbol matches where no contract is declared -- the exact-match matching cascade in [`matching.ts`](../../packages/core/src/core/group/matching.ts).
 - Each repo stays editable and re-indexable on its own. Re-run `codragraph analyze` in a repo when it changes, then `codragraph group sync <group>` to refresh `contracts.json`. `codragraph group status` reports which members are stale.
 
 ## Prerequisites
 
 - CodraGraph installed and runnable as `codragraph` or `npx @codragraph/cli` (see the root [README.md](../../README.md)).
-- Each service repository checked out locally. No requirement that they share a parent directory â€” the group references them by registry name.
+- Each service repository checked out locally. No requirement that they share a parent directory -- the group references them by registry name.
 - Write access to `~/.codragraph/` (the default codragraph home; see `getDefaultCodragraphDir` in [`storage.ts`](../../packages/core/src/core/group/storage.ts)).
 
 ## Step-by-step walkthrough
 
-The example uses three services â€” a TypeScript API gateway, a Go orders service, and a Python inventory service â€” with gRPC between them. The gateway is an `orders` consumer; the orders service is both an `orders` provider and an `inventory` consumer; the inventory service is an `inventory` provider.
+The example uses three services -- a TypeScript API gateway, a Go orders service, and a Python inventory service -- with gRPC between them. The gateway is an `orders` consumer; the orders service is both an `orders` provider and an `inventory` consumer; the inventory service is an `inventory` provider.
 
 ### 1. Index each repository
 
-Run `analyze` from inside each service repo (or pass the path). The CLI surface lives in [`packages/core/src/cli/analyze.ts`](../../packages/core/src/cli/analyze.ts) and is wired in [`packages/core/src/cli/index.ts`](../../packages/core/src/cli/index.ts).
+Run `analyze` for each service repo. Passing the path keeps the commands portable across Windows PowerShell, macOS bash/zsh, and Linux shells. The CLI surface lives in [`packages/core/src/cli/analyze.ts`](../../packages/core/src/cli/analyze.ts) and is wired in [`packages/core/src/cli/index.ts`](../../packages/core/src/cli/index.ts).
 
 ```bash
-cd ~/code/gateway && npx @codragraph/cli analyze
-cd ~/code/orders  && npx @codragraph/cli analyze
-cd ~/code/inventory && npx @codragraph/cli analyze
+npx @codragraph/cli analyze ~/code/gateway
+npx @codragraph/cli analyze ~/code/orders
+npx @codragraph/cli analyze ~/code/inventory
 ```
 
 Useful flags:
 
-- `--force` â€” reindex even if up to date.
-- `--embeddings` â€” generate embedding vectors (needed only if you want semantic search; the exact-match cross-repo cascade does **not** need them).
-- `--name <alias>` â€” register the repo under a specific alias when two repos share a basename (e.g. two `api/` folders).
-- `--skip-git` â€” index a checkout that isn't a git repo.
+- `--force` -- reindex even if up to date.
+- `--embeddings` -- generate embedding vectors (needed only if you want semantic search; the exact-match cross-repo cascade does **not** need them).
+- `--name <alias>` -- register the repo under a specific alias when two repos share a basename (e.g. two `api/` folders).
+- `--skip-git` -- index a checkout that isn't a git repo.
 
 Each run writes a `.codragraph/` folder in the repo and registers the repo in `~/.codragraph/registry.json`. Confirm with `npx @codragraph/cli list`.
 
 ### 2. Author `group.yaml`
 
-Create the group directory and edit the config. Either use the CLI scaffolder or write the file directly â€” both produce the same shape consumed by [`config-parser.ts`](../../packages/core/src/core/group/config-parser.ts).
+Create the group directory and edit the config. Either use the CLI scaffolder or write the file directly -- both produce the same shape consumed by [`config-parser.ts`](../../packages/core/src/core/group/config-parser.ts).
 
 ```bash
 npx @codragraph/cli group create payments-platform
-# or manually:
-mkdir -p ~/.codragraph/groups/payments-platform
-$EDITOR   ~/.codragraph/groups/payments-platform/group.yaml
 ```
 
 Minimal working `group.yaml`:
@@ -65,7 +62,7 @@ repos:
   orders: orders
   inventory: inventory
 
-# Only add explicit links when the automatic extractors miss something â€”
+# Only add explicit links when the automatic extractors miss something --
 # see "When automatic extraction isn't enough" below.
 links: []
 
@@ -86,12 +83,12 @@ matching:
 
 Field notes (schema in [`types.ts`](../../packages/core/src/core/group/types.ts)):
 
-- `version` â€” must be `1`. The parser rejects anything else.
-- `name` â€” required; used for the group directory name and all CLI / MCP calls.
-- `repos` â€” a mapping from **group path** (a logical name you choose; can be a hierarchy like `backend/orders`) to **registry name** (the name shown by `npx @codragraph/cli list`). Both sides appear throughout the tooling: contract rows use the group path; `@<group>/<groupPath>` routes tools to a single member.
-- `links` â€” optional manifest escape hatch, one entry per explicit cross-repo contract. Validated by the parser: `from` and `to` must be known repo paths, `type` must be one of `http | grpc | topic | lib | custom`, and `role` must be `provider | consumer`.
-- `detect` â€” toggles per extractor family. Defaults (set in `config-parser.ts`) turn `http`, `grpc`, `topics`, and `shared_libs` on; disable the ones you don't use to speed up sync.
-- `matching` â€” thresholds for the matching cascade. The exact match is always run; other strategies depend on indexer state.
+- `version` -- must be `1`. The parser rejects anything else.
+- `name` -- required; used for the group directory name and all CLI / MCP calls.
+- `repos` -- a mapping from **group path** (a logical name you choose; can be a hierarchy like `backend/orders`) to **registry name** (the name shown by `npx @codragraph/cli list`). Both sides appear throughout the tooling: contract rows use the group path; `@<group>/<groupPath>` routes tools to a single member.
+- `links` -- optional manifest escape hatch, one entry per explicit cross-repo contract. Validated by the parser: `from` and `to` must be known repo paths, `type` must be one of `http | grpc | topic | lib | custom`, and `role` must be `provider | consumer`.
+- `detect` -- toggles per extractor family. Defaults (set in `config-parser.ts`) turn `http`, `grpc`, `topics`, and `shared_libs` on; disable the ones you don't use to speed up sync.
+- `matching` -- thresholds for the matching cascade. The exact match is always run; other strategies depend on indexer state.
 
 ### 3. Sync the group
 
@@ -109,12 +106,12 @@ What this does (see [`sync.ts`](../../packages/core/src/core/group/sync.ts)):
 
 Flags:
 
-- `--exact-only` â€” stop after the exact cascade; skip BM25 and embedding fallback.
-- `--skip-embeddings` â€” run exact plus BM25 but not embedding-based matching.
-- `--allow-stale` â€” don't warn if a member's index is stale.
-- `--json` â€” machine-readable output.
+- `--exact-only` -- stop after the exact cascade; skip BM25 and embedding fallback.
+- `--skip-embeddings` -- run exact plus BM25 but not embedding-based matching.
+- `--allow-stale` -- don't warn if a member's index is stale.
+- `--json` -- machine-readable output.
 
-The same operation is available over MCP as `group_sync({ name: "payments-platform" })` â€” see [`tools.ts`](../../packages/core/src/mcp/tools.ts).
+The same operation is available over MCP as `group_sync({ name: "payments-platform" })` -- see [`tools.ts`](../../packages/core/src/mcp/tools.ts).
 
 ### 4. Inspect the registry
 
@@ -150,8 +147,8 @@ A shortened response:
   ],
   "crossLinks": [
     {
-      "from": { "repo": "gateway", "symbolUid": "â€¦", "symbolRef": { "filePath": "src/clients/orders.ts", "name": "OrderServiceClient" } },
-      "to":   { "repo": "orders",  "symbolUid": "â€¦", "symbolRef": { "filePath": "internal/grpc/order_server.go", "name": "RegisterOrderServiceServer" } },
+      "from": { "repo": "gateway", "symbolUid": "...", "symbolRef": { "filePath": "src/clients/orders.ts", "name": "OrderServiceClient" } },
+      "to":   { "repo": "orders",  "symbolUid": "...", "symbolRef": { "filePath": "internal/grpc/order_server.go", "name": "RegisterOrderServiceServer" } },
       "type": "grpc",
       "contractId": "grpc::orders.OrderService/PlaceOrder",
       "matchType": "exact",
@@ -255,7 +252,7 @@ links:
     contract: InventoryService
     role: consumer
 
-  # Works for HTTP too â€” use `METHOD::/path` form for the exact
+  # Works for HTTP too -- use `METHOD::/path` form for the exact
   # handler, or just `/path` for a method-agnostic wildcard.
   - from: gateway
     to: orders
@@ -266,9 +263,9 @@ links:
 
 What the manifest extractor does (see [`manifest-extractor.ts`](../../packages/core/src/core/group/extractors/manifest-extractor.ts)):
 
-1. Builds a canonical `contractId` with `buildContractId` â€” the same canonicalization used by the automatic extractors, so manifest links cross-match automatic contracts on the other side.
+1. Builds a canonical `contractId` with `buildContractId` -- the same canonicalization used by the automatic extractors, so manifest links cross-match automatic contracts on the other side.
 2. Tries to resolve each side to a real graph symbol (the `Route` node for HTTP, a `Function|Method` / `Class|Interface` for gRPC, a `Package|Module` for `lib`).
-3. If resolution fails, falls back to a deterministic synthetic uid (`manifest::<repo>::<contractId>`) so both sides still line up in cross-impact â€” name-only links still work when the symbol isn't in the graph.
+3. If resolution fails, falls back to a deterministic synthetic uid (`manifest::<repo>::<contractId>`) so both sides still line up in cross-impact -- name-only links still work when the symbol isn't in the graph.
 4. Emits both a provider and a consumer `StoredContract` (confidence `1.0`, `source: "manifest"`) and a `CrossLink` with `matchType: "manifest"`.
 
 Use `links` for exactly the cases the extractor can't infer: different package names across repos (see #701), hand-rolled transports, cases where the provider repo isn't checked out locally but you still want a record, or any contract whose provider and consumer simply don't share a surface the extractors know how to pattern-match.
@@ -278,18 +275,18 @@ History: the manifest extractor used to be silently skipped by the sync pipeline
 ## Troubleshooting
 
 1. **`contracts.json` is empty after a sync.** Either no member repo contained a recognizable gRPC pattern, or the extractors are disabled in `detect`. Confirm `detect.grpc: true` and re-run with `--verbose`.
-2. **A known provider/consumer pair doesn't cross-link.** Most common cause: the package segment differs. Check the raw contract ids with `codragraph group contracts <name> --unmatched` â€” if you see two same-method contracts with different package prefixes, add a manifest `links:` entry to bridge them (no automatic rewrite rules yet).
-3. **`matchType: "manifest"` is missing entirely.** The extractor needs `config.links` to be non-empty and the sync pipeline to actually call it â€” verify you're on a post-#827 build. Empty contract rows for manifest links usually mean `resolveSymbol` couldn't find a graph match; the synthetic uid still lets cross-impact work, it just won't carry a file path.
+2. **A known provider/consumer pair doesn't cross-link.** Most common cause: the package segment differs. Check the raw contract ids with `codragraph group contracts <name> --unmatched` -- if you see two same-method contracts with different package prefixes, add a manifest `links:` entry to bridge them (no automatic rewrite rules yet).
+3. **`matchType: "manifest"` is missing entirely.** The extractor needs `config.links` to be non-empty and the sync pipeline to actually call it -- verify you're on a post-#827 build. Empty contract rows for manifest links usually mean `resolveSymbol` couldn't find a graph match; the synthetic uid still lets cross-impact work, it just won't carry a file path.
 4. **Ambiguous proto warnings.** Look for `[grpc-extractor] Ambiguous proto resolution` in the sync logs; that means a service name exists in multiple `.proto` files under the same repo and the path-distance heuristic couldn't pick a winner. Resolve by renaming the service or declaring the intended pairing in `config.links`.
 5. **Cross-impact says "stale".** Both sides need a fresh per-repo index _and_ a fresh group sync. Order matters: `codragraph analyze` in each changed repo, then `codragraph group sync <name>`. Use `codragraph group status <name>` to see which side is behind.
 
 ## Related docs and references
 
-- [AGENTS.md](../../AGENTS.md) â€” authoritative list of MCP tools and resources, including group-mode routing and the `codragraph://group/â€¦` resources.
-- [ARCHITECTURE.md](../ARCHITECTURE.md) â€” overall data flow and the call-resolution DAG that the per-repo indexer uses.
-- [`packages/core/src/core/group/`](../../packages/core/src/core/group/) â€” `service.ts`, `sync.ts`, `config-parser.ts`, `matching.ts`.
-- [`packages/core/src/core/group/extractors/grpc-extractor.ts`](../../packages/core/src/core/group/extractors/grpc-extractor.ts) and [`grpc-patterns/`](../../packages/core/src/core/group/extractors/grpc-patterns/) â€” gRPC detection.
-- [`packages/core/src/core/group/extractors/manifest-extractor.ts`](../../packages/core/src/core/group/extractors/manifest-extractor.ts) â€” the `config.links` escape hatch.
-- [`packages/core/src/mcp/tools.ts`](../../packages/core/src/mcp/tools.ts) â€” MCP tool schemas (`group_list`, `group_sync`, plus `@<group>` routing on `impact` / `query` / `context`).
-- [`packages/core/src/cli/group.ts`](../../packages/core/src/cli/group.ts) â€” CLI command definitions and flags.
+- [AGENTS.md](../../AGENTS.md) -- authoritative list of MCP tools and resources, including group-mode routing and the `codragraph://group/...` resources.
+- [ARCHITECTURE.md](../ARCHITECTURE.md) -- overall data flow and the call-resolution DAG that the per-repo indexer uses.
+- [`packages/core/src/core/group/`](../../packages/core/src/core/group/) -- `service.ts`, `sync.ts`, `config-parser.ts`, `matching.ts`.
+- [`packages/core/src/core/group/extractors/grpc-extractor.ts`](../../packages/core/src/core/group/extractors/grpc-extractor.ts) and [`grpc-patterns/`](../../packages/core/src/core/group/extractors/grpc-patterns/) -- gRPC detection.
+- [`packages/core/src/core/group/extractors/manifest-extractor.ts`](../../packages/core/src/core/group/extractors/manifest-extractor.ts) -- the `config.links` escape hatch.
+- [`packages/core/src/mcp/tools.ts`](../../packages/core/src/mcp/tools.ts) -- MCP tool schemas (`group_list`, `group_sync`, plus `@<group>` routing on `impact` / `query` / `context`).
+- [`packages/core/src/cli/group.ts`](../../packages/core/src/cli/group.ts) -- CLI command definitions and flags.
 - Tracking issues: #701, #826, #906.

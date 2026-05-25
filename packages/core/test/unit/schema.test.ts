@@ -16,6 +16,7 @@ import {
   CODE_ELEMENT_SCHEMA,
   COMMUNITY_SCHEMA,
   PROCESS_SCHEMA,
+  FEATURE_CLUSTER_SCHEMA,
   RELATION_SCHEMA,
   EMBEDDING_SCHEMA,
   CREATE_VECTOR_INDEX_QUERY,
@@ -34,6 +35,7 @@ describe('LadybugDB Schema', () => {
         'CodeElement',
         'Community',
         'Process',
+        'FeatureCluster',
       ];
       for (const t of core) {
         expect(NODE_TABLES).toContain(t);
@@ -68,8 +70,8 @@ describe('LadybugDB Schema', () => {
     });
 
     it('has expected total count', () => {
-      // 9 core + 19 multi-language + Route + Tool = 31
-      expect(NODE_TABLES).toHaveLength(31);
+      // 10 core + 19 multi-language + Route + Tool = 32
+      expect(NODE_TABLES).toHaveLength(32);
     });
   });
 
@@ -84,6 +86,8 @@ describe('LadybugDB Schema', () => {
         'IMPLEMENTS',
         'MEMBER_OF',
         'STEP_IN_PROCESS',
+        'FEATURE_MEMBER_OF',
+        'FEATURE_DEPENDS_ON',
       ];
       for (const t of expected) {
         expect(REL_TYPES).toContain(t);
@@ -102,6 +106,7 @@ describe('LadybugDB Schema', () => {
       ['CODE_ELEMENT_SCHEMA', CODE_ELEMENT_SCHEMA, 'CodeElement'],
       ['COMMUNITY_SCHEMA', COMMUNITY_SCHEMA, 'Community'],
       ['PROCESS_SCHEMA', PROCESS_SCHEMA, 'Process'],
+      ['FEATURE_CLUSTER_SCHEMA', FEATURE_CLUSTER_SCHEMA, 'FeatureCluster'],
     ])('%s contains CREATE NODE TABLE for %s', (_, schema, tableName) => {
       expect(schema).toContain('CREATE NODE TABLE');
       expect(schema).toContain(tableName);
@@ -125,6 +130,18 @@ describe('LadybugDB Schema', () => {
     it('Process schema has processType and stepCount', () => {
       expect(PROCESS_SCHEMA).toContain('processType STRING');
       expect(PROCESS_SCHEMA).toContain('stepCount INT32');
+    });
+
+    it('FeatureCluster schema has context-pack metadata', () => {
+      expect(FEATURE_CLUSTER_SCHEMA).toContain('slug STRING');
+      expect(FEATURE_CLUSTER_SCHEMA).toContain('summary STRING');
+      expect(FEATURE_CLUSTER_SCHEMA).toContain('repo STRING');
+      expect(FEATURE_CLUSTER_SCHEMA).toContain('service STRING');
+      expect(FEATURE_CLUSTER_SCHEMA).toContain('memberCount INT32');
+      expect(FEATURE_CLUSTER_SCHEMA).toContain('routes STRING[]');
+      expect(FEATURE_CLUSTER_SCHEMA).toContain('tools STRING[]');
+      expect(FEATURE_CLUSTER_SCHEMA).toContain('testCoverageHints STRING[]');
+      expect(FEATURE_CLUSTER_SCHEMA).toContain('lastIndexedCommit STRING');
     });
   });
 
@@ -156,6 +173,12 @@ describe('LadybugDB Schema', () => {
     it('connects symbols to Process (STEP_IN_PROCESS)', () => {
       expect(RELATION_SCHEMA).toContain('FROM Function TO Process');
       expect(RELATION_SCHEMA).toContain('FROM Method TO Process');
+    });
+
+    it('connects symbols and clusters to FeatureCluster', () => {
+      expect(RELATION_SCHEMA).toContain('FROM Function TO FeatureCluster');
+      expect(RELATION_SCHEMA).toContain('FROM File TO FeatureCluster');
+      expect(RELATION_SCHEMA).toContain('FROM FeatureCluster TO FeatureCluster');
     });
 
     it('has all FROM/TO pairs needed for HAS_METHOD edges', () => {
@@ -202,7 +225,7 @@ describe('LadybugDB Schema', () => {
 
   describe('schema query ordering', () => {
     it('NODE_SCHEMA_QUERIES has correct count', () => {
-      expect(NODE_SCHEMA_QUERIES).toHaveLength(31);
+      expect(NODE_SCHEMA_QUERIES).toHaveLength(32);
     });
 
     it('REL_SCHEMA_QUERIES has one relation table', () => {
@@ -210,8 +233,8 @@ describe('LadybugDB Schema', () => {
     });
 
     it('SCHEMA_QUERIES includes all node + rel + embedding schemas', () => {
-      // 31 node + 1 rel + 1 embedding = 33
-      expect(SCHEMA_QUERIES).toHaveLength(33);
+      // 32 node + 1 rel + 1 embedding = 34
+      expect(SCHEMA_QUERIES).toHaveLength(34);
     });
 
     it('node schemas come before relation schemas in SCHEMA_QUERIES', () => {

@@ -100,7 +100,7 @@ export function finalizeScopeModel(
 
   // ── Step 2: Workspace-wide indexes built from the per-file unions.
   // These are pure aggregations — no algorithm beyond what the builders
-  // in codragraph-shared already encapsulate (first-write-wins, qname
+  // in @codragraph/shared already encapsulate (first-write-wins, qname
   // collision buckets, etc.).
 
   const allScopes: Scope[] = [];

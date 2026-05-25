@@ -30,6 +30,10 @@ function createMockBackend(overrides: Partial<Record<string, any>> = {}): any {
     ),
     getContext: vi.fn().mockReturnValue(overrides.context ?? null),
     queryClusters: vi.fn().mockResolvedValue(overrides.clusters ?? { clusters: [] }),
+    queryFeatureClusters: vi.fn().mockResolvedValue(overrides.featureClusters ?? { clusters: [] }),
+    queryFeatureContext: vi
+      .fn()
+      .mockResolvedValue(overrides.featureContext ?? { error: 'Not found' }),
     queryProcesses: vi.fn().mockResolvedValue(overrides.processes ?? { processes: [] }),
     queryClusterDetail: vi
       .fn()
@@ -81,10 +85,10 @@ describe('getResourceDefinitions', () => {
 
 describe('getResourceTemplates', () => {
   it('returns the full set of dynamic templates', () => {
-    // Bumped from 8 → 13 after graphstore log/branches/head + recipes
-    // templates landed. Update if more templates are added.
+    // Bumped from 13 -> 15 after feature-cluster resources landed.
+    // Update if more templates are added.
     const templates = getResourceTemplates();
-    expect(templates).toHaveLength(13);
+    expect(templates).toHaveLength(15);
   });
 
   it('includes per-repo + graphstore + recipes + group templates', () => {
@@ -92,9 +96,11 @@ describe('getResourceTemplates', () => {
     const uris = templates.map((t) => t.uriTemplate);
     expect(uris).toContain('codragraph://repo/{name}/context');
     expect(uris).toContain('codragraph://repo/{name}/clusters');
+    expect(uris).toContain('codragraph://repo/{name}/feature-clusters');
     expect(uris).toContain('codragraph://repo/{name}/processes');
     expect(uris).toContain('codragraph://repo/{name}/schema');
     expect(uris).toContain('codragraph://repo/{name}/cluster/{clusterName}');
+    expect(uris).toContain('codragraph://repo/{name}/feature/{featureName}');
     expect(uris).toContain('codragraph://repo/{name}/process/{processName}');
     expect(uris).toContain('codragraph://repo/{name}/graphstore/log');
     expect(uris).toContain('codragraph://repo/{name}/graphstore/branches');
@@ -165,6 +171,16 @@ describe('parseResourceUri', () => {
     });
   });
 
+  it('parses feature context resource names', () => {
+    const p = parseResourceUri('codragraph://repo/my%20project/feature/AI%20Tools');
+    expect(p).toEqual({
+      kind: 'repo',
+      repoName: 'my project',
+      resourceType: 'feature',
+      param: 'AI Tools',
+    });
+  });
+
   it('rejects unknown group resource tail', () => {
     expect(() => parseResourceUri('codragraph://group/foo/bar')).toThrow('Unknown group resource');
   });
@@ -212,6 +228,8 @@ describe('readResource', () => {
     const result = await readResource('codragraph://setup', backend);
     expect(result).toContain('CodraGraph MCP');
     expect(result).toContain('proj');
+    expect(result).toContain('feature_clusters');
+    expect(result).toContain('Cross-platform commands');
   });
 
   it('returns fallback when setup has no repos', async () => {
@@ -275,6 +293,32 @@ describe('readResource', () => {
     expect(result).toContain('Auth');
   });
 
+  it('routes codragraph://repo/{name}/feature-clusters correctly', async () => {
+    const backend = createMockBackend({
+      featureClusters: {
+        clusters: [
+          {
+            name: 'Settings',
+            slug: 'settings',
+            featureKind: 'domain',
+            memberCount: 12,
+            confidence: 0.91,
+          },
+        ],
+      },
+    });
+    const result = await readResource('codragraph://repo/test/feature-clusters', backend);
+    expect(backend.queryFeatureClusters).toHaveBeenCalledWith('test', 100);
+    expect(result).toContain('Settings');
+    expect(result).toContain('members: 12');
+  });
+
+  it('returns empty feature clusters when none exist', async () => {
+    const backend = createMockBackend({ featureClusters: { clusters: [] } });
+    const result = await readResource('codragraph://repo/test/feature-clusters', backend);
+    expect(result).toContain('feature_clusters: []');
+  });
+
   it('returns empty modules when no clusters', async () => {
     const backend = createMockBackend({ clusters: { clusters: [] } });
     const result = await readResource('codragraph://repo/test/clusters', backend);
@@ -317,6 +361,47 @@ describe('readResource', () => {
     expect(backend.queryClusterDetail).toHaveBeenCalledWith('Auth', 'test');
     expect(result).toContain('Auth');
     expect(result).toContain('login');
+  });
+
+  it('routes codragraph://repo/{name}/feature/{featureName} correctly', async () => {
+    const backend = createMockBackend({
+      featureContext: {
+        cluster: {
+          name: 'AI',
+          slug: 'ai',
+          featureKind: 'domain',
+          memberCount: 2,
+          confidence: 0.94,
+        },
+        members: [
+          {
+            name: 'AiPanel',
+            type: 'Function',
+            filePath: 'src/features/ai/AiPanel.tsx',
+            startLine: 12,
+            endLine: 40,
+          },
+        ],
+        dependencies: {
+          outgoing: [{ name: 'Settings', slug: 'settings' }],
+          incoming: [],
+        },
+        processes: [{ heuristicLabel: 'AI Search Flow' }],
+      },
+    });
+    const result = await readResource('codragraph://repo/test/feature/AI', backend);
+    expect(backend.queryFeatureContext).toHaveBeenCalledWith('AI', 'test');
+    expect(result).toContain('feature: "AI"');
+    expect(result).toContain('AiPanel');
+    expect(result).toContain('AI Search Flow');
+  });
+
+  it('handles feature context error', async () => {
+    const backend = createMockBackend({
+      featureContext: { error: 'Feature cluster not found' },
+    });
+    const result = await readResource('codragraph://repo/test/feature/Missing', backend);
+    expect(result).toContain('Feature cluster not found');
   });
 
   it('handles cluster detail error', async () => {

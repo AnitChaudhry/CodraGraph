@@ -195,6 +195,49 @@ program
   .action(createLazyAction(() => import('./tool.js'), 'cypherCommand'));
 
 program
+  .command('feature-clusters')
+  .description('List human-facing feature clusters for targeted context building')
+  .option('-r, --repo <name>', 'Target repository')
+  .option('-l, --limit <n>', 'Max feature clusters to return (default: 100)')
+  .action(createLazyAction(() => import('./tool.js'), 'featureClustersCommand'));
+
+program
+  .command('cluster-query [query]')
+  .description('Alias for feature-clusters: list product/domain clusters')
+  .option('-r, --repo <name>', 'Target repository')
+  .option('-l, --limit <n>', 'Max feature clusters to return (default: 100)')
+  .action(createLazyAction(() => import('./tool.js'), 'clusterQueryCommand'));
+
+program
+  .command('feature-context <name>')
+  .description('Show members, line ranges, and dependencies for a feature cluster')
+  .option('-r, --repo <name>', 'Target repository')
+  .option('-l, --limit <n>', 'Max members to return (default: 100)')
+  .action(createLazyAction(() => import('./tool.js'), 'featureContextCommand'));
+
+program
+  .command('cluster-context <name>')
+  .description('Alias for feature-context: show a feature cluster context pack')
+  .option('-r, --repo <name>', 'Target repository')
+  .option('-l, --limit <n>', 'Max members to return (default: 100)')
+  .action(createLazyAction(() => import('./tool.js'), 'clusterContextCommand'));
+
+program
+  .command('context-pack <name>')
+  .description('Generate the compact agent context pack for a feature cluster')
+  .option('-r, --repo <name>', 'Target repository')
+  .option('-l, --limit <n>', 'Max members to return (default: 100)')
+  .action(createLazyAction(() => import('./tool.js'), 'contextPackCommand'));
+
+program
+  .command('cluster-impact <name>')
+  .description('Feature-level blast radius analysis for a cluster')
+  .option('-d, --direction <dir>', 'upstream, downstream, or both', 'upstream')
+  .option('-r, --repo <name>', 'Target repository')
+  .option('-l, --limit <n>', 'Max context-pack members to include (default: 100)')
+  .action(createLazyAction(() => import('./tool.js'), 'clusterImpactCommand'));
+
+program
   .command('detect-changes')
   .alias('detect_changes')
   .description('Map git diff hunks to indexed symbols and affected execution flows')

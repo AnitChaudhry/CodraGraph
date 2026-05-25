@@ -26,7 +26,7 @@ Sixty seconds. Local-first. Bring your own key. No sign-up required.
 ## Secondary
 
 - **Join the Team waitlist** → email signup for Phase 5 hosted version
-- **Talk to sales** → for enterprise / custom license / commercial use
+- **Talk to sales** → for managed hosting, enterprise support, and security review
 
 ## Final positioning line
 
@@ -75,7 +75,7 @@ Sixty seconds. Local-first. Bring your own key. No sign-up required.
 
 ## Brand line at the very bottom
 
-`© 2026 Codragraph. Apache-2.0. Built by Anit Chaudhary.`
+`© 2026 Codragraph. Apache-2.0 open source. Built by Anit Chaudhary.`
 
 ## Designer brief
 

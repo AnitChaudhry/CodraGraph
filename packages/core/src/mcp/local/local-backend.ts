@@ -73,6 +73,7 @@ export const VALID_NODE_LABELS = new Set([
   'CodeElement',
   'Community',
   'Process',
+  'FeatureCluster',
   'Struct',
   'Enum',
   'Macro',
@@ -112,6 +113,9 @@ export const VALID_RELATION_TYPES = new Set([
   'HANDLES_TOOL',
   'ENTRY_POINT_OF',
   'WRAPS',
+  'QUERIES',
+  'FEATURE_MEMBER_OF',
+  'FEATURE_DEPENDS_ON',
 ]);
 
 /**
@@ -158,6 +162,66 @@ const confidenceForRelType = (relType: string | undefined): number =>
 function logQueryError(context: string, err: unknown): void {
   const msg = err instanceof Error ? err.message : String(err);
   console.error(`CodraGraph [${context}]: ${msg}`);
+}
+
+function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
+  const parsed =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string'
+        ? Number.parseInt(value, 10)
+        : Number.NaN;
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(min, Math.min(max, Math.trunc(parsed)));
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).replace(/^['"]|['"]$/g, ''));
+  }
+  if (typeof value !== 'string' || value.length === 0) return [];
+  return value
+    .replace(/^\[|\]$/g, '')
+    .split(',')
+    .map((item) => item.trim().replace(/^['"]|['"]$/g, ''))
+    .filter(Boolean);
+}
+
+function uniqueStrings(values: Array<string | undefined | null>): string[] {
+  return [...new Set(values.map((v) => (v ?? '').trim()).filter(Boolean))].sort();
+}
+
+function isDocsFilePath(filePath: string | undefined): boolean {
+  const p = (filePath || '').toLowerCase().replace(/\\/g, '/');
+  return p.includes('/docs/') || p.endsWith('.md') || p.endsWith('.mdx');
+}
+
+function mapFeatureClusterRow(row: any): any {
+  const rich =
+    row.summary !== undefined ||
+    row.repo !== undefined ||
+    row.routes !== undefined ||
+    row[10] !== undefined;
+  return {
+    id: row.id || row[0],
+    name: row.name || row[1],
+    slug: row.slug || row[2],
+    featureKind: row.featureKind || row[3],
+    summary: row.summary ?? (rich ? row[4] : ''),
+    description: row.description ?? (rich ? row[5] : row[4]),
+    repo: row.repo ?? (rich ? row[6] : undefined),
+    service: row.service ?? (rich ? row[7] : undefined),
+    signals: normalizeStringArray(row.signals ?? (rich ? row[8] : row[5])),
+    memberCount: row.memberCount ?? (rich ? row[9] : row[6]) ?? 0,
+    entryPointIds: normalizeStringArray(row.entryPointIds ?? (rich ? row[10] : row[7])),
+    routes: normalizeStringArray(row.routes ?? (rich ? row[11] : [])),
+    tools: normalizeStringArray(row.tools ?? (rich ? row[12] : [])),
+    testCoverageHints: normalizeStringArray(row.testCoverageHints ?? (rich ? row[13] : [])),
+    lastIndexedCommit: row.lastIndexedCommit ?? (rich ? row[14] : undefined),
+    confidence: row.confidence ?? (rich ? row[15] : row[8]) ?? 0,
+    source: row.source || (rich ? row[16] : row[9]) || 'heuristic',
+    crossRepoLinks: [],
+  };
 }
 
 /**
@@ -230,6 +294,10 @@ export class LocalBackend {
         query: (r, p) => this.query(r as RepoHandle, p),
         impactByUid: (id, uid, d, o) => this.impactByUid(id, uid, d, o),
         context: (r, p) => this.context(r as RepoHandle, p),
+        featureClusters: (r, p) => this.queryFeatureClusters(r.name, p.limit, p.query),
+        featureContext: (r, p) => this.queryFeatureContext(p.name, r.name, p.limit),
+        featureImpact: (r, p) =>
+          this.queryFeatureImpact(p.name, r.name, p.direction ?? 'upstream', p.limit),
       };
       this.groupToolSvc = new GroupService(port);
     }
@@ -637,11 +705,18 @@ export class LocalBackend {
     }
 
     const p = params && typeof params === 'object' ? (params as Record<string, unknown>) : {};
-    if (
-      (method === 'impact' || method === 'query' || method === 'context') &&
-      typeof p.repo === 'string' &&
-      p.repo.startsWith('@')
-    ) {
+    const groupRepoMethods = new Set([
+      'impact',
+      'query',
+      'context',
+      'feature_clusters',
+      'feature_context',
+      'cluster_query',
+      'cluster_context',
+      'context_pack',
+      'cluster_impact',
+    ]);
+    if (groupRepoMethods.has(method) && typeof p.repo === 'string' && p.repo.startsWith('@')) {
       return this.callToolAtGroupRepo(method, p);
     }
 
@@ -678,6 +753,39 @@ export class LocalBackend {
         return this.toolMap(repo, params);
       case 'api_impact':
         return this.apiImpact(repo, params);
+      case 'feature_clusters':
+      case 'cluster_query':
+        return this.queryFeatureClusters(
+          (params as { repo?: string } | undefined)?.repo,
+          clampNumber((params as { limit?: unknown } | undefined)?.limit, 1, 500, 100),
+          String((params as { query?: unknown } | undefined)?.query ?? ''),
+        );
+      case 'feature_context':
+      case 'cluster_context':
+      case 'context_pack':
+        return this.queryFeatureContext(
+          String(
+            (params as { name?: unknown; slug?: unknown; id?: unknown } | undefined)?.name ??
+              (params as { slug?: unknown } | undefined)?.slug ??
+              (params as { id?: unknown } | undefined)?.id ??
+              '',
+          ),
+          (params as { repo?: string } | undefined)?.repo,
+          clampNumber((params as { limit?: unknown } | undefined)?.limit, 1, 500, 100),
+        );
+      case 'cluster_impact':
+        return this.queryFeatureImpact(
+          String(
+            (params as { name?: unknown; slug?: unknown; id?: unknown } | undefined)?.name ??
+              (params as { slug?: unknown } | undefined)?.slug ??
+              (params as { id?: unknown } | undefined)?.id ??
+              '',
+          ),
+          (params as { repo?: string } | undefined)?.repo,
+          (params as { direction?: 'upstream' | 'downstream' | 'both' } | undefined)?.direction ??
+            'upstream',
+          clampNumber((params as { limit?: unknown } | undefined)?.limit, 1, 500, 100),
+        );
       case 'harness_swarm_run': {
         // Same lazy-import dance as harness_run (see comments below) — keeps
         // codragraph-harness optional and avoids a circular build-time dep.
@@ -3258,6 +3366,59 @@ export class LocalBackend {
       }
       return svc.groupContext(contextArgs);
     }
+    if (method === 'feature_clusters' || method === 'cluster_query') {
+      const args: Record<string, unknown> = {
+        name: groupName,
+        query: params.query,
+        limit: params.limit,
+      };
+      if (memberRest !== undefined) {
+        args.subgroup = memberRest;
+        args.subgroupExact = true;
+      }
+      return svc.groupFeatureClusters(args);
+    }
+    if (method === 'feature_context' || method === 'cluster_context' || method === 'context_pack') {
+      const clusterName =
+        typeof params.name === 'string' && params.name.trim() !== ''
+          ? params.name.trim()
+          : typeof params.slug === 'string' && params.slug.trim() !== ''
+            ? params.slug.trim()
+            : typeof params.id === 'string'
+              ? params.id.trim()
+              : '';
+      const args: Record<string, unknown> = {
+        name: groupName,
+        cluster: clusterName,
+        limit: params.limit,
+      };
+      if (memberRest !== undefined) {
+        args.subgroup = memberRest;
+        args.subgroupExact = true;
+      }
+      return svc.groupFeatureContext(args);
+    }
+    if (method === 'cluster_impact') {
+      const clusterName =
+        typeof params.name === 'string' && params.name.trim() !== ''
+          ? params.name.trim()
+          : typeof params.slug === 'string' && params.slug.trim() !== ''
+            ? params.slug.trim()
+            : typeof params.id === 'string'
+              ? params.id.trim()
+              : '';
+      const args: Record<string, unknown> = {
+        name: groupName,
+        cluster: clusterName,
+        direction: params.direction,
+        limit: params.limit,
+      };
+      if (memberRest !== undefined) {
+        args.subgroup = memberRest;
+        args.subgroupExact = true;
+      }
+      return svc.groupFeatureImpact(args);
+    }
     throw new Error(`Internal: unsupported group-repo tool ${method}`);
   }
 
@@ -3769,6 +3930,310 @@ export class LocalBackend {
    * Query clusters (communities) directly from graph.
    * Used by getClustersResource — avoids legacy overview() dispatch.
    */
+  /**
+   * Query feature clusters directly from graph.
+   * FeatureCluster is the human-facing project area layer above Communities.
+   */
+  async queryFeatureClusters(
+    repoName?: string,
+    limit = 100,
+    query = '',
+  ): Promise<{ clusters: any[] }> {
+    const repo = await this.resolveRepo(repoName);
+    await this.ensureInitialized(repo.id);
+
+    const safeLimit = clampNumber(limit, 1, 500, 100);
+    const needle = query.trim().toLowerCase();
+    const fetchLimit = needle ? 500 : safeLimit;
+
+    try {
+      let clusters: any[];
+      try {
+        clusters = await executeQuery(
+          repo.id,
+          `
+        MATCH (c:FeatureCluster)
+        RETURN c.id AS id, c.name AS name, c.slug AS slug, c.featureKind AS featureKind,
+               c.summary AS summary, c.description AS description, c.repo AS repo,
+               c.service AS service, c.signals AS signals, c.memberCount AS memberCount,
+               c.entryPointIds AS entryPointIds, c.routes AS routes, c.tools AS tools,
+               c.testCoverageHints AS testCoverageHints,
+               c.lastIndexedCommit AS lastIndexedCommit, c.confidence AS confidence,
+               c.source AS source
+        ORDER BY c.memberCount DESC
+        LIMIT ${fetchLimit}
+      `,
+        );
+      } catch {
+        clusters = await executeQuery(
+          repo.id,
+          `
+          MATCH (c:FeatureCluster)
+          RETURN c.id AS id, c.name AS name, c.slug AS slug, c.featureKind AS featureKind,
+                 c.description AS description, c.signals AS signals, c.memberCount AS memberCount,
+                 c.entryPointIds AS entryPointIds, c.confidence AS confidence, c.source AS source
+          ORDER BY c.memberCount DESC
+          LIMIT ${fetchLimit}
+        `,
+        );
+      }
+      return {
+        clusters: clusters
+          .map(mapFeatureClusterRow)
+          .filter((cluster: any) => {
+            if (!needle) return true;
+            return [
+              cluster.name,
+              cluster.slug,
+              cluster.summary,
+              cluster.description,
+              ...(cluster.signals || []),
+              ...(cluster.routes || []),
+              ...(cluster.tools || []),
+            ]
+              .join(' ')
+              .toLowerCase()
+              .includes(needle);
+          })
+          .slice(0, safeLimit),
+      };
+    } catch {
+      return { clusters: [] };
+    }
+  }
+
+  /**
+   * Query one feature cluster with members, dependencies, and process links.
+   */
+  async queryFeatureContext(name: string, repoName?: string, limit = 100): Promise<any> {
+    const key = name.trim();
+    if (!key) return { error: 'Feature cluster name, slug, or id is required' };
+
+    const repo = await this.resolveRepo(repoName);
+    await this.ensureInitialized(repo.id);
+    const safeLimit = clampNumber(limit, 1, 500, 100);
+
+    let clusters: any[];
+    try {
+      clusters = await executeParameterized(
+        repo.id,
+        `
+      MATCH (c:FeatureCluster)
+      WHERE c.id = $key OR c.name = $key OR c.slug = $key
+      RETURN c.id AS id, c.name AS name, c.slug AS slug, c.featureKind AS featureKind,
+             c.summary AS summary, c.description AS description, c.repo AS repo,
+             c.service AS service, c.signals AS signals, c.memberCount AS memberCount,
+             c.entryPointIds AS entryPointIds, c.routes AS routes, c.tools AS tools,
+             c.testCoverageHints AS testCoverageHints,
+             c.lastIndexedCommit AS lastIndexedCommit, c.confidence AS confidence,
+             c.source AS source
+      LIMIT 1
+    `,
+        { key },
+      );
+    } catch {
+      clusters = await executeParameterized(
+        repo.id,
+        `
+        MATCH (c:FeatureCluster)
+        WHERE c.id = $key OR c.name = $key OR c.slug = $key
+        RETURN c.id AS id, c.name AS name, c.slug AS slug, c.featureKind AS featureKind,
+               c.description AS description, c.signals AS signals, c.memberCount AS memberCount,
+               c.entryPointIds AS entryPointIds, c.confidence AS confidence, c.source AS source
+        LIMIT 1
+      `,
+        { key },
+      );
+    }
+    let cluster = clusters.length > 0 ? mapFeatureClusterRow(clusters[0]) : undefined;
+    if (!cluster) {
+      const fallback = await this.queryFeatureClusters(repoName, 1, key);
+      cluster = fallback.clusters[0];
+    }
+    if (!cluster) return { error: `Feature cluster '${name}' not found` };
+
+    const clusterId = cluster.id;
+
+    const members = await executeParameterized(
+      repo.id,
+      `
+      MATCH (n)-[r:CodeRelation {type: 'FEATURE_MEMBER_OF'}]->(c:FeatureCluster {id: $clusterId})
+      RETURN DISTINCT n.id AS id, n.name AS name, labels(n)[0] AS type, n.filePath AS filePath,
+             n.startLine AS startLine, n.endLine AS endLine, r.confidence AS confidence,
+             r.reason AS reason
+      ORDER BY type, filePath, startLine
+      LIMIT ${safeLimit}
+    `,
+      { clusterId },
+    );
+
+    const outgoing = await executeParameterized(
+      repo.id,
+      `
+      MATCH (c:FeatureCluster {id: $clusterId})-[r:CodeRelation {type: 'FEATURE_DEPENDS_ON'}]->(d:FeatureCluster)
+      RETURN d.id AS id, d.name AS name, d.slug AS slug, r.confidence AS confidence, r.reason AS reason
+      ORDER BY d.name
+    `,
+      { clusterId },
+    );
+
+    const incoming = await executeParameterized(
+      repo.id,
+      `
+      MATCH (s:FeatureCluster)-[r:CodeRelation {type: 'FEATURE_DEPENDS_ON'}]->(c:FeatureCluster {id: $clusterId})
+      RETURN s.id AS id, s.name AS name, s.slug AS slug, r.confidence AS confidence, r.reason AS reason
+      ORDER BY s.name
+    `,
+      { clusterId },
+    );
+
+    const processes = await executeParameterized(
+      repo.id,
+      `
+      MATCH (n)-[:CodeRelation {type: 'FEATURE_MEMBER_OF'}]->(c:FeatureCluster {id: $clusterId}),
+            (n)-[:CodeRelation {type: 'STEP_IN_PROCESS'}]->(p:Process)
+      RETURN DISTINCT p.id AS id, p.label AS label, p.heuristicLabel AS heuristicLabel,
+             p.processType AS processType, p.stepCount AS stepCount
+      ORDER BY p.stepCount DESC
+      LIMIT 25
+    `,
+      { clusterId },
+    );
+
+    const mappedMembers = members.map((m: any) => {
+      const id = m.id || m[0];
+      const type = m.type || m[2];
+      const filePath = m.filePath || m[3];
+      const name = m.name || m[1];
+      return {
+        id,
+        name,
+        type,
+        filePath,
+        startLine: m.startLine ?? m[4],
+        endLine: m.endLine ?? m[5],
+        role: cluster.entryPointIds.includes(id)
+          ? 'entrypoint'
+          : type === 'File' || type === 'Section'
+            ? 'supporting'
+            : 'implementation',
+        confidence: m.confidence ?? m[6] ?? 0,
+        reason: m.reason || m[7],
+      };
+    });
+
+    const outgoingDependencies = outgoing.map((d: any) => ({
+      id: d.id || d[0],
+      name: d.name || d[1],
+      slug: d.slug || d[2],
+      confidence: d.confidence ?? d[3] ?? 0,
+      reason: d.reason || d[4],
+    }));
+    const incomingDependencies = incoming.map((d: any) => ({
+      id: d.id || d[0],
+      name: d.name || d[1],
+      slug: d.slug || d[2],
+      confidence: d.confidence ?? d[3] ?? 0,
+      reason: d.reason || d[4],
+    }));
+    const testMembers = mappedMembers.filter((member) => isTestFilePath(member.filePath || ''));
+    const docMembers = mappedMembers.filter(
+      (member) => member.type === 'Section' || isDocsFilePath(member.filePath),
+    );
+    const warnings: string[] = [];
+    if (testMembers.length === 0) {
+      warnings.push('No obvious test members were found in this cluster.');
+    }
+    if (incomingDependencies.length + outgoingDependencies.length > 10) {
+      warnings.push(
+        'This cluster has broad feature dependencies; check impact before large edits.',
+      );
+    }
+
+    return {
+      cluster,
+      members: mappedMembers,
+      dependencies: {
+        outgoing: outgoingDependencies,
+        incoming: incomingDependencies,
+      },
+      entryPoints: mappedMembers.filter(
+        (member) =>
+          cluster.entryPointIds.includes(member.id) ||
+          member.type === 'Route' ||
+          member.type === 'Tool',
+      ),
+      routes: mappedMembers.filter((member) => member.type === 'Route'),
+      tools: mappedMembers.filter((member) => member.type === 'Tool'),
+      processes: processes.map((p: any) => ({
+        id: p.id || p[0],
+        label: p.label || p[1],
+        heuristicLabel: p.heuristicLabel || p[2],
+        processType: p.processType || p[3],
+        stepCount: p.stepCount || p[4],
+      })),
+      tests: testMembers,
+      docs: docMembers,
+      crossRepoLinks: cluster.crossRepoLinks || [],
+      safeEditSurface: {
+        files: uniqueStrings(mappedMembers.map((member) => member.filePath)),
+        symbols: uniqueStrings(
+          mappedMembers
+            .filter((member) => !['File', 'Folder', 'Section'].includes(member.type || ''))
+            .map((member) => member.name),
+        ),
+        warnings,
+      },
+    };
+  }
+
+  async queryFeatureImpact(
+    name: string,
+    repoName?: string,
+    direction: 'upstream' | 'downstream' | 'both' = 'upstream',
+    limit = 100,
+  ): Promise<any> {
+    const contextPack = await this.queryFeatureContext(name, repoName, limit);
+    if (contextPack?.error) return contextPack;
+
+    const incoming = contextPack.dependencies?.incoming ?? [];
+    const outgoing = contextPack.dependencies?.outgoing ?? [];
+    const impactedClusters =
+      direction === 'downstream'
+        ? outgoing
+        : direction === 'both'
+          ? [...incoming, ...outgoing]
+          : incoming;
+    const uniqueImpacted = Array.from(
+      new Map(
+        impactedClusters.map((cluster: any) => [cluster.id || cluster.name, cluster]),
+      ).values(),
+    );
+    const affectedMembers = contextPack.members?.length ?? 0;
+    const dependencyCount = uniqueImpacted.length;
+    const riskLevel =
+      dependencyCount >= 15 || affectedMembers >= 250
+        ? 'HIGH'
+        : dependencyCount >= 5 || affectedMembers >= 75
+          ? 'MEDIUM'
+          : 'LOW';
+
+    return {
+      cluster: contextPack.cluster,
+      direction,
+      impactedClusters: uniqueImpacted,
+      safeEditSurface: contextPack.safeEditSurface,
+      contextPack,
+      impactSummary: {
+        affectedMembers,
+        dependencyCount,
+        incomingDependencies: incoming.length,
+        outgoingDependencies: outgoing.length,
+        riskLevel,
+      },
+    };
+  }
+
   async queryClusters(repoName?: string, limit = 100): Promise<{ clusters: any[] }> {
     const repo = await this.resolveRepo(repoName);
     await this.ensureInitialized(repo.id);

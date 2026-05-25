@@ -100,6 +100,7 @@ export interface AnalyzeResult {
     nodes?: number;
     edges?: number;
     communities?: number;
+    featureClusters?: number;
     processes?: number;
     embeddings?: number;
   };
@@ -120,6 +121,7 @@ export const PHASE_LABELS: Record<string, string> = {
   heritage: 'Extracting inheritance',
   communities: 'Detecting communities',
   processes: 'Detecting processes',
+  feature_clusters: 'Building feature clusters',
   complete: 'Pipeline complete',
   cgdb: 'Loading into LadybugDB',
   fts: 'Creating search indexes',
@@ -228,10 +230,10 @@ export async function runFullAnalysis(
   // ── Early-return: already up to date ──────────────────────────────
   // Schema-version mismatch forces a full re-analyze regardless of commit
   // equality: existing 1.7.x indexes have no `schemaVersion` field at all,
-  // and 1.8+ readers expect every node table to carry a `contentEncoding`
-  // column (RFC 0001 Phase 2). LadybugDB ALTER on existing tables is not
-  // validated end-to-end yet, so the supported migration path is
-  // re-analyze → fresh CREATE NODE TABLE.
+  // and current readers expect contentEncoding plus rich FeatureCluster
+  // context-pack columns. LadybugDB ALTER on existing tables is not validated
+  // end-to-end yet, so the supported migration path is re-analyze via a fresh
+  // CREATE NODE TABLE.
   const schemaUpToDate =
     !!existingMeta && (existingMeta.schemaVersion ?? 0) >= INDEX_SCHEMA_VERSION;
   if (
@@ -253,7 +255,7 @@ export async function runFullAnalysis(
   if (existingMeta && !schemaUpToDate) {
     log(
       `Index schema version ${existingMeta.schemaVersion ?? '<missing>'} is older than ` +
-        `${INDEX_SCHEMA_VERSION} (RFC 0001 Phase 2 — adds contentEncoding column). ` +
+        `${INDEX_SCHEMA_VERSION} (FeatureCluster context-pack schema). ` +
         `Re-analyzing.`,
     );
   }
@@ -280,11 +282,20 @@ export async function runFullAnalysis(
   }
 
   // ── Phase 1: Full Pipeline (0–60%) ────────────────────────────────
-  const pipelineResult = await runPipelineFromRepo(repoPath, (p) => {
-    const phaseLabel = PHASE_LABELS[p.phase] || p.phase;
-    const scaled = Math.round(p.percent * 0.6);
-    progress(p.phase, scaled, phaseLabel);
-  });
+  const repoNameForFeatureClusters =
+    options.registryName ?? getInferredRepoName(repoPath) ?? path.basename(repoPath);
+  const pipelineResult = await runPipelineFromRepo(
+    repoPath,
+    (p) => {
+      const phaseLabel = PHASE_LABELS[p.phase] || p.phase;
+      const scaled = Math.round(p.percent * 0.6);
+      progress(p.phase, scaled, phaseLabel);
+    },
+    {
+      featureClusterRepo: repoNameForFeatureClusters,
+      lastIndexedCommit: currentCommit || undefined,
+    },
+  );
 
   // ── Phase 2: LadybugDB (60–85%) ──────────────────────────────────
   progress('cgdb', 60, 'Loading into LadybugDB...');
@@ -478,6 +489,7 @@ export async function runFullAnalysis(
         nodes: stats.nodes,
         edges: stats.edges,
         communities: pipelineResult.communityResult?.stats.totalCommunities,
+        featureClusters: pipelineResult.featureClusterResult?.stats.totalClusters,
         processes: pipelineResult.processResult?.stats.totalProcesses,
         embeddings: embeddingCount,
       },
@@ -523,7 +535,8 @@ export async function runFullAnalysis(
           nodes: stats.nodes,
           edges: stats.edges,
           communities: pipelineResult.communityResult?.stats.totalCommunities,
-          clusters: aggregatedClusterCount,
+          clusters:
+            pipelineResult.featureClusterResult?.stats.totalClusters ?? aggregatedClusterCount,
           processes: pipelineResult.processResult?.stats.totalProcesses,
         },
         undefined,

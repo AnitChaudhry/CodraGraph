@@ -29,7 +29,7 @@ Multiply by 1000 queries/week. Quietly $$$.
 **3/8**
 Codragraph indexes your repo as a graph.
 
-16 languages. tree-sitter. 44 node types. Local-first.
+16 languages. tree-sitter. 45 node types. FeatureCluster packs. Local-first.
 
 Agents call `codragraph_context(name: "X")` and get the right 1.8k tokens — callers, callees, impact, processes — typed graph data.
 

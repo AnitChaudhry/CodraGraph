@@ -5,7 +5,7 @@ import path from 'path';
 import { createRequire } from 'module';
 
 const _require = createRequire(import.meta.url);
-const codragraphPkg = _require('../codragraph/package.json');
+const codragraphPkg = _require('../../packages/core/package.json');
 
 // Resolve a workspace-hoisted package's file path. npm workspaces hoist
 // shared deps to the monorepo root node_modules, so __dirname-relative

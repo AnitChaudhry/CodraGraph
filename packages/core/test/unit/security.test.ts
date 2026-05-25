@@ -106,7 +106,7 @@ describe('isWriteQuery', () => {
 
 describe('VALID_RELATION_TYPES', () => {
   it('contains all expected relation types', () => {
-    expect(VALID_RELATION_TYPES.size).toBe(15);
+    expect(VALID_RELATION_TYPES.size).toBe(18);
     for (const t of [
       'CALLS',
       'IMPORTS',
@@ -123,6 +123,9 @@ describe('VALID_RELATION_TYPES', () => {
       'HANDLES_TOOL',
       'ENTRY_POINT_OF',
       'WRAPS',
+      'QUERIES',
+      'FEATURE_MEMBER_OF',
+      'FEATURE_DEPENDS_ON',
     ]) {
       expect(VALID_RELATION_TYPES.has(t)).toBe(true);
     }
@@ -154,7 +157,7 @@ describe('VALID_NODE_LABELS', () => {
   });
 
   it('contains meta node types', () => {
-    for (const label of ['Community', 'Process']) {
+    for (const label of ['Community', 'Process', 'FeatureCluster']) {
       expect(VALID_NODE_LABELS.has(label)).toBe(true);
     }
   });

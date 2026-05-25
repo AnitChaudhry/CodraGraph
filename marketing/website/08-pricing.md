@@ -52,7 +52,7 @@ For organizations that want self-hosted with white-glove support.
 - Custom inference provider adapters (in-house models, etc.)
 - Dedicated solutions engineer
 - SLA, security review, on-call
-- Custom license terms
+- Custom support, security, and procurement terms
 
 *Contact sales.*
 
@@ -80,7 +80,11 @@ This means:
 - ✅ Rehost Codragraph as a paid service (the license permits it)
 - ✅ Modify the source and ship your own fork
 
-There are no usage restrictions. The Team and Enterprise tiers are for teams who'd rather pay than self-host — not for anyone who needs to "unlock" the OSS.
+There are no usage restrictions. The Team and Enterprise tiers are for teams
+who'd rather pay than self-host; they are service offerings, not license gates.
+
+The open-source code remains Apache-2.0 across every public package. Managed
+plans are service/support offerings on top of the same permissive core.
 
 ## Designer brief
 

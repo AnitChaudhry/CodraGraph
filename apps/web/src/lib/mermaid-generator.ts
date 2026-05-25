@@ -167,5 +167,5 @@ export function generateSimpleMermaid(processLabel: string, stepCount: number): 
   return `graph LR
   classDef entry fill:#059669,stroke:#34d399,stroke-width:2px,color:#ffffff,rx:10,ry:10;
   classDef terminal fill:#be185d,stroke:#f472b6,stroke-width:2px,color:#ffffff,rx:10,ry:10;
-  A["🟢 ${entry || 'Start'}"]:::entry --> B["... ${stepCount - 2} steps ..."] --> C["🔴 ${terminal || 'End'}"]:::terminal`;
+  A["${entry || 'Start'}"]:::entry --> B["... ${stepCount - 2} steps ..."] --> C["${terminal || 'End'}"]:::terminal`;
 }

@@ -5,11 +5,11 @@ description: "Use when the user needs to run CodraGraph CLI commands like analyz
 
 # CodraGraph CLI Commands
 
-All commands work via `npx` â€” no global install required.
+All commands work via `npx` -- no global install required.
 
 ## Commands
 
-### analyze â€” Build or refresh the index
+### analyze -- Build or refresh the index
 
 ```bash
 npx @codragraph/cli analyze
@@ -24,7 +24,7 @@ Run from the project root. This parses all source files, builds the knowledge gr
 
 **When to run:** First time in a project, after major code changes, or when `codragraph://repo/{name}/context` reports the index is stale.
 
-### status â€” Check index freshness
+### status -- Check index freshness
 
 ```bash
 npx @codragraph/cli status
@@ -32,7 +32,7 @@ npx @codragraph/cli status
 
 Shows whether the current repo has a CodraGraph index, when it was last updated, and symbol/relationship counts. Use this to check if re-indexing is needed.
 
-### clean â€” Delete the index
+### clean -- Delete the index
 
 ```bash
 npx @codragraph/cli clean
@@ -45,7 +45,7 @@ Deletes the `.codragraph/` directory and unregisters the repo from the global re
 | `--force` | Skip confirmation prompt |
 | `--all` | Clean all indexed repos, not just the current one |
 
-### wiki â€” Generate documentation from the graph
+### wiki -- Generate documentation from the graph
 
 ```bash
 npx @codragraph/cli wiki
@@ -62,7 +62,7 @@ Generates repository documentation from the knowledge graph using an LLM. Requir
 | `--concurrency <n>` | Parallel LLM calls (default: 3) |
 | `--gist` | Publish wiki as a public GitHub Gist |
 
-### list â€” Show all indexed repos
+### list -- Show all indexed repos
 
 ```bash
 npx @codragraph/cli list

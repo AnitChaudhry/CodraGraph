@@ -1,9 +1,9 @@
 // Graph namespace — clients for the codragraph knowledge graph.
 //
 // LocalGraphClient runs in-process against the same LocalBackend the
-// codragraph CLI uses. HttpGraphClient is a Phase 2 placeholder for
-// out-of-process / hosted scenarios; calling its methods currently throws
-// (use MCP-over-HTTP via @modelcontextprotocol/sdk for now).
+// codragraph CLI uses. HttpGraphClient talks to a running `codragraph serve`
+// instance over the REST endpoints for search, context, impact, and
+// feature-cluster workflows.
 
 import { LocalGraphClient } from '@codragraph/harness/graph/local-client';
 
@@ -19,10 +19,18 @@ export {
 
 export type {
   GraphClient,
+  GraphClusterImpactInput,
+  GraphClusterImpactResult,
   GraphQueryInput,
   GraphQueryResult,
   GraphContextInput,
   GraphContextResult,
+  GraphFeatureClustersInput,
+  GraphFeatureClustersResult,
+  GraphFeatureClusterSummary,
+  GraphFeatureContextInput,
+  GraphFeatureContextMember,
+  GraphFeatureContextResult,
   GraphImpactInput,
   GraphImpactResult,
 } from '@codragraph/harness/types';
@@ -37,6 +45,11 @@ export async function createLocalGraphClient(
 ): Promise<LocalGraphClient> {
   const { LocalBackend } = await import('@codragraph/cli/mcp/local/local-backend');
   const backend = new LocalBackend();
-  await backend.init();
+  const ok = await backend.init();
+  if (!ok) {
+    throw new Error(
+      'CodraGraph has no indexed repositories. Run `codragraph analyze` in a repo before creating a local graph client.',
+    );
+  }
   return new LocalGraphClient({ backend, defaultRepo: opts.defaultRepo });
 }

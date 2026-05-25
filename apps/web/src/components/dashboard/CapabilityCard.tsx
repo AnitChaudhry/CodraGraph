@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ArrowRight } from '@/lib/lucide-icons';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
@@ -53,22 +54,28 @@ export const CapabilityCard = ({
 }: CapabilityCardProps): React.JSX.Element => (
   <Card className={cn('flex h-full flex-col', className)}>
     <CardHeader className="pb-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <CardTitle className="text-base">{title}</CardTitle>
-          <p className="mt-1 text-xs text-text-secondary">{tagline}</p>
+      <div className="grid grid-cols-[40px_minmax(0,1fr)] gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-accent/20 bg-accent/10">
+          <Icon className="h-5 w-5 text-accent" aria-hidden />
         </div>
-        <Icon className="h-5 w-5 text-accent" aria-hidden />
+        <div className="min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="truncate text-sm">{title}</CardTitle>
+            <Badge variant={STATUS_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
+          </div>
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-text-secondary">{tagline}</p>
+        </div>
       </div>
     </CardHeader>
     <CardContent className="flex-1">
-      <Badge variant={STATUS_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
       {metric !== undefined && (
-        <div className="mt-3 font-mono text-2xl font-semibold text-text-primary tabular-nums">
+        <div className="font-mono text-xl font-semibold text-text-primary tabular-nums">
           {metric}
         </div>
       )}
-      {detail !== undefined && <p className="mt-1 text-xs text-text-secondary">{detail}</p>}
+      {detail !== undefined && (
+        <p className="mt-1 line-clamp-2 text-xs text-text-secondary">{detail}</p>
+      )}
     </CardContent>
     {cta && (
       <div className="border-t border-border-subtle p-3">
@@ -78,7 +85,8 @@ export const CapabilityCard = ({
           onClick={cta.onClick}
           className="w-full justify-start text-text-secondary hover:text-text-primary"
         >
-          {cta.label} →
+          {cta.label}
+          <ArrowRight className="ml-auto h-3.5 w-3.5" />
         </Button>
       </div>
     )}

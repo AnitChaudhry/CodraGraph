@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Snail, Rocket, SkipForward } from '@/lib/lucide-icons';
+import { Cpu, Lightbulb, Rocket, SkipForward, X } from '@/lib/lucide-icons';
 
 interface WebGPUFallbackDialogProps {
   isOpen: boolean;
@@ -10,8 +10,7 @@ interface WebGPUFallbackDialogProps {
 }
 
 /**
- * Fun dialog shown when WebGPU isn't available
- * Lets user choose: CPU fallback (slow) or skip embeddings
+ * Dialog shown when WebGPU isn't available.
  */
 export const WebGPUFallbackDialog = ({
   isOpen,
@@ -50,8 +49,7 @@ export const WebGPUFallbackDialog = ({
       <div
         className={`relative mx-4 w-full max-w-md overflow-hidden rounded-2xl border border-border-subtle bg-surface shadow-2xl transition-all duration-200 ${isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
       >
-        {/* Header with scratching emoji */}
-        <div className="relative border-b border-border-subtle bg-gradient-to-r from-amber-500/20 to-orange-500/20 px-6 py-5">
+        <div className="relative border-b border-border-subtle bg-elevated/60 px-6 py-5">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-1 text-text-muted transition-colors hover:text-text-primary"
@@ -60,16 +58,15 @@ export const WebGPUFallbackDialog = ({
           </button>
 
           <div className="flex items-center gap-4">
-            {/* Animated emoji */}
             <div
-              className={`text-5xl ${isAnimating ? 'animate-bounce' : ''}`}
+              className={`flex h-12 w-12 items-center justify-center rounded-lg border border-amber-400/25 bg-amber-400/10 text-amber-300 ${isAnimating ? 'animate-breathe' : ''}`}
               onAnimationEnd={() => setIsAnimating(false)}
               onClick={() => setIsAnimating(true)}
             >
-              🤔
+              <Cpu className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-text-primary">WebGPU said "nope"</h2>
+              <h2 className="text-lg font-semibold text-text-primary">WebGPU unavailable</h2>
               <p className="mt-0.5 text-sm text-text-muted">
                 Your browser doesn't support GPU acceleration
               </p>
@@ -80,8 +77,8 @@ export const WebGPUFallbackDialog = ({
         {/* Content */}
         <div className="space-y-4 px-6 py-5">
           <p className="text-sm leading-relaxed text-text-secondary">
-            Couldn't create embeddings with WebGPU, so semantic search (Graph RAG) won't be as
-            smart. The graph still works fine though!
+            Embeddings could not be created with WebGPU. The graph remains available, but semantic
+            search quality may be reduced.
           </p>
 
           <div className="rounded-lg border border-border-subtle bg-elevated/50 p-4">
@@ -90,9 +87,9 @@ export const WebGPUFallbackDialog = ({
             </p>
             <ul className="mt-2 space-y-1.5 text-sm text-text-muted">
               <li className="flex items-start gap-2">
-                <Snail className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" />
+                <Cpu className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-400" />
                 <span>
-                  <strong className="text-text-secondary">Use CPU</strong> — Works but{' '}
+                  <strong className="text-text-secondary">Use CPU</strong> - Works but{' '}
                   {isSmallCodebase ? 'a bit' : 'way'} slower
                   {nodeCount > 0 && (
                     <span className="text-text-muted">
@@ -105,7 +102,7 @@ export const WebGPUFallbackDialog = ({
               <li className="flex items-start gap-2">
                 <SkipForward className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-400" />
                 <span>
-                  <strong className="text-text-secondary">Skip it</strong> — Graph works, just no AI
+                  <strong className="text-text-secondary">Skip it</strong> - Graph works, just no AI
                   semantic search
                 </span>
               </li>
@@ -119,7 +116,10 @@ export const WebGPUFallbackDialog = ({
             </p>
           )}
 
-          <p className="text-xs text-text-muted">💡 Tip: Try Chrome or Edge for WebGPU support</p>
+          <p className="flex items-center gap-1.5 text-xs text-text-muted">
+            <Lightbulb className="h-3.5 w-3.5" />
+            Try Chrome or Edge for WebGPU support.
+          </p>
         </div>
 
         {/* Actions */}
@@ -139,7 +139,7 @@ export const WebGPUFallbackDialog = ({
                 : 'border border-amber-500/30 bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
             }`}
           >
-            <Snail className="h-4 w-4" />
+            <Cpu className="h-4 w-4" />
             Use CPU {isSmallCodebase ? '(Recommended)' : '(Slow)'}
           </button>
         </div>

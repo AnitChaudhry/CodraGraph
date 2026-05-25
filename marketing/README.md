@@ -51,3 +51,11 @@ marketing/
 - 2026-04-29: initial copy written
 - Phases 1, 1.5, 3 shipped. Phases 4 (versioned graph), 2 (dashboard), 5 (org features) in development.
 - Pre-launch — no infra exists yet. Adjust CTAs once GitHub/npm/site are live.
+
+## License language
+
+Codragraph is Apache-2.0 across every public package. Marketing copy must
+not imply that commercial use, resale, paid hosting, bundling, or internal
+company use is restricted. Paid tiers should be positioned as managed
+hosting, support, security review, enterprise deployment, or procurement
+offerings on top of the permissive open-source core.

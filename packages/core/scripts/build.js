@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Build script that compiles codragraph and inlines codragraph-shared into the dist.
+ * Build script that compiles @codragraph/cli and inlines @codragraph/shared
+ * into the published dist.
  *
  * Steps:
- *  1. Build codragraph-shared (tsc)
- *  2. Build codragraph-graphstore (tsc) — codragraph imports it; without
+ *  1. Build @codragraph/shared (tsc)
+ *  2. Build @codragraph/graphstore (tsc) — @codragraph/cli imports it; without
  *     a populated dist/ here, step 3 fails to resolve types.
- *  3. Build codragraph (tsc)
- *  4. Copy codragraph-shared/dist → dist/_shared
+ *  3. Build @codragraph/cli (tsc)
+ *  4. Copy packages/shared/dist → dist/_shared
  *  5. Rewrite bare '@codragraph/shared' specifiers → relative paths
  */
 import { execSync } from 'node:child_process';
@@ -35,20 +36,20 @@ execSync('npx tsc', { cwd: SHARED_ROOT, stdio: 'inherit' });
 // `@codragraph/graphstore` imports. Skip gracefully if the workspace
 // is not present (e.g. someone pinned an older monorepo layout).
 if (fs.existsSync(GRAPHSTORE_ROOT)) {
-  console.log('[build] compiling codragraph-graphstore…');
+  console.log('[build] compiling @codragraph/graphstore…');
   execSync('npx tsc', { cwd: GRAPHSTORE_ROOT, stdio: 'inherit' });
 }
 
-// ── 3. Build codragraph ──────────────────────────────────────────────
-console.log('[build] compiling codragraph…');
+// ── 3. Build @codragraph/cli ─────────────────────────────────────────
+console.log('[build] compiling @codragraph/cli…');
 execSync('npx tsc', { cwd: ROOT, stdio: 'inherit' });
 
-// ── 3. Copy shared dist ────────────────────────────────────────────
+// ── 4. Copy shared dist ────────────────────────────────────────────
 console.log('[build] copying shared module into dist/_shared…');
 fs.cpSync(path.join(SHARED_ROOT, 'dist'), SHARED_DEST, { recursive: true });
 
-// ── 4. Rewrite imports ─────────────────────────────────────────────
-console.log('[build] rewriting codragraph-shared imports…');
+// ── 5. Rewrite imports ─────────────────────────────────────────────
+console.log('[build] rewriting @codragraph/shared imports…');
 let rewritten = 0;
 
 function rewriteFile(filePath) {
@@ -82,7 +83,7 @@ function walk(dir, extensions, cb) {
 
 walk(DIST, ['.js', '.d.ts'], rewriteFile);
 
-// ── 5. Make CLI entry executable ────────────────────────────────────
+// ── 6. Make CLI entry executable ────────────────────────────────────
 const cliEntry = path.join(DIST, 'cli', 'index.js');
 if (fs.existsSync(cliEntry)) fs.chmodSync(cliEntry, 0o755);
 

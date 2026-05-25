@@ -35,6 +35,15 @@ describe('rbac/check — DEFAULT_POLICY', () => {
     expect(checkPermission(DEFAULT_POLICY, 'viewer', 'repo.delete')).toBe(false);
   });
 
+  it('supports cluster-level read, context-pack, impact, and audit permissions', () => {
+    expect(checkPermission(DEFAULT_POLICY, 'viewer', 'cluster.read')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'viewer', 'cluster.context_pack')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'viewer', 'cluster.impact')).toBe(false);
+    expect(checkPermission(DEFAULT_POLICY, 'member', 'cluster.impact')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'member', 'cluster.audit')).toBe(false);
+    expect(checkPermission(DEFAULT_POLICY, 'admin', 'cluster.audit')).toBe(true);
+  });
+
   it('admin can read audit; member cannot', () => {
     expect(checkPermission(DEFAULT_POLICY, 'admin', 'audit.read')).toBe(true);
     expect(checkPermission(DEFAULT_POLICY, 'member', 'audit.read')).toBe(false);

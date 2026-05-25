@@ -21,6 +21,20 @@ export { SupportedLanguages } from './languages.js';
 export { getLanguageFromFilename, getSyntaxLanguageFromFilename } from './language-detection.js';
 export type { MroStrategy } from './mro-strategy.js';
 
+// Feature cluster layer
+export type {
+  FeatureClusterKind,
+  FeatureClusterSignal,
+  ClusterSignal,
+  CrossRepoClusterLink,
+  FeatureCluster,
+  FeatureClusterMember,
+  FeatureClusterDependency,
+  FeatureClusterReference,
+  FeatureContextPack,
+  ClusterContextPack,
+} from './feature-clusters.js';
+
 // Pipeline progress
 export type { PipelinePhase, PipelineProgress } from './pipeline.js';
 

@@ -3,7 +3,8 @@
 Claude Code plugin that gives Claude **graph-aware** context for every edit.
 Before each Grep / Glob / Bash invocation, the CodraGraph hook surfaces
 the blast-radius, callers, and process participation for symbols Claude
-is about to touch — so Claude doesn't have to grep blindly.
+is about to touch. Claude can also load FeatureCluster packs for product
+areas like Settings, Auth, AI, or Billing, so it does not have to grep blindly.
 
 ## Install
 
@@ -21,6 +22,8 @@ claude plugins install integrations/claude
 - **Hooks**: PreToolUse + PostToolUse on Grep/Glob/Bash → run a
   side-channel CodraGraph query and prepend the result to Claude's
   context.
+- **Feature context**: `feature_clusters` and `feature_context` expose
+  focused files, line ranges, dependencies, and flows for one product area.
 - **Skills**: 7 skill packs Claude can invoke directly:
   - `codragraph-impact-analysis` — what breaks if I change this?
   - `codragraph-pr-review` — review a diff with full graph context
@@ -42,4 +45,6 @@ codragraph config set openai --api-key sk-...
 
 ## License
 
-Apache-2.0
+Apache-2.0. You can use, modify, redistribute, bundle, and host this
+integration commercially, subject to the Apache-2.0 notice and attribution
+requirements.

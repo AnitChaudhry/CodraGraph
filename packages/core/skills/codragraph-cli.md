@@ -5,7 +5,7 @@ description: "Use when the user needs to run CodraGraph CLI commands like analyz
 
 # CodraGraph CLI Commands
 
-All commands work via `npx` — no global install required.
+All commands work via `npx` — no global install required. The examples are safe in Windows PowerShell, macOS bash/zsh, and Linux shells; prefer `npm --prefix <package> <script>` from the repo root when running package-local checks.
 
 ## Commands
 
@@ -31,6 +31,22 @@ npx @codragraph/cli status
 ```
 
 Shows whether the current repo has a CodraGraph index, when it was last updated, and symbol/relationship counts. Use this to check if re-indexing is needed.
+
+### feature-clusters — List product/domain areas
+
+```bash
+npx @codragraph/cli feature-clusters
+```
+
+Shows the human-facing feature clusters CodraGraph detected: areas like Settings, Auth, AI, Billing, or Admin, with member counts and confidence. Use this before asking an agent to work on a product area.
+
+### feature-context — Load one focused context pack
+
+```bash
+npx @codragraph/cli feature-context Settings
+```
+
+Returns the members, file paths, line ranges, dependencies, and flows for one feature cluster so an agent can edit the right files without re-exploring the whole repo.
 
 ### clean — Delete the index
 

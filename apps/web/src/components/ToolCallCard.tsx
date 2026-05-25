@@ -13,8 +13,13 @@ import {
   Check,
   Loader2,
   AlertCircle,
+  Code,
+  FileCode,
+  Search,
+  Target,
 } from '@/lib/lucide-icons';
 import type { ToolCallInfo } from '../core/llm/types';
+import type { LucideIcon } from 'lucide-react';
 
 interface ToolCallCardProps {
   toolCall: ToolCallInfo;
@@ -91,21 +96,35 @@ const getStatusDisplay = (status: ToolCallInfo['status']) => {
 const getToolDisplayName = (name: string): string => {
   const names: Record<string, string> = {
     // Current 7-tool architecture
-    search: '🔍 Search Code',
-    cypher: '🔗 Cypher Query',
-    grep: '🔎 Pattern Search',
-    read: '📄 Read File',
-    overview: '🗺️ Codebase Overview',
-    explore: '🔬 Deep Dive',
-    impact: '💥 Impact Analysis',
+    search: 'Search Code',
+    cypher: 'Cypher Query',
+    grep: 'Pattern Search',
+    read: 'Read File',
+    overview: 'Codebase Overview',
+    explore: 'Deep Dive',
+    impact: 'Impact Analysis',
   };
   return names[name] || name;
+};
+
+const getToolIcon = (name: string): LucideIcon => {
+  const icons: Record<string, LucideIcon> = {
+    search: Search,
+    cypher: Code,
+    grep: Search,
+    read: FileCode,
+    overview: Sparkles,
+    explore: Sparkles,
+    impact: Target,
+  };
+  return icons[name] ?? Sparkles;
 };
 
 export const ToolCallCard = ({ toolCall, defaultExpanded = false }: ToolCallCardProps) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const status = getStatusDisplay(toolCall.status);
   const formattedArgs = formatArgs(toolCall.args);
+  const ToolIcon = getToolIcon(toolCall.name);
 
   return (
     <div
@@ -130,7 +149,8 @@ export const ToolCallCard = ({ toolCall, defaultExpanded = false }: ToolCallCard
         </span>
 
         {/* Tool name */}
-        <span className="flex-1 text-sm font-medium text-text-primary">
+        <span className="flex flex-1 items-center gap-2 text-sm font-medium text-text-primary">
+          <ToolIcon className="h-3.5 w-3.5 text-accent" aria-hidden />
           {getToolDisplayName(toolCall.name)}
         </span>
 

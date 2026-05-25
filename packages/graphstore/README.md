@@ -4,7 +4,7 @@ Dolt-like content-addressed versioning for the CodraGraph knowledge graph.
 
 > Your codebase has git history. Your agent's understanding of it should too.
 
-This package adds a versioning layer underneath the existing LadybugDB-backed query path. Each `codragraph analyze` produces an immutable, content-addressed snapshot of the knowledge graph. Branches, merges, and structured diffs operate on those snapshots; querying a historical snapshot materializes it back into an ephemeral LadybugDB so the existing Cypher/MCP surface keeps working unchanged.
+This package adds a versioning layer underneath the existing LadybugDB-backed query path. Each `codragraph analyze` produces an immutable, content-addressed snapshot of the knowledge graph, including FeatureCluster nodes and their feature membership/dependency edges. Branches, merges, and structured diffs operate on those snapshots; querying a historical snapshot materializes it back into an ephemeral LadybugDB so the existing Cypher/MCP surface keeps working unchanged.
 
 ## Status
 
@@ -45,6 +45,10 @@ src/
 
 ## Quick start
 
+Most users get graphstore through `@codragraph/cli`; install this package
+directly only when you want to embed content-addressed graph versioning in
+your own tool.
+
 ```ts
 import { FsCAS } from "@codragraph/graphstore/cas";
 import { serializeSnapshot, materializeSnapshot } from "@codragraph/graphstore/snapshot";
@@ -70,4 +74,5 @@ const diff = await diffSnapshots({ cas, from: snapA.id, to: snapB.id });
 
 ## License
 
-Apache-2.0
+Apache-2.0. You can use, modify, redistribute, bundle, and host this package
+commercially, subject to the Apache-2.0 notice and attribution requirements.

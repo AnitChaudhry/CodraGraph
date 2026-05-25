@@ -64,7 +64,7 @@ Codragraph isn't trying to replace Sourcegraph, Cursor, Copilot, or Claude Code.
 
 - **Hard reasoning still needs flagship models.** Codragraph helps the model find the right context — it doesn't make Haiku as smart as Opus on novel multi-step problems.
 - **Phase 4 (versioned graph) is in development.** Recipe memory ships in the next release.
-- **No SaaS yet.** Pre-launch, BYO infra. Hosted version (Phase 5) requires a license decision.
+- **No SaaS yet.** Pre-launch, BYO infra. The OSS stays Apache-2.0; the hosted version (Phase 5) adds managed service terms and team operations.
 - **The harness auto-search costs money.** Spending $50–200 to find a great recipe is worth it ONLY if the recipe is reused thousands of times — which is exactly what versioned recipe memory enables. Without it, the math is murky.
 
 ## Visual brief

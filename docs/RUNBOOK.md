@@ -1,6 +1,6 @@
 # Runbook — CodraGraph
 
-Short, copy-paste operations for **local development**, **MCP**, and **CI**. Commands assume a Unix shell; on Windows use Git Bash or equivalent paths.
+Short, copy-paste operations for **local development**, **MCP**, and **CI**. Commands are written to work in Windows PowerShell, macOS bash/zsh, and Linux shells.
 
 ## Prerequisites
 
@@ -9,12 +9,11 @@ Short, copy-paste operations for **local development**, **MCP**, and **CI**. Com
 - From repo root, install and build the CLI package:
 
 ```bash
-cd packages/core
 npm install
-npm run build
+npm --prefix packages/core run build
 ```
 
-Use `npx @codragraph/cli …` from any path after global/published install, or `node dist/cli/index.js …` when developing from `packages/core/` with a local build.
+Use `npx @codragraph/cli ...` from any path after global/published install, or `npm --prefix packages/core exec codragraph -- ...` when developing from the repo root with a local build.
 
 ---
 
@@ -69,8 +68,7 @@ npx @codragraph/cli analyze --embeddings
 **Fix:** In each project you want indexed:
 
 ```bash
-cd /path/to/repo
-npx @codragraph/cli analyze
+npx @codragraph/cli analyze /path/to/repo
 ```
 
 Restart the editor MCP session if needed. The server **refreshes the registry lazily**; new analyzes are picked up without necessarily reinstalling MCP.
@@ -106,7 +104,6 @@ Then re-run `npx @codragraph/cli analyze` (and `--embeddings` if you need vector
 ## Local bridge for the web UI
 
 ```bash
-cd packages/core
 npx @codragraph/cli serve
 # default http://127.0.0.1:4747 — see serve --help for port/host
 ```
@@ -120,9 +117,12 @@ Use when the browser UI should talk to **local** indexed repos instead of WASM-o
 Useful for debugging without an editor:
 
 ```bash
-cd packages/core
 npx @codragraph/cli query "authentication flow" --repo MyRepo
 npx @codragraph/cli context SomeSymbol --repo MyRepo
+npx @codragraph/cli feature-clusters --repo MyRepo
+npx @codragraph/cli feature-context Settings --repo MyRepo
+npx @codragraph/cli context-pack Settings --repo MyRepo
+npx @codragraph/cli cluster-impact Settings --direction both --repo MyRepo
 npx @codragraph/cli impact SomeSymbol --direction upstream --repo MyRepo
 npx @codragraph/cli cypher "MATCH (n) RETURN count(n) LIMIT 1" --repo MyRepo
 ```
@@ -135,10 +135,10 @@ Orchestrator: `.github/workflows/ci.yml`.
 
 | Job | Typical local repro |
 |-----|---------------------|
-| **quality** | `cd packages/core && npx tsc --noEmit` |
-| **unit-tests** | `cd packages/core && npx vitest run test/unit` |
-| **integration** | `cd packages/core && npx vitest run test/integration` (see workflow matrix for groups) |
-| **e2e** | Triggered when `apps/web/` changes; `cd apps/web && E2E=1 npx playwright test` (requires `codragraph serve` + `npm run dev`) |
+| **quality** | `npm --prefix packages/core exec tsc -- --noEmit` |
+| **unit-tests** | `npm --prefix packages/core exec vitest -- run test/unit` |
+| **integration** | `npm --prefix packages/core exec vitest -- run test/integration` (see workflow matrix for groups) |
+| **e2e** | Triggered when `apps/web/` changes; `npm --prefix apps/web exec playwright -- test` (requires `codragraph serve` + `npm --prefix apps/web run dev`) |
 
 **Note:** Pushes that touch only certain markdown paths may be skipped by `paths-ignore` in CI — see workflow file for exact patterns.
 

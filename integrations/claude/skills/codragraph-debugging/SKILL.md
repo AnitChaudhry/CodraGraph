@@ -16,13 +16,13 @@ description: "Use when the user is debugging a bug, tracing an error, or asking 
 ## Workflow
 
 ```
-1. codragraph_query({query: "<error or symptom>"})            â†’ Find related execution flows
-2. codragraph_context({name: "<suspect>"})                    â†’ See callers/callees/processes
-3. READ codragraph://repo/{name}/process/{name}                â†’ Trace execution flow
-4. codragraph_cypher({query: "MATCH path..."})                 â†’ Custom traces if needed
+1. codragraph_query({query: "<error or symptom>"})            -> Find related execution flows
+2. codragraph_context({name: "<suspect>"})                    -> See callers/callees/processes
+3. READ codragraph://repo/{name}/process/{name}                -> Trace execution flow
+4. codragraph_cypher({query: "MATCH path..."})                 -> Custom traces if needed
 ```
 
-> If "Index is stale" â†’ run `npx @codragraph/cli analyze` in terminal.
+> If "Index is stale" -> run `npx @codragraph/cli analyze` in terminal.
 
 ## Checklist
 
@@ -40,32 +40,32 @@ description: "Use when the user is debugging a bug, tracing an error, or asking 
 
 | Symptom              | CodraGraph Approach                                          |
 | -------------------- | ---------------------------------------------------------- |
-| Error message        | `codragraph_query` for error text â†’ `context` on throw sites |
-| Wrong return value   | `context` on the function â†’ trace callees for data flow    |
-| Intermittent failure | `context` â†’ look for external calls, async deps            |
-| Performance issue    | `context` â†’ find symbols with many callers (hot paths)     |
+| Error message        | `codragraph_query` for error text -> `context` on throw sites |
+| Wrong return value   | `context` on the function -> trace callees for data flow    |
+| Intermittent failure | `context` -> look for external calls, async deps            |
+| Performance issue    | `context` -> find symbols with many callers (hot paths)     |
 | Recent regression    | `detect_changes` to see what your changes affect           |
 
 ## Tools
 
-**codragraph_query** â€” find code related to error:
+**codragraph_query** -- find code related to error:
 
 ```
 codragraph_query({query: "payment validation error"})
-â†’ Processes: CheckoutFlow, ErrorHandling
-â†’ Symbols: validatePayment, handlePaymentError, PaymentException
+-> Processes: CheckoutFlow, ErrorHandling
+-> Symbols: validatePayment, handlePaymentError, PaymentException
 ```
 
-**codragraph_context** â€” full context for a suspect:
+**codragraph_context** -- full context for a suspect:
 
 ```
 codragraph_context({name: "validatePayment"})
-â†’ Incoming calls: processCheckout, webhookHandler
-â†’ Outgoing calls: verifyCard, fetchRates (external API!)
-â†’ Processes: CheckoutFlow (step 3/7)
+-> Incoming calls: processCheckout, webhookHandler
+-> Outgoing calls: verifyCard, fetchRates (external API!)
+-> Processes: CheckoutFlow (step 3/7)
 ```
 
-**codragraph_cypher** â€” custom call chain traces:
+**codragraph_cypher** -- custom call chain traces:
 
 ```cypher
 MATCH path = (a)-[:CodeRelation {type: 'CALLS'}*1..2]->(b:Function {name: "validatePayment"})
@@ -76,14 +76,14 @@ RETURN [n IN nodes(path) | n.name] AS chain
 
 ```
 1. codragraph_query({query: "payment error handling"})
-   â†’ Processes: CheckoutFlow, ErrorHandling
-   â†’ Symbols: validatePayment, handlePaymentError
+   -> Processes: CheckoutFlow, ErrorHandling
+   -> Symbols: validatePayment, handlePaymentError
 
 2. codragraph_context({name: "validatePayment"})
-   â†’ Outgoing calls: verifyCard, fetchRates (external API!)
+   -> Outgoing calls: verifyCard, fetchRates (external API!)
 
 3. READ codragraph://repo/my-app/process/CheckoutFlow
-   â†’ Step 3: validatePayment â†’ calls fetchRates (external)
+   -> Step 3: validatePayment -> calls fetchRates (external)
 
 4. Root cause: fetchRates calls external API without proper timeout
 ```

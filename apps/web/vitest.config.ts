@@ -4,7 +4,7 @@ import path from 'path';
 import { createRequire } from 'module';
 
 const _require = createRequire(import.meta.url);
-const codragraphPkg = _require('../codragraph/package.json');
+const codragraphPkg = _require('../../packages/core/package.json');
 
 export default defineConfig({
   plugins: [react()],
@@ -14,6 +14,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@codragraph/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
       '@anthropic-ai/sdk/lib/transform-json-schema': path.resolve(
         __dirname,
         'node_modules/@anthropic-ai/sdk/lib/transform-json-schema.mjs',

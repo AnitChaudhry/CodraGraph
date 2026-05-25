@@ -9,7 +9,7 @@
  *
  * ## Dependency direction
  *
- *     codragraph-shared (NodeLabel)             — leaf
+ *     @codragraph/shared (NodeLabel)            — leaf
  *          ↑
  *     symbol-table.ts                         — pure file/callable index
  *          ↑

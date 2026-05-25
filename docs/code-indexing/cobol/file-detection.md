@@ -52,24 +52,13 @@ The matching is **case-insensitive** and checks all path segments:
 ### Decision Tree
 
 ```mermaid
-flowchart TD
-    A[getLanguageFromPath] --> B[getLanguageFromFilename]
-    B --> C{Known extension?}
-    C -->|Yes .cbl/.cob/.cobol/.cpy/...| D[Return COBOL]
-    C -->|Yes .ts/.py/.java/...| E[Return other language]
-    C -->|No match| F{Has extension?}
-
-    F -->|"Has dot in basename"| G[Return null]
-    F -->|"No dot = extensionless"| H{CODRAGRAPH_COBOL_DIRS set?}
-
-    H -->|No| G
-    H -->|Yes| I{Any path segment<br/>matches a configured dir?}
-
-    I -->|Yes| D
-    I -->|No| G
-
-    style D fill:#e8f5e9,stroke:#2e7d32
-    style G fill:#ffebee,stroke:#c62828
+flowchart LR
+    Path["File path"] --> Ext["Check known extensions"]
+    Ext -->|"COBOL extension"| Cobol["Return COBOL"]
+    Ext -->|"Other known extension"| Other["Return other language"]
+    Ext -->|"No extension"| Dirs["Check CODRAGRAPH_COBOL_DIRS"]
+    Dirs -->|"Path segment matches"| Cobol
+    Dirs -->|"No match"| Skip["Skip"]
 ```
 
 ### Implementation Detail

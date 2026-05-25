@@ -61,6 +61,8 @@ const getNodeMass = (nodeType: NodeLabel, nodeCount: number): number => {
       return 20 * baseMassMultiplier; // Heavy
     case 'Folder':
       return 15 * baseMassMultiplier; // Heavy - blasts folders apart!
+    case 'FeatureCluster':
+      return 18 * baseMassMultiplier; // Feature anchors should spread apart
     case 'File':
       return 3 * baseMassMultiplier; // Medium - follows folders
     case 'Class':
@@ -115,7 +117,7 @@ export const knowledgeGraphToGraphology = (
   const nodeMap = new Map(knowledgeGraph.nodes.map((n) => [n.id, n]));
 
   // Separate structural nodes (folders, packages) from content nodes
-  const structuralTypes = new Set(['Project', 'Package', 'Module', 'Folder']);
+  const structuralTypes = new Set(['Project', 'Package', 'Module', 'Folder', 'FeatureCluster']);
   const structuralNodes = knowledgeGraph.nodes.filter((n) => structuralTypes.has(n.label));
 
   // Much wider spread for structural nodes - this is the key!
@@ -295,6 +297,10 @@ export const knowledgeGraphToGraphology = (
     // TYPE RELATIONSHIPS - Warm colors (OOP)
     EXTENDS: { color: '#c2410c', sizeMultiplier: 1.0 }, // Orange - extension
     IMPLEMENTS: { color: '#be185d', sizeMultiplier: 0.9 }, // Pink - interface implementation
+
+    // FEATURE CONTEXT - Teal/Cyan
+    FEATURE_MEMBER_OF: { color: '#0891b2', sizeMultiplier: 0.45 },
+    FEATURE_DEPENDS_ON: { color: '#0f766e', sizeMultiplier: 0.9 },
   };
 
   knowledgeGraph.relationships.forEach((rel) => {

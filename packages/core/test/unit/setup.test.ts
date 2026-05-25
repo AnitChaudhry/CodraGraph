@@ -75,7 +75,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'cmd',
-      args: ['/c', 'npx', '-y', '@codragraph/cli@latest', 'mcp'],
+      args: ['/c', 'npx', '-y', '@codragraph/cli@2.1.0', 'mcp'],
     });
   });
 
@@ -90,7 +90,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'npx',
-      args: ['-y', '@codragraph/cli@latest', 'mcp'],
+      args: ['-y', '@codragraph/cli@2.1.0', 'mcp'],
     });
   });
 
@@ -188,7 +188,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'npx',
-      args: ['-y', '@codragraph/cli@latest', 'mcp'],
+      args: ['-y', '@codragraph/cli@2.1.0', 'mcp'],
     });
   });
 
@@ -233,7 +233,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'cmd',
-      args: ['/c', 'npx', '-y', '@codragraph/cli@latest', 'mcp'],
+      args: ['/c', 'npx', '-y', '@codragraph/cli@2.1.0', 'mcp'],
     });
   });
 });

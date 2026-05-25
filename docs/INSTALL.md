@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./branding/codragraph-logo.png" alt="CodraGraph" width="80" height="80" />
+  <img src="../branding/codragraph-logo.png" alt="CodraGraph" width="80" height="80" />
 </p>
 
 # Installing CodraGraph
@@ -27,13 +27,19 @@ the bundled web dashboard. Everything else is optional.
 
 ## The package matrix
 
+All public packages below ship under Apache-2.0. The license permits
+personal, internal, commercial, hosted, and redistributed use; paid
+CodraGraph offerings are for managed service/support rather than license
+restrictions.
+
 | Package | What you get | Install command |
 |---|---|---|
-| **`@codragraph/cli`** | CLI, MCP server, HTTP API, indexer | `npm install -g @codragraph/cli` |
-| **`@codragraph/sdk`** | Programmatic API (no CLI) — graph, harness, graphstore, recipes, compress | `npm install @codragraph/sdk` |
+| **`@codragraph/cli`** | CLI, MCP server, HTTP API, indexer, web dashboard, FeatureCluster context packs | `npm install -g @codragraph/cli` |
+| **`@codragraph/sdk`** | Programmatic API on top of CLI-indexed repos — graph, harness, graphstore, recipes, compress | `npm install @codragraph/sdk` |
 | **`@codragraph/graphstore`** | Just the versioned-graph store (snapshots / branches / diffs / merge) | `npm install @codragraph/graphstore` |
 | **`@codragraph/harness`** | Auto-tuned harness search + swarm + recipe memory | `npm install @codragraph/harness` |
 | **`@codragraph/compress`** | Graph-aware compression library | `npm install @codragraph/compress` |
+| **`@codragraph/org`** | Tenant/RBAC/audit helpers for hosted deployments | `npm install @codragraph/org` |
 
 > `@codragraph/shared` is internal-only (TypeScript types).
 
@@ -58,12 +64,27 @@ All three plugins are thin glue — they delegate to the `codragraph` CLI
   - `import { recipes } from '@codragraph/sdk/recipes'`
   - `import { compress } from '@codragraph/sdk/compress'`
 - **I just need versioning over a property graph (no AI / no CLI)** → install `@codragraph/graphstore` directly.
-- **I want to auto-tune harnesses for my own task family** → install `@codragraph/harness`. It carries its own CLI: `packages/harness swarm-search …`
+- **I want to auto-tune harnesses for my own task family** → install `@codragraph/harness`. It carries its own CLI: `codragraph-harness search ...` and `codragraph-harness swarm-search ...`
 - **I want token-savings compression for an LLM pipeline** → install `@codragraph/compress`.
+- **I want hosted / enterprise boundaries** → install `@codragraph/org` alongside CLI workers and graphstore.
+
+## How packages compose
+
+`@codragraph/cli` is the root of the end-to-end workflow: it indexes repos,
+creates FeatureCluster packs, serves MCP/HTTP, and registers local repos. Add
+other packages only when you need their layer:
+
+| Add this | When |
+|---|---|
+| `@codragraph/sdk` | Your own agent or dashboard needs to query indexed repos programmatically |
+| `@codragraph/harness` | You want to optimize prompts/retrieval over a task family |
+| `@codragraph/compress` | You want to compress feature context before it reaches an LLM |
+| `@codragraph/graphstore` | You want graph snapshots, diffs, branches, and blame |
+| `@codragraph/org` | You want tenant, RBAC, and audit layers around the local-first stack |
 
 ## API keys (BYO)
 
-All five packages share one config file at `~/.codragraph/config.json`.
+All packages share one config file at `~/.codragraph/config.json`.
 Set provider keys with the CLI:
 
 ```sh
@@ -86,4 +107,5 @@ local server, so changes you make in one surface show up in the others.
 ## License
 
 Every public package ships under **Apache-2.0**. You can use, modify,
-and redistribute commercially. See [LICENSE](./LICENSE).
+host, redistribute, and bundle CodraGraph commercially. Keep the license
+and attribution notices required by Apache-2.0. See [LICENSE](../LICENSE).

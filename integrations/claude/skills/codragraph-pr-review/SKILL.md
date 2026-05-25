@@ -17,16 +17,16 @@ description: "Use when the user wants to review a pull request, understand what 
 ## Workflow
 
 ```
-1. gh pr diff <number>                                    â†’ Get the raw diff
-2. codragraph_detect_changes({scope: "compare", base_ref: "main"})  â†’ Map diff to affected flows
+1. gh pr diff <number>                                    -> Get the raw diff
+2. codragraph_detect_changes({scope: "compare", base_ref: "main"})  -> Map diff to affected flows
 3. For each changed symbol:
-   codragraph_impact({target: "<symbol>", direction: "upstream"})    â†’ Blast radius per change
-4. codragraph_context({name: "<key symbol>"})               â†’ Understand callers/callees
-5. READ codragraph://repo/{name}/processes                   â†’ Check affected execution flows
+   codragraph_impact({target: "<symbol>", direction: "upstream"})    -> Blast radius per change
+4. codragraph_context({name: "<key symbol>"})               -> Understand callers/callees
+5. READ codragraph://repo/{name}/processes                   -> Check affected execution flows
 6. Summarize findings with risk assessment
 ```
 
-> If "Index is stale" â†’ run `npx @codragraph/cli analyze` in terminal before reviewing.
+> If "Index is stale" -> run `npx @codragraph/cli analyze` in terminal before reviewing.
 
 ## Checklist
 
@@ -34,7 +34,7 @@ description: "Use when the user wants to review a pull request, understand what 
 - [ ] Fetch PR diff (gh pr diff or git diff base...head)
 - [ ] codragraph_detect_changes to map changes to affected execution flows
 - [ ] codragraph_impact on each non-trivial changed symbol
-- [ ] Review d=1 items (WILL BREAK) â€” are callers updated?
+- [ ] Review d=1 items (WILL BREAK) -- are callers updated?
 - [ ] codragraph_context on key changed symbols to understand full picture
 - [ ] Check if affected processes have test coverage
 - [ ] Assess overall risk level
@@ -45,9 +45,9 @@ description: "Use when the user wants to review a pull request, understand what 
 
 | Dimension | How CodraGraph Helps |
 | --- | --- |
-| **Correctness** | `context` shows callers â€” are they all compatible with the change? |
-| **Blast radius** | `impact` shows d=1/d=2/d=3 dependents â€” anything missed? |
-| **Completeness** | `detect_changes` shows all affected flows â€” are they all handled? |
+| **Correctness** | `context` shows callers -- are they all compatible with the change? |
+| **Blast radius** | `impact` shows d=1/d=2/d=3 dependents -- anything missed? |
+| **Completeness** | `detect_changes` shows all affected flows -- are they all handled? |
 | **Test coverage** | `impact({includeTests: true})` shows which tests touch changed code |
 | **Breaking changes** | d=1 upstream items that aren't updated in the PR = potential breakage |
 
@@ -59,77 +59,77 @@ description: "Use when the user wants to review a pull request, understand what 
 | Changes touch 3-10 symbols, 2-5 processes | MEDIUM |
 | Changes touch >10 symbols or many processes | HIGH |
 | Changes touch auth, payments, or data integrity code | CRITICAL |
-| d=1 callers exist outside the PR diff | Potential breakage â€” flag it |
+| d=1 callers exist outside the PR diff | Potential breakage -- flag it |
 
 ## Tools
 
-**codragraph_detect_changes** â€” map PR diff to affected execution flows:
+**codragraph_detect_changes** -- map PR diff to affected execution flows:
 
 ```
 codragraph_detect_changes({scope: "compare", base_ref: "main"})
 
-â†’ Changed: 8 symbols in 4 files
-â†’ Affected processes: CheckoutFlow, RefundFlow, WebhookHandler
-â†’ Risk: MEDIUM
+-> Changed: 8 symbols in 4 files
+-> Affected processes: CheckoutFlow, RefundFlow, WebhookHandler
+-> Risk: MEDIUM
 ```
 
-**codragraph_impact** â€” blast radius per changed symbol:
+**codragraph_impact** -- blast radius per changed symbol:
 
 ```
 codragraph_impact({target: "validatePayment", direction: "upstream"})
 
-â†’ d=1 (WILL BREAK):
+-> d=1 (WILL BREAK):
   - processCheckout (src/checkout.ts:42) [CALLS, 100%]
   - webhookHandler (src/webhooks.ts:15) [CALLS, 100%]
 
-â†’ d=2 (LIKELY AFFECTED):
+-> d=2 (LIKELY AFFECTED):
   - checkoutRouter (src/routes/checkout.ts:22) [CALLS, 95%]
 ```
 
-**codragraph_impact with tests** â€” check test coverage:
+**codragraph_impact with tests** -- check test coverage:
 
 ```
 codragraph_impact({target: "validatePayment", direction: "upstream", includeTests: true})
 
-â†’ Tests that cover this symbol:
+-> Tests that cover this symbol:
   - validatePayment.test.ts [direct]
   - checkout.integration.test.ts [via processCheckout]
 ```
 
-**codragraph_context** â€” understand a changed symbol's role:
+**codragraph_context** -- understand a changed symbol's role:
 
 ```
 codragraph_context({name: "validatePayment"})
 
-â†’ Incoming calls: processCheckout, webhookHandler
-â†’ Outgoing calls: verifyCard, fetchRates
-â†’ Processes: CheckoutFlow (step 3/7), RefundFlow (step 1/5)
+-> Incoming calls: processCheckout, webhookHandler
+-> Outgoing calls: verifyCard, fetchRates
+-> Processes: CheckoutFlow (step 3/7), RefundFlow (step 1/5)
 ```
 
 ## Example: "Review PR #42"
 
 ```
 1. gh pr diff 42 > /tmp/pr42.diff
-   â†’ 4 files changed: payments.ts, checkout.ts, types.ts, utils.ts
+   -> 4 files changed: payments.ts, checkout.ts, types.ts, utils.ts
 
 2. codragraph_detect_changes({scope: "compare", base_ref: "main"})
-   â†’ Changed symbols: validatePayment, PaymentInput, formatAmount
-   â†’ Affected processes: CheckoutFlow, RefundFlow
-   â†’ Risk: MEDIUM
+   -> Changed symbols: validatePayment, PaymentInput, formatAmount
+   -> Affected processes: CheckoutFlow, RefundFlow
+   -> Risk: MEDIUM
 
 3. codragraph_impact({target: "validatePayment", direction: "upstream"})
-   â†’ d=1: processCheckout, webhookHandler (WILL BREAK)
-   â†’ webhookHandler is NOT in the PR diff â€” potential breakage!
+   -> d=1: processCheckout, webhookHandler (WILL BREAK)
+   -> webhookHandler is NOT in the PR diff -- potential breakage!
 
 4. codragraph_impact({target: "PaymentInput", direction: "upstream"})
-   â†’ d=1: validatePayment (in PR), createPayment (NOT in PR)
-   â†’ createPayment uses the old PaymentInput shape â€” breaking change!
+   -> d=1: validatePayment (in PR), createPayment (NOT in PR)
+   -> createPayment uses the old PaymentInput shape -- breaking change!
 
 5. codragraph_context({name: "formatAmount"})
-   â†’ Called by 12 functions â€” but change is backwards-compatible (added optional param)
+   -> Called by 12 functions -- but change is backwards-compatible (added optional param)
 
 6. Review summary:
-   - MEDIUM risk â€” 3 changed symbols affect 2 execution flows
+   - MEDIUM risk -- 3 changed symbols affect 2 execution flows
    - BUG: webhookHandler calls validatePayment but isn't updated for new signature
    - BUG: createPayment depends on PaymentInput type which changed
    - OK: formatAmount change is backwards-compatible

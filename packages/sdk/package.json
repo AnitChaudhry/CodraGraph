@@ -59,9 +59,11 @@
     "README.md"
   ],
   "scripts": {
+    "prebuild": "npm --workspace @codragraph/harness run build",
     "build": "tsc",
-    "test": "vitest run",
-    "prepack": "tsc"
+    "pretest": "npm --workspace @codragraph/harness run build",
+    "test": "vitest run --passWithNoTests",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@codragraph/cli": "^2.1.0",

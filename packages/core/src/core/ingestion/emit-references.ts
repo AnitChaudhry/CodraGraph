@@ -15,7 +15,7 @@
  *   - `confidence`: the pre-computed confidence from the Reference record.
  *   - `reason`: human-readable summary (`"scope-resolution: call | confidence 0.75"`).
  *   - `evidence`: the full `ResolutionEvidence[]` trace — additive graph
- *     property (see `GraphRelationship.evidence` in codragraph-shared),
+ *     property (see `GraphRelationship.evidence` in @codragraph/shared),
  *     so queries that don't know about it are unaffected.
  *   - `step`: carries the reference's access-kind discriminant when
  *     available (`1` for read, `2` for write) so `ACCESSES` edges retain

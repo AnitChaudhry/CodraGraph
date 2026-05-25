@@ -18,6 +18,10 @@ import { type GraphNode, getSyntaxLanguageFromFilename } from '@codragraph/share
 import { NODE_COLORS } from '../lib/constants';
 import { readFile, type ReadFileResult } from '../services/backend-client';
 
+const PANEL_MIN_WIDTH = 360;
+const PANEL_DEFAULT_WIDTH = 520;
+const PANEL_MAX_WIDTH = 720;
+
 const getSyntaxLanguage = (filePath: string | undefined): string => {
   if (!filePath) return 'text';
   return getSyntaxLanguageFromFilename(filePath);
@@ -44,6 +48,35 @@ const customTheme = {
 export interface CodeReferencesPanelProps {
   onFocusNode: (nodeId: string) => void;
 }
+
+const SourceUnavailableState = ({
+  filePath,
+  isFileSelection,
+}: {
+  filePath: string | undefined;
+  isFileSelection: boolean;
+}) => (
+  <div className="flex h-full min-h-[160px] items-center justify-center px-5 py-8 text-center">
+    <div className="max-w-sm">
+      <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg border border-border-subtle bg-elevated/60">
+        <FileCode className="h-5 w-5 text-text-muted" />
+      </div>
+      <p className="text-sm font-medium text-text-primary">
+        {isFileSelection ? 'Source unavailable' : 'Select a file node'}
+      </p>
+      <p className="mt-1 text-xs leading-5 text-text-muted">
+        {isFileSelection ? (
+          <>
+            The graph knows this file, but the server did not return source for{' '}
+            <span className="font-mono text-text-secondary">{filePath}</span>.
+          </>
+        ) : (
+          'Choose a file from the graph or explorer to preview its source.'
+        )}
+      </p>
+    </div>
+  </div>
+);
 
 export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) => {
   const {
@@ -82,10 +115,10 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
     try {
       const saved = window.localStorage.getItem('codragraph.codePanelWidth');
       const parsed = saved ? parseInt(saved, 10) : NaN;
-      if (!Number.isFinite(parsed)) return 560; // increased default
-      return Math.max(420, Math.min(parsed, 900));
+      if (!Number.isFinite(parsed)) return PANEL_DEFAULT_WIDTH;
+      return Math.max(PANEL_MIN_WIDTH, Math.min(parsed, PANEL_MAX_WIDTH));
     } catch {
-      return 560;
+      return PANEL_DEFAULT_WIDTH;
     }
   });
 
@@ -109,7 +142,9 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
         const state = resizeRef.current;
         if (!state) return;
         const delta = ev.clientX - state.startX;
-        const next = Math.max(420, Math.min(state.startWidth + delta, 900));
+        const parentWidth = panelRef.current?.parentElement?.clientWidth ?? PANEL_MAX_WIDTH;
+        const maxWidth = Math.min(PANEL_MAX_WIDTH, Math.max(PANEL_MIN_WIDTH, parentWidth));
+        const next = Math.max(PANEL_MIN_WIDTH, Math.min(state.startWidth + delta, maxWidth));
         setPanelWidth(next);
       };
 
@@ -290,23 +325,24 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
 
   if (isCollapsed) {
     return (
-      <aside className="flex h-full w-12 flex-shrink-0 flex-col items-center gap-2 border-r border-border-subtle bg-surface py-3">
+      <aside className="flex h-full w-11 flex-shrink-0 flex-col items-center gap-2 border-r border-border-subtle bg-surface py-3">
         <button
           onClick={() => setIsCollapsed(false)}
-          className="rounded p-2 text-text-secondary transition-colors hover:bg-cyan-500/10 hover:text-cyan-400"
-          title="Expand Code Panel"
+          className="rounded-md border border-border-subtle bg-elevated/60 p-2 text-text-secondary transition-colors hover:bg-hover hover:text-text-primary"
+          title="Expand code inspector"
+          aria-label="Expand code inspector"
         >
-          <PanelLeft className="h-5 w-5" />
+          <PanelLeft className="h-4 w-4" />
         </button>
         <div className="my-1 h-px w-6 bg-border-subtle" />
         {showSelectedViewer && (
-          <div className="rotate-90 text-[9px] font-medium tracking-wide whitespace-nowrap text-amber-400">
-            SELECTED
+          <div className="rotate-90 text-[9px] font-medium tracking-wide whitespace-nowrap text-cyan-300">
+            Selection
           </div>
         )}
         {showCitations && (
           <div className="mt-4 rotate-90 text-[9px] font-medium tracking-wide whitespace-nowrap text-cyan-400">
-            AI • {aiReferences.length}
+            AI - {aiReferences.length}
           </div>
         )}
       </aside>
@@ -318,8 +354,8 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
       ref={(el) => {
         panelRef.current = el;
       }}
-      className="relative flex h-full animate-slide-in flex-col border-r border-border-subtle bg-surface/95 shadow-2xl backdrop-blur-md"
-      style={{ width: panelWidth }}
+      className="relative flex h-full max-w-full animate-slide-in flex-col border-r border-border-subtle bg-surface shadow-2xl"
+      style={{ width: panelWidth, maxWidth: '100%' }}
     >
       {/* Resize handle */}
       <div
@@ -328,7 +364,7 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
         title="Drag to resize"
       />
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border-subtle bg-gradient-to-r from-elevated/60 to-surface/60 px-3 py-2.5">
+      <div className="flex items-center justify-between border-b border-border-subtle bg-elevated/40 px-3 py-2.5">
         <div className="flex items-center gap-2">
           <Code className="h-4 w-4 text-cyan-400" />
           <span className="text-sm font-semibold text-text-primary">Code Inspector</span>
@@ -345,8 +381,9 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
           )}
           <button
             onClick={() => setIsCollapsed(true)}
-            className="rounded p-1.5 text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
-            title="Collapse Panel"
+            className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
+            title="Collapse code inspector"
+            aria-label="Collapse code inspector"
           >
             <PanelLeftClose className="h-4 w-4" />
           </button>
@@ -357,27 +394,27 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
         {/* Top: Selected file viewer (when a node is selected) */}
         {showSelectedViewer && (
           <div className={`${showCitations ? 'h-[42%]' : 'flex-1'} flex min-h-0 flex-col`}>
-            <div className="flex items-center gap-2 border-b border-amber-500/20 bg-gradient-to-r from-amber-500/8 to-orange-500/5 px-3 py-2">
-              <div className="flex items-center gap-1.5 rounded-md border border-amber-500/25 bg-amber-500/15 px-2 py-0.5">
-                <MousePointerClick className="h-3 w-3 text-amber-400" />
-                <span className="text-[10px] font-semibold tracking-wide text-amber-300 uppercase">
-                  Selected
+            <div className="flex items-center gap-2 border-b border-border-subtle bg-elevated/35 px-3 py-2">
+              <div className="flex items-center gap-1.5 rounded-md border border-cyan-500/25 bg-cyan-500/10 px-2 py-0.5">
+                <MousePointerClick className="h-3 w-3 text-cyan-300" />
+                <span className="text-[10px] font-semibold tracking-wide text-cyan-200 uppercase">
+                  Selection
                 </span>
               </div>
-              <FileCode className="ml-1 h-3.5 w-3.5 text-amber-400/70" />
+              <FileCode className="ml-1 h-3.5 w-3.5 text-text-muted" />
               <span className="flex-1 truncate font-mono text-xs text-text-primary">
                 {selectedNode?.properties?.filePath?.split('/').pop() ??
                   selectedNode?.properties?.name}
               </span>
               <button
                 onClick={() => setSelectedNode(null)}
-                className="rounded p-1 text-text-muted transition-colors hover:bg-amber-500/10 hover:text-amber-400"
+                className="rounded-md p-1 text-text-muted transition-colors hover:bg-hover hover:text-text-primary"
                 title="Clear selection"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div ref={selectedViewerRef} className="scrollbar-thin min-h-0 flex-1 overflow-auto">
+            <div ref={selectedViewerRef} className="scrollbar-canvas min-h-0 flex-1 overflow-auto">
               {isLoadingFile ? (
                 <div className="flex items-center justify-center gap-2 py-8 text-text-muted">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -418,16 +455,10 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
                   {selectedFileContent}
                 </SyntaxHighlighter>
               ) : (
-                <div className="px-3 py-3 text-sm text-text-muted">
-                  {selectedIsFile ? (
-                    <>
-                      Code not available in memory for{' '}
-                      <span className="font-mono">{selectedFilePath}</span>
-                    </>
-                  ) : (
-                    <>Select a file node to preview its contents.</>
-                  )}
-                </div>
+                <SourceUnavailableState
+                  filePath={selectedFilePath}
+                  isFileSelection={selectedIsFile}
+                />
               )}
             </div>
           </div>
@@ -453,7 +484,7 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
                 {aiReferences.length} reference{aiReferences.length !== 1 ? 's' : ''}
               </span>
             </div>
-            <div className="scrollbar-thin min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+            <div className="scrollbar-canvas min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
               {refsWithSnippets.map(
                 ({ ref, content, start, highlightStart, highlightEnd, totalLines }) => {
                   const nodeColor = ref.label
@@ -496,12 +527,12 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
                             {startDisplay !== undefined && (
                               <span className="text-text-secondary">
                                 {' '}
-                                • L{startDisplay}
-                                {endDisplay !== startDisplay ? `–${endDisplay}` : ''}
+                                - L{startDisplay}
+                                {endDisplay !== startDisplay ? `-${endDisplay}` : ''}
                               </span>
                             )}
                             {totalLines > 0 && (
-                              <span className="text-text-muted"> • {totalLines} lines</span>
+                              <span className="text-text-muted"> - {totalLines} lines</span>
                             )}
                           </div>
                         </div>
@@ -571,10 +602,7 @@ export const CodeReferencesPanel = ({ onFocusNode }: CodeReferencesPanelProps) =
                             {content}
                           </SyntaxHighlighter>
                         ) : (
-                          <div className="px-3 py-3 text-sm text-text-muted">
-                            Code not available in memory for{' '}
-                            <span className="font-mono">{ref.filePath}</span>
-                          </div>
+                          <SourceUnavailableState filePath={ref.filePath} isFileSelection />
                         )}
                       </div>
                     </div>

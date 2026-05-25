@@ -23,44 +23,16 @@ The regex-only approach provides:
 ## Architecture
 
 ```mermaid
-flowchart TD
-    A[Repository Scan] --> B{File Detection}
-    B -->|Extension match| C[COBOL file]
-    B -->|CODRAGRAPH_COBOL_DIRS match| C
-    B -->|No match| Z[Skip]
-
-    C --> D{Copybook?}
-    D -->|Yes| E[Add to Copybook Map]
-    D -->|No| F[Source Program]
-
-    E --> G[COPY Expansion Engine]
-    F --> G
-
-    G -->|Inline copybook content| H[Expanded Source]
-    H --> I[Patch Marker Cleanup]
-    I --> J[Regex State Machine]
-
-    J --> K[Extracted Symbols]
-    K --> L[Graph Model Builder]
-    L --> M[Knowledge Graph]
-
-    subgraph "Per-Chunk Processing"
-        G
-        H
-        I
-        J
-        K
-        L
-    end
-
-    subgraph "Post-Processing"
-        M --> N[Community Detection]
-        M --> O[Process Detection]
-        M --> P[Contract Detection]
-    end
-
-    style J fill:#e8f5e9,stroke:#2e7d32
-    style G fill:#e3f2fd,stroke:#1565c0
+flowchart LR
+    Scan["Repository scan"] --> Detect["Detect COBOL files"]
+    Detect --> Copybooks["Build copybook map"]
+    Detect --> Programs["Source programs"]
+    Copybooks --> Expand["COPY expansion"]
+    Programs --> Expand
+    Expand --> Clean["Patch marker cleanup"]
+    Clean --> Regex["Regex extraction"]
+    Regex --> Graph["COBOL graph nodes and edges"]
+    Graph --> Flows["Communities, processes, contracts"]
 ```
 
 ## COBOL vs Tree-Sitter Languages

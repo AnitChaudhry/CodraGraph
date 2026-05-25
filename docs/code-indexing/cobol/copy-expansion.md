@@ -47,41 +47,13 @@ Continuation lines (indicator `-` in column 7) are merged before COPY statement 
 ## Expansion Flow
 
 ```mermaid
-sequenceDiagram
-    participant Pipeline
-    participant Expander as COPY Expander
-    participant Resolver
-    participant Reader
-
-    Pipeline->>Pipeline: Identify all COBOL files
-    Pipeline->>Pipeline: Classify copybooks vs programs
-    Pipeline->>Reader: Read all copybook content upfront
-    Reader-->>Pipeline: Copybook content map (name -> content)
-
-    loop For each source file in chunk
-        Pipeline->>Expander: expandCopies(content, filePath, resolveFile, readFile)
-        Expander->>Expander: Merge continuation lines
-        Expander->>Expander: Detect COPY statements via regex
-
-        loop For each COPY statement (reverse order)
-            Expander->>Resolver: resolveFile(copyTarget)
-            Resolver-->>Expander: Copybook key or null
-
-            alt Resolved successfully
-                Expander->>Reader: readFile(resolvedKey)
-                Reader-->>Expander: Copybook content
-
-                Expander->>Expander: Apply REPLACING transformations
-                Expander->>Expander: Recurse for nested COPYs (depth + 1)
-                Expander->>Expander: Splice expanded content into output
-            else Not resolved
-                Expander->>Expander: Keep original COPY line
-            end
-        end
-
-        Expander-->>Pipeline: Expanded content + resolution metadata
-        Pipeline->>Pipeline: Replace file content with expanded content
-    end
+flowchart LR
+    Files["COBOL files"] --> Classify["Classify programs/copybooks"]
+    Classify --> Map["Build copybook map"]
+    Map --> Expand["Expand COPY statements"]
+    Expand --> Replace["Apply REPLACING"]
+    Replace --> Nested["Resolve nested COPYs"]
+    Nested --> Output["Expanded source + metadata"]
 ```
 
 The return type `CopyExpansionResult` contains `expandedContent` and `copyResolutions`. The `expansionDepth` field has been removed from the return type (it was unused by callers).

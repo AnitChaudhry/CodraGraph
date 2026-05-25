@@ -1,5 +1,6 @@
 import type { KnowledgeGraph } from '../core/graph/types.js';
 import { CommunityDetectionResult } from '../core/ingestion/community-processor.js';
+import { FeatureClusterDetectionResult } from '../core/ingestion/feature-cluster-processor.js';
 import { ProcessDetectionResult } from '../core/ingestion/process-processor.js';
 
 // CLI-specific: in-memory result with graph + detection results
@@ -11,6 +12,7 @@ export interface PipelineResult {
   totalFileCount: number;
   communityResult?: CommunityDetectionResult;
   processResult?: ProcessDetectionResult;
+  featureClusterResult?: FeatureClusterDetectionResult;
   /**
    * True if the parse phase spawned a worker pool for this run. False means
    * the sequential fallback handled every chunk. Primarily a test affordance

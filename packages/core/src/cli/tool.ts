@@ -169,6 +169,124 @@ export async function cypherCommand(
   output(result);
 }
 
+export async function featureClustersCommand(options?: {
+  repo?: string;
+  limit?: string;
+}): Promise<void> {
+  const backend = await getBackend();
+  const result = await backend.callTool('feature_clusters', {
+    repo: options?.repo,
+    limit: options?.limit ? parseInt(options.limit, 10) : undefined,
+  });
+  output(result);
+}
+
+export async function clusterQueryCommand(
+  query?: string,
+  options?: {
+    repo?: string;
+    limit?: string;
+  },
+): Promise<void> {
+  const backend = await getBackend();
+  const result = await backend.callTool('cluster_query', {
+    query,
+    repo: options?.repo,
+    limit: options?.limit ? parseInt(options.limit, 10) : undefined,
+  });
+  output(result);
+}
+
+export async function featureContextCommand(
+  name: string,
+  options?: {
+    repo?: string;
+    limit?: string;
+  },
+): Promise<void> {
+  if (!name?.trim()) {
+    console.error('Usage: codragraph feature-context <name>');
+    process.exit(1);
+  }
+
+  const backend = await getBackend();
+  const result = await backend.callTool('feature_context', {
+    name,
+    repo: options?.repo,
+    limit: options?.limit ? parseInt(options.limit, 10) : undefined,
+  });
+  output(result);
+  emitTokenStats(result);
+}
+
+export async function clusterContextCommand(
+  name: string,
+  options?: {
+    repo?: string;
+    limit?: string;
+  },
+): Promise<void> {
+  if (!name?.trim()) {
+    console.error('Usage: codragraph cluster-context <name>');
+    process.exit(1);
+  }
+
+  const backend = await getBackend();
+  const result = await backend.callTool('cluster_context', {
+    name,
+    repo: options?.repo,
+    limit: options?.limit ? parseInt(options.limit, 10) : undefined,
+  });
+  output(result);
+  emitTokenStats(result);
+}
+
+export async function contextPackCommand(
+  name: string,
+  options?: {
+    repo?: string;
+    limit?: string;
+  },
+): Promise<void> {
+  if (!name?.trim()) {
+    console.error('Usage: codragraph context-pack <name>');
+    process.exit(1);
+  }
+
+  const backend = await getBackend();
+  const result = await backend.callTool('context_pack', {
+    name,
+    repo: options?.repo,
+    limit: options?.limit ? parseInt(options.limit, 10) : undefined,
+  });
+  output(result);
+  emitTokenStats(result);
+}
+
+export async function clusterImpactCommand(
+  name: string,
+  options?: {
+    direction?: string;
+    repo?: string;
+    limit?: string;
+  },
+): Promise<void> {
+  if (!name?.trim()) {
+    console.error('Usage: codragraph cluster-impact <name>');
+    process.exit(1);
+  }
+
+  const backend = await getBackend();
+  const result = await backend.callTool('cluster_impact', {
+    name,
+    direction: options?.direction,
+    repo: options?.repo,
+    limit: options?.limit ? parseInt(options.limit, 10) : undefined,
+  });
+  output(result);
+  emitTokenStats(result);
+}
+
 function formatDetectChangesResult(result: any): string {
   if (result?.error) return `Error: ${result.error}`;
 
