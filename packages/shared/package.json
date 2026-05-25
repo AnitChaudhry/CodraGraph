@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/shared",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Shared type definitions for CodraGraph CLI and web",
   "author": {
     "name": "Anit Chaudhary",

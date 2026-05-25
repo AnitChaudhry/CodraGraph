@@ -692,13 +692,13 @@ Current workspace versions:
 
 | Package | Version | Notes |
 |---|---|---|
-| `@codragraph/cli` | 2.1.0 | CLI, MCP, HTTP, web dashboard, FeatureCluster context packs |
-| `@codragraph/shared` | 2.1.0 | Shared graph, schema, and FeatureCluster contracts |
-| `@codragraph/graphstore` | 2.1.0 | Content-addressed snapshots, diff, branch, merge, blame |
-| `@codragraph/harness` | 2.1.0 | Harness search, swarm, recipe memory, graph clients |
-| `@codragraph/compress` | 2.1.0 | LLM-context compression and FeatureCluster context-pack compression |
-| `@codragraph/sdk` | 2.1.0 | One-import programmatic surface over graph, harness, graphstore, compress |
-| `@codragraph/org` | 2.1.0 | Tenant, RBAC, and audit helpers for hosted/team deployments |
+| `@codragraph/cli` | 2.1.1 | CLI, MCP, HTTP, web dashboard, FeatureCluster context packs |
+| `@codragraph/shared` | 2.1.1 | Shared graph, schema, and FeatureCluster contracts |
+| `@codragraph/graphstore` | 2.1.1 | Content-addressed snapshots, diff, branch, merge, blame |
+| `@codragraph/harness` | 2.1.1 | Harness search, swarm, recipe memory, graph clients |
+| `@codragraph/compress` | 2.1.1 | LLM-context compression and FeatureCluster context-pack compression |
+| `@codragraph/sdk` | 2.1.1 | One-import programmatic surface over graph, harness, graphstore, compress |
+| `@codragraph/org` | 2.1.1 | Tenant, RBAC, and audit helpers for hosted/team deployments |
 | `@codragraph/codex` | 0.1.1 | |
 | `@codragraph/claude-plugin` | 0.1.1 | |
 

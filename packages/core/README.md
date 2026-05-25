@@ -55,16 +55,16 @@ If you prefer to configure manually instead of using `codragraph setup`:
 
 ```bash
 # macOS / Linux
-claude mcp add codragraph -- npx -y @codragraph/cli@2.1.0 mcp
+claude mcp add codragraph -- npx -y @codragraph/cli@2.1.1 mcp
 
 # Windows
-claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@2.1.0 mcp
+claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@2.1.1 mcp
 ```
 
 ### Codex (full support — MCP + skills)
 
 ```bash
-codex mcp add codragraph -- npx -y @codragraph/cli@2.1.0 mcp
+codex mcp add codragraph -- npx -y @codragraph/cli@2.1.1 mcp
 ```
 
 ### Cursor / Windsurf
@@ -76,7 +76,7 @@ Add to `~/.cursor/mcp.json` (global — works for all projects):
   "mcpServers": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "@codragraph/cli@2.1.0", "mcp"]
+      "args": ["-y", "@codragraph/cli@2.1.1", "mcp"]
     }
   }
 }
@@ -91,7 +91,7 @@ Add to `~/.config/opencode/config.json`:
   "mcp": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "@codragraph/cli@2.1.0", "mcp"]
+      "args": ["-y", "@codragraph/cli@2.1.1", "mcp"]
     }
   }
 }
@@ -296,9 +296,9 @@ It is fixed in **codragraph v1.6.2+**. Upgrade to the current workspace
 version, or pin the version your team has validated:
 
 ```bash
-npx @codragraph/cli@2.1.0 analyze          # no global install
+npx @codragraph/cli@2.1.1 analyze          # no global install
 # or
-npm install -g @codragraph/cli@2.1.0       # upgrade a global install
+npm install -g @codragraph/cli@2.1.1       # upgrade a global install
 ```
 
 If you still hit npm install issues after upgrading, these generic workarounds

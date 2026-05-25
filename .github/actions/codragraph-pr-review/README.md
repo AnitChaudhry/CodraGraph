@@ -67,7 +67,7 @@ jobs:
 | `mode` | no | `deterministic` | `deterministic` or `review`. |
 | `anthropic-api-key` | when `mode=review` | — | Use a repo secret, never hardcode. |
 | `anthropic-model` | no | `claude-sonnet-4-6` | Any Anthropic model id. |
-| `codragraph-version` | no | `2.1.0` | Exact version recommended; npm dist-tags are accepted when you intentionally want floating upgrades. |
+| `codragraph-version` | no | `2.1.1` | Exact version recommended; npm dist-tags are accepted when you intentionally want floating upgrades. |
 | `comment-marker` | no | `<!-- codragraph-pr-review -->` | HTML marker the action looks for to update its sticky comment. |
 | `github-token` | no | `github.token` | Needs `pull-requests: write`. |
 

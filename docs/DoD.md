@@ -1,6 +1,6 @@
 # Definition of Done — CodraGraph
 
-Last reviewed: 2026-05-25 · Version: 2.1.0
+Last reviewed: 2026-05-25 · Version: 2.1.1
 
 This document defines the repo-wide completion bar for production-ready changes in CodraGraph. It is the stable baseline. Implementation prompts, agent behavior, and review workflows may add task-specific checks, but they must never weaken this bar.
 
@@ -210,6 +210,6 @@ Track material updates in the changelog below. Keep the file tight — if it gro
 
 | Date       | Version | Change                                                                                                                                                        |
 | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-05-25 | 2.1.0   | Added FeatureCluster context-pack validation expectations and clarified cross-package build order for the shared, harness, SDK, compress, and org surfaces. |
+| 2026-05-25 | 2.1.1   | Added FeatureCluster context-pack validation expectations and clarified cross-package build order for the shared, harness, SDK, compress, and org surfaces. |
 | 2026-04-23 | 2.0.0   | Restructured into numbered sections; added Security, Observability, Reversibility, Agent-Assisted Guardrails, Review Gates, Not-Done Signals; expanded validation baseline (shared-first build, prettier, CI workflow checks). |
 | 2026-04-13 | 1.0.0   | Initial repo-wide Definition of Done.                                                                                                                         |

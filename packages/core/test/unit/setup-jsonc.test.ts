@@ -232,7 +232,7 @@ describe('setupOpenCode — JSONC preservation', () => {
 
     expect(config.mcp.codragraph).toEqual({
       type: 'local',
-      command: ['npx', '-y', '@codragraph/cli@2.1.0', 'mcp'],
+      command: ['npx', '-y', '@codragraph/cli@2.1.1', 'mcp'],
     });
   });
 
