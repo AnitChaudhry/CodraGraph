@@ -4,6 +4,33 @@ All notable changes to CodraGraph will be documented in this file.
 
 ## [Unreleased]
 
+## [2.1.4] - 2026-05-28
+
+### Added
+
+- Public distribution export now derives package versions from workspace
+  manifests, so the generated public README, install snippets, tarball names,
+  and checksum manifest stay aligned with the release version.
+
+### Changed
+
+- `codragraph analyze` now reuses an existing graph when the indexed commit
+  changes but only non-index-impacting files changed, such as generated agent
+  context, lockfiles, or ignored binary assets.
+- Public documentation exports include the full docs tree, package README
+  mirrors, branding, downloadable package tarballs, and an end-to-end public
+  README rather than only source package artifacts.
+- Workspace packages, web app, and integrations bumped to `2.1.4`.
+
+### Fixed
+
+- `analyze --embeddings` and compression changes now force a rebuild when the
+  existing index does not contain the requested storage layer.
+- The analyzer no longer reuses metadata when the LadybugDB graph files are
+  missing.
+- Windows-heavy unit tests have larger child-process budgets for source CLI
+  startup paths.
+
 ### Changed
 - Migrated from KuzuDB to LadybugDB v0.15 (`@ladybugdb/core`, `@ladybugdb/wasm-core`)
 - Renamed all internal paths from `kuzu` to `cgdb` (storage: `.codragraph/kuzu` → `.codragraph/cgdb`)

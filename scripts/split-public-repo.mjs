@@ -26,33 +26,67 @@ const targetArg = process.argv[2] ?? path.resolve(monorepo, '..', 'codragraph-pu
 const target = path.resolve(targetArg);
 const downloadsDir = path.join(target, 'downloads', 'npm');
 
-const packages = [
+const packageDefs = [
   {
     name: '@codragraph/cli',
-    version: '2.1.2',
+    workspace: 'packages/core',
     purpose: 'CLI, MCP server, HTTP API, indexer, dashboard, feature-cluster context packs',
   },
   {
     name: '@codragraph/shared',
-    version: '2.1.2',
+    workspace: 'packages/shared',
     purpose: 'Shared runtime/type contracts used by published packages',
   },
   {
     name: '@codragraph/graphstore',
-    version: '2.1.2',
+    workspace: 'packages/graphstore',
     purpose: 'Content-addressed graph snapshots, diffs, branches, merges',
   },
   {
     name: '@codragraph/harness',
-    version: '2.1.2',
+    workspace: 'packages/harness',
     purpose: 'Agent harness search, swarm, recipe memory',
   },
-  { name: '@codragraph/compress', version: '2.1.2', purpose: 'Context-pack compression utilities' },
-  { name: '@codragraph/sdk', version: '2.1.2', purpose: 'Programmatic SDK surface' },
-  { name: '@codragraph/org', version: '2.1.2', purpose: 'Tenant, RBAC, and audit helpers' },
-  { name: '@codragraph/claude-plugin', version: '2.1.2', purpose: 'Claude Code hooks and skills' },
-  { name: '@codragraph/codex', version: '2.1.2', purpose: 'Codex hook installer' },
+  {
+    name: '@codragraph/compress',
+    workspace: 'packages/compress',
+    purpose: 'Context-pack compression utilities',
+  },
+  { name: '@codragraph/sdk', workspace: 'packages/sdk', purpose: 'Programmatic SDK surface' },
+  {
+    name: '@codragraph/org',
+    workspace: 'packages/org',
+    purpose: 'Tenant, RBAC, and audit helpers',
+  },
+  {
+    name: '@codragraph/claude-plugin',
+    workspace: 'integrations/claude',
+    purpose: 'Claude Code hooks and skills',
+  },
+  {
+    name: '@codragraph/codex',
+    workspace: 'integrations/codex',
+    purpose: 'Codex hook installer',
+  },
 ];
+
+const readJson = async (rel) => JSON.parse(await fs.readFile(path.join(monorepo, rel), 'utf8'));
+
+const packages = await Promise.all(
+  packageDefs.map(async (pkg) => {
+    const manifest = await readJson(path.join(pkg.workspace, 'package.json'));
+    if (manifest.name !== pkg.name) {
+      throw new Error(
+        `Package definition mismatch for ${pkg.workspace}: expected ${pkg.name}, got ${manifest.name}`,
+      );
+    }
+    return { ...pkg, version: manifest.version };
+  }),
+);
+const cliPackage = packages.find((pkg) => pkg.name === '@codragraph/cli');
+if (!cliPackage) {
+  throw new Error('Missing @codragraph/cli package definition');
+}
 
 const forbiddenTopLevel = new Set([
   'apps',
@@ -147,6 +181,7 @@ const sha256 = async (file) => {
 
 const tarballName = (packageName, version) =>
   `${packageName.replace('@', '').replace('/', '-')}-${version}.tgz`;
+const cliTarball = tarballName(cliPackage.name, cliPackage.version);
 
 console.error(`Building public distribution repo in ${target}`);
 await fs.rm(target, { recursive: true, force: true });
@@ -254,13 +289,13 @@ codragraph analyze .
 For local/offline verification, download the matching tarball from \`downloads/npm/\` and install it directly:
 
 \`\`\`bash
-npm install -g ./downloads/npm/codragraph-cli-2.1.2.tgz
+npm install -g ./downloads/npm/${cliTarball}
 \`\`\`
 
 Windows PowerShell:
 
 \`\`\`powershell
-npm install -g .\\downloads\\npm\\codragraph-cli-2.1.2.tgz
+npm install -g .\\downloads\\npm\\${cliTarball}
 codragraph analyze .
 \`\`\`
 
@@ -318,7 +353,7 @@ shasum -a 256 -c SHA256SUMS.txt
 Windows PowerShell:
 
 \`\`\`powershell
-Get-FileHash .\\downloads\\npm\\codragraph-cli-2.1.2.tgz -Algorithm SHA256
+Get-FileHash .\\downloads\\npm\\${cliTarball} -Algorithm SHA256
 \`\`\`
 
 ## License
@@ -348,13 +383,13 @@ codragraph analyze .
 ## Local tarball
 
 \`\`\`bash
-npm install -g ./downloads/npm/codragraph-cli-2.1.2.tgz
+npm install -g ./downloads/npm/${cliTarball}
 \`\`\`
 
 ## PowerShell
 
 \`\`\`powershell
-npm install -g .\\downloads\\npm\\codragraph-cli-2.1.2.tgz
+npm install -g .\\downloads\\npm\\${cliTarball}
 codragraph analyze .
 \`\`\`
 
@@ -368,7 +403,7 @@ codragraph analyze .
 
 for (const pkg of packages) {
   console.error(`Packing ${pkg.name}`);
-  sh('npm', ['pack', '--workspace', pkg.name, '--pack-destination', downloadsDir]);
+  sh('npm', ['pack', '--silent', '--workspace', pkg.name, '--pack-destination', downloadsDir]);
 }
 
 const entries = [];
