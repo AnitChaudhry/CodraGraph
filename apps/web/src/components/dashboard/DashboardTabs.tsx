@@ -32,7 +32,7 @@ const TABS: TabDef[] = [
 
 export const DashboardTabs = ({ section, onChange }: DashboardTabsProps): React.JSX.Element => (
   <div className="border-b border-border-subtle bg-deep">
-    <div className="scrollbar-none mx-auto flex max-w-screen-2xl items-center gap-2 overflow-x-auto px-4 py-2">
+    <div className="mx-auto flex max-w-screen-2xl scrollbar-none items-center gap-2 overflow-x-auto px-4 py-2">
       <Tabs value={section} onValueChange={(v) => onChange(v as DashboardSection)}>
         <TabsList className="shrink-0">
           {TABS.map((tab) => {
