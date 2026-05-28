@@ -182,6 +182,159 @@ const sha256 = async (file) => {
 const tarballName = (packageName, version) =>
   `${packageName.replace('@', '').replace('/', '-')}-${version}.tgz`;
 const cliTarball = tarballName(cliPackage.name, cliPackage.version);
+const publicCiWorkflow = `name: Public Release CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-public-release:
+    name: Validate public release bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate docs, manifest, and checksums
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const path = require('node:path');
+
+          const root = process.cwd();
+          const mustExist = [
+            'README.md',
+            'INSTALL.md',
+            'LICENSE',
+            'SECURITY.md',
+            'CODE_OF_CONDUCT.md',
+            'llms.txt',
+            'branding/codragraph-logo.png',
+            'docs/README.md',
+            'docs/ARCHITECTURE.md',
+            'docs/AI_AGENT_CLI_GUIDE.md',
+            'docs/STORAGE_AND_RETRIEVAL.md',
+            'docs/releases/v${cliPackage.version}.md',
+            'downloads/manifest.json',
+            'downloads/npm/SHA256SUMS.txt',
+          ];
+
+          for (const rel of mustExist) {
+            if (!fs.existsSync(path.join(root, rel))) {
+              throw new Error(\`Missing required public file: \${rel}\`);
+            }
+          }
+
+          const forbidden = [
+            'apps',
+            'packages',
+            'integrations',
+            'infra',
+            'marketing',
+            'scripts',
+            '.claude',
+            '.cursor',
+            '.sisyphus',
+          ];
+          for (const rel of forbidden) {
+            if (fs.existsSync(path.join(root, rel))) {
+              throw new Error(\`Public repo must not include private source directory: \${rel}\`);
+            }
+          }
+
+          const manifest = JSON.parse(fs.readFileSync('downloads/manifest.json', 'utf8'));
+          if (!Array.isArray(manifest) || manifest.length === 0) {
+            throw new Error('downloads/manifest.json must be a non-empty package array');
+          }
+
+          const versions = new Set(manifest.map((entry) => entry.version));
+          if (versions.size !== 1 || !versions.has('${cliPackage.version}')) {
+            throw new Error(\`Expected every package version to be ${cliPackage.version}, got \${[...versions].join(', ')}\`);
+          }
+
+          const checksums = new Map(
+            fs
+              .readFileSync('downloads/npm/SHA256SUMS.txt', 'utf8')
+              .trim()
+              .split(/\\r?\\n/)
+              .map((line) => {
+                const [hash, file] = line.trim().split(/\\s+/);
+                return [file, hash];
+              }),
+          );
+
+          const requiredPackages = new Set(${JSON.stringify(packages.map((pkg) => pkg.name))});
+          for (const entry of manifest) {
+            requiredPackages.delete(entry.package);
+            const rel = path.join('downloads', 'npm', entry.file);
+            const bytes = fs.statSync(rel).size;
+            if (bytes !== entry.bytes) {
+              throw new Error(\`\${entry.file} byte size mismatch: manifest=\${entry.bytes}, actual=\${bytes}\`);
+            }
+            const digest = crypto.createHash('sha256').update(fs.readFileSync(rel)).digest('hex');
+            if (digest !== entry.sha256) {
+              throw new Error(\`\${entry.file} manifest checksum mismatch\`);
+            }
+            if (checksums.get(entry.file) !== digest) {
+              throw new Error(\`\${entry.file} SHA256SUMS checksum mismatch\`);
+            }
+          }
+
+          if (requiredPackages.size > 0) {
+            throw new Error(\`Missing package tarballs: \${[...requiredPackages].join(', ')}\`);
+          }
+
+          const cli = manifest.find((entry) => entry.package === '@codragraph/cli');
+          if (!cli || cli.file !== '${cliTarball}') {
+            throw new Error('Missing expected @codragraph/cli tarball metadata');
+          }
+
+          const readme = fs.readFileSync('README.md', 'utf8');
+          const install = fs.readFileSync('INSTALL.md', 'utf8');
+          for (const text of [readme, install]) {
+            if (!text.includes('${cliTarball}') || !text.includes('${cliPackage.version}')) {
+              throw new Error('README.md and INSTALL.md must mention the current CLI tarball and version');
+            }
+          }
+          NODE
+
+      - name: Smoke test CLI tarball contents
+        run: |
+          mkdir -p .ci-tarball
+          tar -xzf "./downloads/npm/${cliTarball}" -C .ci-tarball package/package.json package/dist/cli/index.js
+          node <<'NODE'
+          const fs = require('node:fs');
+          const pkg = JSON.parse(fs.readFileSync('.ci-tarball/package/package.json', 'utf8'));
+          if (pkg.name !== '@codragraph/cli') {
+            throw new Error(\`Unexpected CLI package name: \${pkg.name}\`);
+          }
+          if (pkg.version !== '${cliPackage.version}') {
+            throw new Error(\`Unexpected CLI package version: \${pkg.version}\`);
+          }
+          if (pkg.bin?.codragraph !== 'dist/cli/index.js') {
+            throw new Error('CLI tarball must expose the codragraph binary');
+          }
+          if (!fs.existsSync('.ci-tarball/package/dist/cli/index.js')) {
+            throw new Error('CLI tarball is missing dist/cli/index.js');
+          }
+          NODE
+`;
 
 console.error(`Building public distribution repo in ${target}`);
 await fs.rm(target, { recursive: true, force: true });
@@ -207,6 +360,7 @@ await copyIfExists('CODE_OF_CONDUCT.md');
 await copyIfExists('llms.txt');
 await copyIfExists('.github/ISSUE_TEMPLATE/bug_report.yml');
 await copyIfExists('.github/ISSUE_TEMPLATE/feature_request.yml');
+await write('.github/workflows/public-ci.yml', publicCiWorkflow);
 await copyTreeIfExists('docs');
 await copyTreeIfExists('branding');
 await copyIfExists('apps/web/public/codragraph-logo.png', 'branding/codragraph-logo.png');
