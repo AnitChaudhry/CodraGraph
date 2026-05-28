@@ -124,7 +124,7 @@ function extractPattern(toolName, toolInput) {
  * Resolve the codragraph CLI path.
  * 1. Relative path (works when script is inside npm package)
  * 2. require.resolve (works when codragraph is globally installed)
- * 3. Fall back to npx (returns empty string)
+ * 3. Fall back to a package runner (returns empty string)
  */
 function resolveCliPath() {
   let cliPath = path.resolve(__dirname, '..', '..', 'dist', 'cli', 'index.js');
@@ -136,6 +136,18 @@ function resolveCliPath() {
     }
   }
   return cliPath;
+}
+
+function isRunningUnderBun() {
+  const userAgent = (process.env.npm_config_user_agent || '').toLowerCase();
+  const execBase = path.basename(process.env.npm_execpath || '').toLowerCase();
+  return userAgent.startsWith('bun/') || execBase === 'bun' || execBase === 'bun.exe';
+}
+
+function getPackageRunnerArgs(args) {
+  const useBun = isRunningUnderBun();
+  if (useBun) return { bin: 'bunx', args: ['@codragraph/cli', ...args] };
+  return { bin: 'npx', args: ['-y', '@codragraph/cli', ...args] };
 }
 
 /**
@@ -152,18 +164,18 @@ function runCodraGraphCli(cliPath, args, cwd, timeout) {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   }
-  // npx fallback: on Windows, Node 22's spawn refuses to launch `npx.cmd`
-  // directly (returns EINVAL), so route through `cmd /c` and let PATHEXT
-  // resolve the shim. POSIX direct-spawn is fine.
+  // Package-runner fallback: on Windows, Node 22's spawn refuses to launch
+  // `.cmd` shims directly, so route through `cmd /c`. POSIX direct-spawn is fine.
+  const runner = getPackageRunnerArgs(args);
   if (isWin) {
-    return spawnSync('cmd', ['/c', 'npx', '-y', '@codragraph/cli', ...args], {
+    return spawnSync('cmd', ['/c', runner.bin, ...runner.args], {
       encoding: 'utf-8',
       timeout: timeout + 5000,
       cwd,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   }
-  return spawnSync('npx', ['-y', '@codragraph/cli', ...args], {
+  return spawnSync(runner.bin, runner.args, {
     encoding: 'utf-8',
     timeout: timeout + 5000,
     cwd,
@@ -268,7 +280,8 @@ function handlePostToolUse(input) {
   // If HEAD matches last indexed commit, no reindex needed
   if (currentHead && currentHead === lastCommit) return;
 
-  const analyzeCmd = `npx @codragraph/cli analyze${hadEmbeddings ? ' --embeddings' : ''}`;
+  const analyzeArgs = `analyze${hadEmbeddings ? ' --embeddings' : ''}`;
+  const analyzeCmd = `npx @codragraph/cli ${analyzeArgs} (or bunx @codragraph/cli ${analyzeArgs})`;
 
   // Opt-in background auto-reindex.
   // Default stays as notification-only because spawning analyze while an MCP
@@ -316,9 +329,11 @@ function handlePostToolUse(input) {
         if (cliPath) {
           child = spawn(process.execPath, [cliPath, ...reindexArgs], spawnOpts);
         } else if (process.platform === 'win32') {
-          child = spawn('cmd', ['/c', 'npx', '-y', '@codragraph/cli', ...reindexArgs], spawnOpts);
+          const runner = getPackageRunnerArgs(reindexArgs);
+          child = spawn('cmd', ['/c', runner.bin, ...runner.args], spawnOpts);
         } else {
-          child = spawn('npx', ['-y', '@codragraph/cli', ...reindexArgs], spawnOpts);
+          const runner = getPackageRunnerArgs(reindexArgs);
+          child = spawn(runner.bin, runner.args, spawnOpts);
         }
         child.unref();
       } catch {

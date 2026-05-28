@@ -20,10 +20,12 @@ vi.mock('child_process', () => ({
   execFileSync: execFileSyncMock,
 }));
 
-describe('setupOpenCode — JSONC preservation', () => {
+describe('setupOpenCode â€” JSONC preservation', () => {
   let tempHome: string;
   let originalHome: string | undefined;
   let originalUserProfile: string | undefined;
+  let originalUserAgent: string | undefined;
+  let originalNpmExecPath: string | undefined;
   let platformDescriptor: PropertyDescriptor | undefined;
 
   const setPlatform = (value: NodeJS.Platform) => {
@@ -42,9 +44,13 @@ describe('setupOpenCode — JSONC preservation', () => {
 
     originalHome = process.env.HOME;
     originalUserProfile = process.env.USERPROFILE;
+    originalUserAgent = process.env.npm_config_user_agent;
+    originalNpmExecPath = process.env.npm_execpath;
     tempHome = await fs.mkdtemp(path.join(os.tmpdir(), 'gn-opencode-jsonc-'));
     process.env.HOME = tempHome;
     process.env.USERPROFILE = tempHome;
+    delete process.env.npm_config_user_agent;
+    delete process.env.npm_execpath;
 
     await fs.mkdir(opencodeDir(), { recursive: true });
 
@@ -62,6 +68,10 @@ describe('setupOpenCode — JSONC preservation', () => {
 
     process.env.HOME = originalHome;
     process.env.USERPROFILE = originalUserProfile;
+    if (originalUserAgent === undefined) delete process.env.npm_config_user_agent;
+    else process.env.npm_config_user_agent = originalUserAgent;
+    if (originalNpmExecPath === undefined) delete process.env.npm_execpath;
+    else process.env.npm_execpath = originalNpmExecPath;
     await fs.rm(tempHome, { recursive: true, force: true });
   });
 
@@ -232,7 +242,31 @@ describe('setupOpenCode — JSONC preservation', () => {
 
     expect(config.mcp.codragraph).toEqual({
       type: 'local',
-      command: ['npx', '-y', '@codragraph/cli@2.1.1', 'mcp'],
+      command: ['npx', '-y', '@codragraph/cli@2.1.2', 'mcp'],
+    });
+  });
+
+  it('uses bunx fallback format when setup is invoked through Bun', async () => {
+    process.env.npm_config_user_agent = 'bun/1.3.13 npm/? node/v22.0.0 linux x64';
+    execFileSyncMock.mockImplementation(() => {
+      throw new Error('not found');
+    });
+
+    const jsonc = `{
+  "model": "test",
+  "mcp": {}
+}`;
+    await fs.writeFile(opencodeJsonPath(), jsonc, 'utf-8');
+
+    const { setupCommand } = await import('../../src/cli/setup.js');
+    await setupCommand();
+
+    const raw = await fs.readFile(opencodeJsonPath(), 'utf-8');
+    const config = parseJsonc(raw);
+
+    expect(config.mcp.codragraph).toEqual({
+      type: 'local',
+      command: ['bunx', '@codragraph/cli@2.1.2', 'mcp'],
     });
   });
 

@@ -20,6 +20,14 @@
     "integrations/claude",
     "integrations/codex"
   ],
+  "trustedDependencies": [
+    "@codragraph/cli",
+    "onnxruntime-node",
+    "tree-sitter-dart",
+    "tree-sitter-kotlin",
+    "tree-sitter-proto",
+    "tree-sitter-swift"
+  ],
   "scripts": {
     "prepare": "husky",
     "format": "prettier --write .",

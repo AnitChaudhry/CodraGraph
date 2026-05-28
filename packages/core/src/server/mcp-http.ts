@@ -22,6 +22,34 @@ interface MCPSession {
   lastActivity: number;
 }
 
+export const MCP_HTTP_ENDPOINT = '/api/mcp';
+export const UNSUPPORTED_MCP_REST_EXAMPLE = '/api/mcp/tools/list';
+
+export interface McpHttpRouteGuidance {
+  endpoint: string;
+  transport: 'streamable-http';
+  note: string;
+  unsupportedRestExample: string;
+  powershellHealthCheck: string;
+  clientInstruction: string;
+}
+
+export const getMcpHttpRouteGuidance = (): McpHttpRouteGuidance => ({
+  endpoint: MCP_HTTP_ENDPOINT,
+  transport: 'streamable-http',
+  note: 'HTTP MCP is a protocol endpoint, not a REST tools namespace.',
+  unsupportedRestExample: UNSUPPORTED_MCP_REST_EXAMPLE,
+  powershellHealthCheck: "Invoke-RestMethod -Uri 'http://127.0.0.1:4747/api/info' -TimeoutSec 10",
+  clientInstruction: 'Point an MCP client at http://127.0.0.1:4747/api/mcp using StreamableHTTP.',
+});
+
+export const getUnsupportedMcpRestRouteResponse = (path: string) => ({
+  error: 'Unsupported MCP HTTP REST route',
+  code: 'MCP_HTTP_REST_ROUTE_UNSUPPORTED',
+  unsupportedRoute: path,
+  ...getMcpHttpRouteGuidance(),
+});
+
 /** Idle sessions are evicted after 30 minutes */
 const SESSION_TTL_MS = 30 * 60 * 1000;
 /** Cleanup sweep runs every 5 minutes */
@@ -85,7 +113,7 @@ export function mountMCPEndpoints(app: Express, backend: LocalBackend): () => Pr
     }
   };
 
-  app.all('/api/mcp', (req: Request, res: Response) => {
+  app.all(MCP_HTTP_ENDPOINT, (req: Request, res: Response) => {
     void handleMcpRequest(req, res).catch((err: any) => {
       console.error('MCP HTTP request failed:', err);
       if (res.headersSent) return;
@@ -95,6 +123,10 @@ export function mountMCPEndpoints(app: Express, backend: LocalBackend): () => Pr
         id: null,
       });
     });
+  });
+
+  app.all(/^\/api\/mcp\/.+/, (req: Request, res: Response) => {
+    res.status(200).json(getUnsupportedMcpRestRouteResponse(req.path));
   });
 
   const cleanup = async () => {
@@ -108,6 +140,6 @@ export function mountMCPEndpoints(app: Express, backend: LocalBackend): () => Pr
     await Promise.allSettled(closers);
   };
 
-  console.log('MCP HTTP endpoints mounted at /api/mcp');
+  console.log(`MCP HTTP endpoint mounted at ${MCP_HTTP_ENDPOINT}`);
   return cleanup;
 }

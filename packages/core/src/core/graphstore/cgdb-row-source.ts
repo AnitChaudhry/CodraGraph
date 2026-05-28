@@ -38,7 +38,7 @@ export const createCgdbRowSource = (opts: CgdbRowSourceOptions = {}): RowSource 
       // `core/search/bm25-index.ts` for FTS results. Tables that do not
       // exist on disk for a given repo throw here — we treat that as
       // "no rows" via the onSkip callback rather than a hard failure.
-      rows = await executeQuery(`MATCH (n:${tableName}) RETURN n`);
+      rows = await executeQuery(`MATCH (n:${quoteCypherIdentifier(tableName)}) RETURN n`);
     } catch (err) {
       onSkip(tableName, err);
       return;
@@ -72,7 +72,7 @@ export const createCgdbRowSource = (opts: CgdbRowSourceOptions = {}): RowSource 
       // payload's shape changes; `rel` carries any extra properties for
       // hashing.
       rows = await executeQuery(
-        `MATCH (a)-[r:${REL_TABLE_NAME}]->(b) RETURN a.id AS \`from\`, b.id AS \`to\`, r.type AS type, r AS rel`,
+        `MATCH (a)-[r:${quoteCypherIdentifier(REL_TABLE_NAME)}]->(b) RETURN a.id AS \`from\`, b.id AS \`to\`, r.type AS type, r AS rel`,
       );
     } catch (err) {
       onSkip(REL_TABLE_NAME, err);
@@ -128,6 +128,9 @@ const pickField = (
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
+
+const quoteCypherIdentifier = (identifier: string): string =>
+  `\`${identifier.replace(/`/g, '``')}\``;
 
 /**
  * Sanitize a node row for canonical hashing:

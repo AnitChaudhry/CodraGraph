@@ -25,6 +25,8 @@ describe('setupClaudeCode', () => {
   let tempHome: string;
   let originalHome: string | undefined;
   let originalUserProfile: string | undefined;
+  let originalUserAgent: string | undefined;
+  let originalNpmExecPath: string | undefined;
   let platformDescriptor: PropertyDescriptor | undefined;
 
   const setPlatform = (value: NodeJS.Platform) => {
@@ -40,11 +42,15 @@ describe('setupClaudeCode', () => {
 
     originalHome = process.env.HOME;
     originalUserProfile = process.env.USERPROFILE;
+    originalUserAgent = process.env.npm_config_user_agent;
+    originalNpmExecPath = process.env.npm_execpath;
     tempHome = await fs.mkdtemp(path.join(os.tmpdir(), 'gn-claude-setup-'));
     process.env.HOME = tempHome;
     process.env.USERPROFILE = tempHome;
+    delete process.env.npm_config_user_agent;
+    delete process.env.npm_execpath;
 
-    // Only create ~/.claude — no other editor directories so their
+    // Only create ~/.claude â€” no other editor directories so their
     // setup functions skip and don't pollute assertions.
     await fs.mkdir(path.join(tempHome, '.claude'), { recursive: true });
 
@@ -61,6 +67,10 @@ describe('setupClaudeCode', () => {
 
     process.env.HOME = originalHome;
     process.env.USERPROFILE = originalUserProfile;
+    if (originalUserAgent === undefined) delete process.env.npm_config_user_agent;
+    else process.env.npm_config_user_agent = originalUserAgent;
+    if (originalNpmExecPath === undefined) delete process.env.npm_execpath;
+    else process.env.npm_execpath = originalNpmExecPath;
     await fs.rm(tempHome, { recursive: true, force: true });
   });
 
@@ -75,7 +85,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'cmd',
-      args: ['/c', 'npx', '-y', '@codragraph/cli@2.1.1', 'mcp'],
+      args: ['/c', 'npx', '-y', '@codragraph/cli@2.1.2', 'mcp'],
     });
   });
 
@@ -90,7 +100,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'npx',
-      args: ['-y', '@codragraph/cli@2.1.1', 'mcp'],
+      args: ['-y', '@codragraph/cli@2.1.2', 'mcp'],
     });
   });
 
@@ -151,7 +161,7 @@ describe('setupClaudeCode', () => {
     await setupCommand();
 
     // readJsonFile returns null on invalid JSON, so mergeMcpConfig
-    // creates a fresh config — the file should now be valid.
+    // creates a fresh config â€” the file should now be valid.
     const raw = await fs.readFile(path.join(tempHome, '.claude.json'), 'utf-8');
     const config = JSON.parse(raw);
 
@@ -188,7 +198,26 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'npx',
-      args: ['-y', '@codragraph/cli@2.1.1', 'mcp'],
+      args: ['-y', '@codragraph/cli@2.1.2', 'mcp'],
+    });
+  });
+
+  it('falls back to bunx when setup is invoked through Bun', async () => {
+    setPlatform('darwin');
+    process.env.npm_config_user_agent = 'bun/1.3.13 npm/? node/v22.0.0 darwin x64';
+    execFileSyncMock.mockImplementationOnce(() => {
+      throw new Error('not found');
+    });
+
+    const { setupCommand } = await import('../../src/cli/setup.js');
+    await setupCommand();
+
+    const raw = await fs.readFile(path.join(tempHome, '.claude.json'), 'utf-8');
+    const config = JSON.parse(raw);
+
+    expect(config.mcpServers.codragraph).toEqual({
+      command: 'bunx',
+      args: ['@codragraph/cli@2.1.2', 'mcp'],
     });
   });
 
@@ -233,7 +262,24 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'cmd',
-      args: ['/c', 'npx', '-y', '@codragraph/cli@2.1.1', 'mcp'],
+      args: ['/c', 'npx', '-y', '@codragraph/cli@2.1.2', 'mcp'],
+    });
+  });
+
+  it('on Windows, falls back to bunx with cmd wrapper when setup is invoked through Bun', async () => {
+    setPlatform('win32');
+    process.env.npm_execpath = 'C:\\Users\\dev\\.bun\\bin\\bun.exe';
+    execFileSyncMock.mockReturnValueOnce('C:\\path\\to\\node_modules\\.bin\\codragraph\n');
+
+    const { setupCommand } = await import('../../src/cli/setup.js');
+    await setupCommand();
+
+    const raw = await fs.readFile(path.join(tempHome, '.claude.json'), 'utf-8');
+    const config = JSON.parse(raw);
+
+    expect(config.mcpServers.codragraph).toEqual({
+      command: 'cmd',
+      args: ['/c', 'bunx', '@codragraph/cli@2.1.2', 'mcp'],
     });
   });
 });

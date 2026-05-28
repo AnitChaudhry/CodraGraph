@@ -10,10 +10,12 @@ doesn't blindly grep its way through the codebase.
 ```sh
 # 1) Install the codragraph CLI
 npm install -g @codragraph/cli
+# or: bun add -g @codragraph/cli --trust
 codragraph setup
 
 # 2) Install this integration globally
 npm install -g @codragraph/codex
+# or: bun add -g @codragraph/codex --trust
 
 # 3) Wire it into Codex. Merges the bundled hooks into ~/.codex/config.json
 #    (substituting the absolute install path so Codex finds the hook script)

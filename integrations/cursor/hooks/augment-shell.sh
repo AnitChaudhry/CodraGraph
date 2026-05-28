@@ -36,9 +36,14 @@ if [ -z "$PATTERN" ] || [ ${#PATTERN} -lt 3 ]; then
   exit 0
 fi
 
-# Run codragraph augment (prefer the global bin if present; fall back to npx)
+# Run codragraph augment (prefer the global bin if present; fall back to bunx
+# under Bun, otherwise npx)
 if command -v codragraph >/dev/null 2>&1; then
   RESULT=$(codragraph augment "$PATTERN" 2>/dev/null)
+elif [ "${npm_config_user_agent#bun/}" != "$npm_config_user_agent" ] && command -v bunx >/dev/null 2>&1; then
+  RESULT=$(bunx @codragraph/cli augment "$PATTERN" 2>/dev/null)
+elif ! command -v npx >/dev/null 2>&1 && command -v bunx >/dev/null 2>&1; then
+  RESULT=$(bunx @codragraph/cli augment "$PATTERN" 2>/dev/null)
 else
   RESULT=$(npx -y @codragraph/cli augment "$PATTERN" 2>/dev/null)
 fi

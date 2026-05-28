@@ -156,7 +156,7 @@ This repository is listed under CodraGraph **group(s): ${groupNames.join(', ')}*
     : ''
 }## CLI
 
-Commands are cross-platform: use \`npx @codragraph/cli ...\` or \`codragraph ...\` in Windows PowerShell, macOS bash/zsh, and Linux shells. Prefer package commands like \`npm --prefix packages/core test\` from repo root instead of shell-specific \`cd dir && ...\` chains.
+Commands are cross-platform: \`codragraph ...\`, \`npx @codragraph/cli ...\`, or \`bunx @codragraph/cli ...\`. Scripts: \`npm --prefix ...\` or \`bun run --filter ...\`.
 
 ${skillsTable}
 

@@ -26,6 +26,17 @@ npm --prefix packages/core run test:coverage
 npm --prefix packages/core exec tsc -- --noEmit    # typecheck (matches CI)
 ```
 
+Bun equivalents:
+
+```bash
+bun install
+bun run --filter @codragraph/cli build
+bun run --filter @codragraph/cli test
+bun run --filter @codragraph/cli test:unit
+bun run --filter @codragraph/cli test:integration
+bun run --filter @codragraph/cli test:coverage
+```
+
 **`apps/web`**
 
 ```bash
@@ -36,9 +47,23 @@ npm --prefix apps/web run test:coverage
 npm --prefix apps/web run test:e2e                 # Playwright (requires codragraph serve + npm --prefix apps/web run dev)
 ```
 
+Bun equivalents:
+
+```bash
+bun run --filter codragraph-web test
+bun run --filter codragraph-web build
+bun run --filter codragraph-web test:coverage
+bun run --filter codragraph-web test:e2e
+```
+
+For Bun typecheck parity, use the build scripts: `@codragraph/cli build`
+runs `tsc` through the package build, and `codragraph-web build` runs
+`tsc -b` before Vite.
+
 These command forms work in Windows PowerShell, macOS bash/zsh, and Linux
-shells. Prefer `npm --prefix <package> <script>` in docs and PRs so copied
-commands do not depend on a specific shell's directory-change syntax.
+shells. Prefer `npm --prefix <package> <script>` or
+`bun run --filter <workspace> <script>` in docs and PRs so copied commands do
+not depend on a specific shell's directory-change syntax.
 
 ## Pre-commit hook
 
@@ -48,7 +73,7 @@ A husky pre-commit hook (`.husky/pre-commit`) runs automatically on every `git c
 2. **`apps/web/` files staged** → `tsc -b --noEmit`
 3. **`packages/core/` files staged** → `tsc --noEmit`
 
-Tests do **not** run in the pre-commit hook — they run in CI (`ci-tests.yml`) only.
+Tests do **not** run in the pre-commit hook — they run in CI (`.github/workflows/ci.yml`) only.
 
 Skip with `git commit --no-verify` (use sparingly).
 
@@ -82,9 +107,11 @@ Re-run the full relevant suite when:
 
 GitHub Actions (`.github/workflows/ci.yml`) orchestrate:
 
-- **`ci-quality.yml`** — prettier format check, eslint lint, `tsc --noEmit` for `packages/core/`, `tsc -b --noEmit` for `apps/web/`
-- **`ci-tests.yml`** — `vitest run` with coverage (ubuntu) + cross-platform (macOS, Windows)
-- **`ci-e2e.yml`** — Playwright E2E tests, gated on `apps/web/**` changes
+- **`lint`** — prettier format check and eslint lint.
+- **`typecheck`** — dependency-ordered package builds plus web typecheck.
+- **`test`** — workspace tests across Linux, macOS, and Windows where supported.
+- **`bun-compat`** — Bun install/build/test smoke for package-manager parity.
+- **`build`** — publishable package build gate after typecheck, tests, and Bun smoke.
 
 Local checks before pushing:
 

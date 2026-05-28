@@ -5,7 +5,7 @@ description: "Use when the user needs to run CodraGraph CLI commands like analyz
 
 # CodraGraph CLI Commands
 
-All commands work via `npx` — no global install required. The examples are safe in Windows PowerShell, macOS bash/zsh, and Linux shells; prefer `npm --prefix <package> <script>` from the repo root when running package-local checks.
+All commands work via `npx` or `bunx` — no global install required. The examples are safe in Windows PowerShell, macOS bash/zsh, and Linux shells; prefer `npm --prefix <package> <script>` or `bun run --filter <workspace> <script>` from the repo root when running package-local checks.
 
 ## Commands
 

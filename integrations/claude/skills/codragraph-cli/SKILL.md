@@ -5,7 +5,7 @@ description: "Use when the user needs to run CodraGraph CLI commands like analyz
 
 # CodraGraph CLI Commands
 
-All commands work via `npx` -- no global install required.
+All commands work via `npx` or `bunx` -- no global install required.
 
 ## Commands
 

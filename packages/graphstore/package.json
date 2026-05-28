@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/graphstore",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Dolt-like content-addressed versioning for the CodraGraph knowledge graph — snapshots, branches, diffs, three-way merge.",
   "author": {
     "name": "Thinqmesh Technologies",

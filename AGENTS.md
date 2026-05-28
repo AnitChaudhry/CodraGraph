@@ -11,7 +11,7 @@ Last reviewed: 2026-05-25
 |----------|------|
 | **Reads** | `packages/core/`, `apps/web/`, `eval/`, plugin packages, `.github/`, `.codragraph/`, docs. |
 | **Writes** | Only paths required for the change; keep diffs minimal. Update lockfiles when deps change. |
-| **Executes** | `npm`, `npx`, `node` under `packages/core/` and `apps/web/`; `uv run` for Python under `eval/`; documented CI/dev workflows. |
+| **Executes** | `npm`, `npx`, `bun`, `bunx`, `node` under `packages/core/` and `apps/web/`; `uv run` for Python under `eval/`; documented CI/dev workflows. |
 | **Off-limits** | Real `.env` / secrets, production credentials, unrelated repos, destructive git ops without confirmation. |
 
 ## Model Configuration
@@ -39,6 +39,7 @@ Commands and gotchas live under **Repo reference** below and in **[CONTRIBUTING.
 ## Reference docs
 
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**, **[CONTRIBUTING.md](docs/CONTRIBUTING.md)**, **[GUARDRAILS.md](docs/GUARDRAILS.md)**
+- **[AI_AGENT_CLI_GUIDE.md](docs/AI_AGENT_CLI_GUIDE.md)** for supported agent commands and MCP HTTP behavior; **[STORAGE_AND_RETRIEVAL.md](docs/STORAGE_AND_RETRIEVAL.md)** for `.codragraph` size, embeddings, BM25, and compression policy.
 - **Call-resolution DAG (legacy path):** See ARCHITECTURE.md § Call-Resolution DAG. Typed 6-stage DAG inside the `parse` phase; language-specific behavior behind `inferImplicitReceiver` / `selectDispatch` hooks on `LanguageProvider`. Shared code in `packages/core/src/core/ingestion/` must not name languages. Types: `packages/core/src/core/ingestion/call-types.ts`.
 - **Scope-resolution pipeline (RFC #909 Ring 3):** See ARCHITECTURE.md § Scope-Resolution Pipeline. Replaces the legacy DAG for languages in `MIGRATED_LANGUAGES` (currently Python). A language plugs in by implementing `ScopeResolver` (`scope-resolution/contract/scope-resolver.ts`) and registering it in `SCOPE_RESOLVERS`. CI parity gate runs BOTH paths per migrated language on every PR.
 - **Cursor:** `.cursor/index.mdc` (always-on); `.cursor/rules/*.mdc` (glob-scoped). Legacy `.cursorrules` deprecated.
@@ -191,22 +192,26 @@ Check `.codragraph/meta.json` `stats.embeddings` (0 = none). Running without `--
 
 ```bash
 npm --prefix packages/core run dev              # CLI: tsx watch mode
+bun run --filter @codragraph/cli dev            # Bun equivalent
 npm --prefix apps/web run dev                   # Web UI: Vite on port 5173
-npx @codragraph/cli serve                         # HTTP API on port 4747 (from any indexed repo)
+bun run --filter codragraph-web dev             # Bun equivalent
+npx @codragraph/cli serve                       # HTTP API on port 4747 (from any indexed repo)
+bunx @codragraph/cli serve                      # Bun equivalent
+npx @codragraph/cli serve --web hosted          # Local API for hosted dashboard connection
 ```
 
-Use the same command forms in Windows PowerShell, macOS bash/zsh, and Linux shells. Prefer `npm --prefix <package> <script>` from repo root instead of `cd dir && ...` when documenting or sharing commands.
+Use the same command forms in Windows PowerShell, macOS bash/zsh, and Linux shells. Prefer `npm --prefix <package> <script>` or `bun run --filter <workspace> <script>` from repo root instead of `cd dir && ...` when documenting or sharing commands.
 
 ### Testing
 
 **CLI / Core (`packages/core/`)**
-- `npm --prefix packages/core test` — full vitest suite (~2000 tests)
+- `npm --prefix packages/core test` or `bun run --filter @codragraph/cli test` — full vitest suite (~2000 tests)
 - `npm --prefix packages/core run test:unit` — unit tests only
 - `npm --prefix packages/core run test:integration` — integration (~1850 tests). LadybugDB file-locking tests may fail in containers (known env issue).
 - `npm --prefix packages/core exec tsc -- --noEmit` — typecheck
 
 **Web UI (`apps/web/`)**
-- `npm --prefix apps/web test` — vitest (~200 tests)
+- `npm --prefix apps/web test` or `bun run --filter codragraph-web test` — vitest (~200 tests)
 - `npm --prefix apps/web run test:e2e` — Playwright (7 spec files; requires `codragraph serve` + `npm --prefix apps/web run dev`)
 - `npm --prefix apps/web exec tsc -- -b --noEmit` — typecheck
 
@@ -214,6 +219,6 @@ Use the same command forms in Windows PowerShell, macOS bash/zsh, and Linux shel
 
 ### Gotchas
 
-- `npm install` in `packages/core/` triggers `prepare` (builds via `tsc`) and `postinstall` (patches tree-sitter-swift, builds tree-sitter-proto). Native bindings need `python3`, `make`, `g++`.
+- `npm install` in `packages/core/` triggers `prepare` (builds via `tsc`) and `postinstall` (patches tree-sitter-swift, builds tree-sitter-proto). Bun users should use `bun install --trust` or `bun pm trust <package>` when native dependency lifecycle scripts are needed. Native bindings need `python3`, `make`, `g++`.
 - `tree-sitter-kotlin` and `tree-sitter-swift` are optional — install warnings expected.
-- ESLint configured via `eslint.config.mjs` (TS, React Hooks, unused-imports). No `npm run lint` script; use `npx eslint .`. Prettier runs via lint-staged. CI checks both in `ci-quality.yml`.
+- ESLint configured via `eslint.config.mjs` (TS, React Hooks, unused-imports). No package-local `npm run lint` script; use the root `npm run lint` or `npx eslint .`. Prettier runs via lint-staged. CI checks both in `.github/workflows/ci.yml`.

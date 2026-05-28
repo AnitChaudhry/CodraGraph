@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { Check, Copy, Terminal, Server, Zap, Sparkles } from '@/lib/lucide-icons';
 import { REQUIRED_NODE_VERSION } from '../config/ui-constants';
 
-// ── Design constants ─────────────────────────────────────────────────────────
+// â”€â”€ Design constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const isDev = import.meta.env.DEV;
 
-// ── Copy-to-clipboard button ─────────────────────────────────────────────────
+// â”€â”€ Copy-to-clipboard button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -44,7 +44,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-// ── Faux terminal window ─────────────────────────────────────────────────────
+// â”€â”€ Faux terminal window â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function TerminalWindow({
   command,
@@ -86,7 +86,7 @@ function TerminalWindow({
   );
 }
 
-// ── Step indicator ───────────────────────────────────────────────────────────
+// â”€â”€ Step indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type StepState = 'waiting' | 'active' | 'done';
 
@@ -165,7 +165,7 @@ function StepRow({
   );
 }
 
-// ── Polling status bar ────────────────────────────────────────────────────────
+// â”€â”€ Polling status bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function PollingBar() {
   return (
@@ -194,7 +194,7 @@ function PollingBar() {
   );
 }
 
-// ── OnboardingGuide ───────────────────────────────────────────────────────────
+// â”€â”€ OnboardingGuide â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface OnboardingGuideProps {
   isPolling?: boolean;
@@ -203,11 +203,11 @@ interface OnboardingGuideProps {
 export const OnboardingGuide = ({ isPolling }: OnboardingGuideProps) => {
   const primary = isDev
     ? 'npm --prefix packages/core run serve'
-    : 'npx @codragraph/cli@2.1.1 serve';
+    : 'npx @codragraph/cli@2.1.2 serve';
   const termLabel = isDev ? 'Start backend' : 'Terminal';
 
   // Step states: step 1 = copy command, step 2 = run/wait, step 3 = auto-connect
-  // Once polling starts the user has presumably run the command — mark step 1 done.
+  // Once polling starts the user has presumably run the command â€” mark step 1 done.
   const step1State: StepState = isPolling ? 'done' : 'active';
   const step2State: StepState = isPolling ? 'active' : 'waiting';
   const step3State: StepState = 'waiting';
@@ -218,7 +218,7 @@ export const OnboardingGuide = ({ isPolling }: OnboardingGuideProps) => {
       <div className="pointer-events-none absolute -top-28 -right-28 h-72 w-72 rounded-full bg-accent/6 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-node-function/6 blur-3xl" />
 
-      {/* ── Headline ─────────────────────────────────────────────── */}
+      {/* â”€â”€ Headline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="relative mb-6">
         <div className="text-center">
           <div className="mb-2 inline-flex items-center gap-1.5">
@@ -238,7 +238,7 @@ export const OnboardingGuide = ({ isPolling }: OnboardingGuideProps) => {
         </div>
       </div>
 
-      {/* ── Step-by-step flow ───────────────────────────────────────── */}
+      {/* â”€â”€ Step-by-step flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="relative space-y-5">
         {/* Vertical connector line behind the dots */}
         <div
@@ -246,7 +246,7 @@ export const OnboardingGuide = ({ isPolling }: OnboardingGuideProps) => {
           aria-hidden="true"
         />
 
-        {/* Step 1 — Copy the command */}
+        {/* Step 1 â€” Copy the command */}
         <StepRow
           state={step1State}
           number={1}
@@ -255,7 +255,7 @@ export const OnboardingGuide = ({ isPolling }: OnboardingGuideProps) => {
         >
           <TerminalWindow command={primary} label={termLabel} isActive={step1State === 'active'} />
 
-          {/* Secondary global-install option — production only */}
+          {/* Secondary global-install option â€” production only */}
           {!isDev && (
             <>
               <div className="my-3 flex items-center gap-3">
@@ -274,7 +274,7 @@ export const OnboardingGuide = ({ isPolling }: OnboardingGuideProps) => {
           )}
         </StepRow>
 
-        {/* Step 2 — Run and wait */}
+        {/* Step 2 â€” Run and wait */}
         <StepRow
           state={step2State}
           number={2}
@@ -286,16 +286,16 @@ export const OnboardingGuide = ({ isPolling }: OnboardingGuideProps) => {
           {isPolling && <PollingBar />}
         </StepRow>
 
-        {/* Step 3 — Auto-connect */}
+        {/* Step 3 â€” Auto-connect */}
         <StepRow
           state={step3State}
           number={3}
           title="Auto-connects and opens the graph"
-          description="No refresh needed — the page detects the server automatically."
+          description="No refresh needed â€” the page detects the server automatically."
         />
       </div>
 
-      {/* ── Prerequisite footnote ────────────────────────────────────── */}
+      {/* â”€â”€ Prerequisite footnote â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="mt-6 flex items-center justify-center gap-1.5 border-t border-border-subtle pt-5 text-xs text-text-muted">
         <Server className="h-3 w-3 shrink-0" />
         <span>
@@ -309,7 +309,7 @@ export const OnboardingGuide = ({ isPolling }: OnboardingGuideProps) => {
             Node.js {REQUIRED_NODE_VERSION}+
           </a>
         </span>
-        <span className="mx-1 text-border-default">·</span>
+        <span className="mx-1 text-border-default">Â·</span>
         <Terminal className="h-3 w-3 shrink-0" />
         <span>Port 4747</span>
       </div>

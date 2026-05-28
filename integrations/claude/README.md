@@ -11,6 +11,7 @@ areas like Settings, Auth, AI, or Billing, so it does not have to grep blindly.
 ```sh
 # Install the codragraph CLI first
 npm install -g @codragraph/cli
+# or: bun add -g @codragraph/cli --trust
 codragraph setup
 
 # Then add the plugin to Claude Code

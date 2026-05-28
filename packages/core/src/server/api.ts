@@ -30,7 +30,14 @@ import { hybridSearch } from '../core/search/hybrid-search.js';
 // Embedding imports are lazy (dynamic import) to avoid loading onnxruntime-node
 // at server startup — crashes on unsupported Node ABI versions (#89)
 import { LocalBackend } from '../mcp/local/local-backend.js';
-import { mountMCPEndpoints } from './mcp-http.js';
+import { getMcpHttpRouteGuidance, mountMCPEndpoints } from './mcp-http.js';
+import {
+  HOSTED_WEB_APP_URL,
+  getWebDashboardInfo,
+  mountWebDashboard,
+  type WebDashboardMode,
+  type WebDashboardMount,
+} from './web-dashboard.js';
 import { fork } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { JobManager } from './analyze-job.js';
@@ -50,7 +57,7 @@ const pkg = _require('../../package.json');
  *     10.0.0.0/8      → 10.x.x.x
  *     172.16.0.0/12   → 172.16.x.x – 172.31.x.x
  *     192.168.0.0/16  → 192.168.x.x
- * - https://codragraph.vercel.app — the deployed CodraGraph web UI
+ * - Hosted CodraGraph web UI — defaults to https://codragraph.vercel.app
  *
  * @param origin - The value of the HTTP `Origin` request header, or `undefined`
  *                 when the header is absent (non-browser request).
@@ -69,7 +76,7 @@ export const isAllowedOrigin = (origin: string | undefined): boolean => {
     origin === 'http://127.0.0.1' ||
     origin.startsWith('http://[::1]:') ||
     origin === 'http://[::1]' ||
-    origin === 'https://codragraph.vercel.app'
+    origin === HOSTED_WEB_APP_URL
   ) {
     return true;
   }
@@ -107,6 +114,10 @@ export const isAllowedOrigin = (origin: string | undefined): boolean => {
   return false;
 };
 
+export interface CreateServerOptions {
+  web?: WebDashboardMode;
+}
+
 type GraphStreamRecord =
   | { type: 'node'; data: GraphNode }
   | { type: 'relationship'; data: GraphRelationship }
@@ -126,6 +137,43 @@ export const isIgnorableGraphQueryError = (err: unknown): boolean => {
     message.includes('not found') ||
     message.includes('No table named')
   );
+};
+
+export interface GraphStoreErrorResponse {
+  error: string;
+  code: 'GRAPHSTORE_CORRUPT';
+  operation: string;
+  recovery: string[];
+}
+
+export const isGraphStoreCorruptionError = (err: unknown): boolean => {
+  const message = (err instanceof Error ? err.message : String(err)).toLowerCase();
+  return (
+    message.includes('wal checksum') ||
+    (message.includes('wal') && message.includes('corrupt')) ||
+    (message.includes('checksum') && message.includes('corrupt')) ||
+    message.includes('database disk image is malformed') ||
+    message.includes('database image is malformed')
+  );
+};
+
+export const getGraphStoreErrorResponse = (
+  err: unknown,
+  operation: string,
+): GraphStoreErrorResponse | null => {
+  if (!isGraphStoreCorruptionError(err)) return null;
+  const message = err instanceof Error ? err.message : String(err);
+  return {
+    error: message || 'Graph store is corrupted',
+    code: 'GRAPHSTORE_CORRUPT',
+    operation,
+    recovery: [
+      'Stop overlapping codragraph serve, mcp, analyze, and embedding jobs for this repo.',
+      'Retry: npx @codragraph/cli analyze --force',
+      'If this repo had embeddings, preserve them with: npx @codragraph/cli analyze --force --embeddings',
+      'Only after approval, use: npx @codragraph/cli clean --force',
+    ],
+  };
 };
 
 const ensureStreamIsWritable = (res: express.Response, signal?: AbortSignal): void => {
@@ -425,6 +473,7 @@ const mountSSEProgress = (app: express.Express, routePath: string, jm: JobManage
 };
 
 const statusFromError = (err: any): number => {
+  if (isGraphStoreCorruptionError(err)) return 503;
   const msg = String(err?.message ?? '');
   if (msg.includes('No indexed repositories') || msg.includes('not found')) return 404;
   if (msg.includes('Multiple repositories')) return 400;
@@ -442,9 +491,18 @@ const requestedRepo = (req: express.Request): string | undefined => {
   return undefined;
 };
 
-export const createServer = async (port: number, host: string = '127.0.0.1') => {
+export const createServer = async (
+  port: number,
+  host: string = '127.0.0.1',
+  options: CreateServerOptions = {},
+) => {
   const app = express();
   app.disable('x-powered-by');
+  let webDashboard: WebDashboardMount = {
+    mode: options.web ?? 'local',
+    served: false,
+    hostedUrl: HOSTED_WEB_APP_URL,
+  };
 
   // CORS: allow localhost, private/LAN networks, and the deployed site.
   // Non-browser requests (curl, server-to-server) have no origin and are allowed.
@@ -614,7 +672,15 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
     } else {
       launchContext = 'global';
     }
-    res.json({ version: pkg.version, launchContext, nodeVersion: process.version });
+    const displayHost = host === '::' || host === '0.0.0.0' ? 'localhost' : host;
+    const apiBaseUrl = `http://${displayHost}:${port}`;
+    res.json({
+      version: pkg.version,
+      launchContext,
+      nodeVersion: process.version,
+      mcp: getMcpHttpRouteGuidance(),
+      web: getWebDashboardInfo(webDashboard, apiBaseUrl),
+    });
   });
 
   // List all registered repos
@@ -1113,14 +1179,25 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
       if (err instanceof ClientDisconnectedError) {
         return;
       }
+      const graphStoreError = getGraphStoreErrorResponse(err, 'api.graph');
       const message = err.message || 'Failed to build graph';
       if (res.headersSent) {
         try {
-          res.write(JSON.stringify({ type: 'error', error: message }) + '\n');
+          res.write(
+            JSON.stringify(
+              graphStoreError
+                ? { type: 'error', ...graphStoreError }
+                : { type: 'error', error: message },
+            ) + '\n',
+          );
         } catch {
           // Best-effort only after streaming has started.
         }
         res.end();
+        return;
+      }
+      if (graphStoreError) {
+        res.status(503).json(graphStoreError);
         return;
       }
       res.status(500).json({ error: message });
@@ -1150,6 +1227,11 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
       const result = await withCgdbDb(cgdbPath, () => executeQuery(cypher));
       res.json({ result });
     } catch (err: any) {
+      const graphStoreError = getGraphStoreErrorResponse(err, 'api.query');
+      if (graphStoreError) {
+        res.status(503).json(graphStoreError);
+        return;
+      }
       res.status(500).json({ error: err.message || 'Query failed' });
     }
   });
@@ -1170,6 +1252,11 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
       });
       res.json(result);
     } catch (err: any) {
+      const graphStoreError = getGraphStoreErrorResponse(err, 'api.context');
+      if (graphStoreError) {
+        res.status(503).json(graphStoreError);
+        return;
+      }
       res.status(statusFromError(err)).json({ error: err.message || 'Context query failed' });
     }
   });
@@ -1191,6 +1278,11 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
       });
       res.json(result);
     } catch (err: any) {
+      const graphStoreError = getGraphStoreErrorResponse(err, 'api.impact');
+      if (graphStoreError) {
+        res.status(503).json(graphStoreError);
+        return;
+      }
       res.status(statusFromError(err)).json({ error: err.message || 'Impact query failed' });
     }
   });
@@ -1340,6 +1432,11 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
       });
       res.json({ results });
     } catch (err: any) {
+      const graphStoreError = getGraphStoreErrorResponse(err, 'api.search');
+      if (graphStoreError) {
+        res.status(503).json(graphStoreError);
+        return;
+      }
       res.status(500).json({ error: err.message || 'Search failed' });
     }
   });
@@ -2014,6 +2111,8 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
     res.json({ id: job.id, status: 'failed', error: 'Cancelled by user' });
   });
 
+  webDashboard = mountWebDashboard(app, { mode: options.web ?? 'local' });
+
   // Global error handler — catch anything the route handlers miss
   app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error('Unhandled error:', err);
@@ -2025,7 +2124,19 @@ export const createServer = async (port: number, host: string = '127.0.0.1') => 
   await new Promise<void>((resolve, reject) => {
     const server = app.listen(port, host, () => {
       const displayHost = host === '::' || host === '0.0.0.0' ? 'localhost' : host;
-      console.log(`CodraGraph server running on http://${displayHost}:${port}`);
+      const localUrl = `http://${displayHost}:${port}`;
+      console.log(`CodraGraph server running on ${localUrl}`);
+      if (webDashboard.served) {
+        console.log(`Web dashboard: ${localUrl}`);
+      } else if (webDashboard.mode === 'hosted') {
+        console.log(`Hosted dashboard: ${webDashboard.hostedUrl}`);
+        console.log(`Connect it to local API: ${localUrl}`);
+      } else if (webDashboard.mode === 'off') {
+        console.log('Web dashboard disabled (--web off).');
+      } else {
+        console.warn(`Web dashboard not bundled: ${webDashboard.reason}`);
+        console.warn(`Hosted dashboard: ${webDashboard.hostedUrl}`);
+      }
       resolve();
     });
     server.on('error', (err) => reject(err));

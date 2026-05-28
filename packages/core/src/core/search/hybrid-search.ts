@@ -159,8 +159,16 @@ export const hybridSearch = async (
     k?: number,
   ) => Promise<SemanticSearchResult[]>,
 ): Promise<HybridSearchResult[]> => {
-  // Use LadybugDB FTS for always-fresh BM25 results
-  const bm25Results = await searchFTSFromCgdb(query, limit);
-  const semanticResults = await semanticSearch(executeQuery, query, limit);
+  const bm25Promise = searchFTSFromCgdb(query, limit);
+  // Start semantic work immediately, but gate its DB calls behind BM25.
+  // semanticSearch performs embedding before it calls executeQuery, so this
+  // overlaps CPU/model work with BM25 while avoiding concurrent queries on the
+  // singleton LadybugDB connection used by CLI/HTTP paths.
+  const executeAfterBm25 = async (cypher: string): Promise<any[]> => {
+    await bm25Promise;
+    return executeQuery(cypher);
+  };
+  const semanticPromise = semanticSearch(executeAfterBm25, query, limit);
+  const [bm25Results, semanticResults] = await Promise.all([bm25Promise, semanticPromise]);
   return mergeWithRRF(bm25Results, semanticResults, limit);
 };

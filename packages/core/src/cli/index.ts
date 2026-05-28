@@ -90,9 +90,14 @@ program
 
 program
   .command('serve')
-  .description('Start local HTTP server for web UI connection')
+  .description('Start local HTTP API and web dashboard')
   .option('-p, --port <port>', 'Port number', '4747')
   .option('--host <host>', 'Bind address (default: 127.0.0.1, use 0.0.0.0 for remote access)')
+  .option(
+    '--web <mode>',
+    'Dashboard mode: local serves the bundled app, hosted prints hosted UI connection info, off serves API only',
+    'local',
+  )
   .action(createLazyAction(() => import('./serve.js'), 'serveCommand'));
 
 program

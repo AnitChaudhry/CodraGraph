@@ -1,4 +1,5 @@
 import { createServer } from '../server/api.js';
+import { normalizeWebDashboardMode } from '../server/web-dashboard.js';
 
 // Catch anything that would cause a silent exit
 process.on('uncaughtException', (err) => {
@@ -12,7 +13,7 @@ process.on('unhandledRejection', (reason: any) => {
   process.exit(1);
 });
 
-export const serveCommand = async (options?: { port?: string; host?: string }) => {
+export const serveCommand = async (options?: { port?: string; host?: string; web?: string }) => {
   const port = Number(options?.port ?? 4747);
   // Default to 'localhost' so the OS decides whether to bind to 127.0.0.1 or
   // ::1 based on system configuration, avoiding spurious CORS errors when the
@@ -20,7 +21,8 @@ export const serveCommand = async (options?: { port?: string; host?: string }) =
   const host = options?.host ?? 'localhost';
 
   try {
-    await createServer(port, host);
+    const web = normalizeWebDashboardMode(options?.web);
+    await createServer(port, host, { web });
   } catch (err: any) {
     console.error(`\nFailed to start CodraGraph server:\n`);
     console.error(`  ${err.message || err}\n`);

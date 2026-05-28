@@ -111,10 +111,36 @@ jobs:
         if: runner.os == 'Linux'
         run: npm test --workspace @codragraph/cli -- test/integration
 
+  # ── Bun package-manager compatibility smoke ──
+  bun-compat:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: install with Bun
+        run: bun install --no-save --ignore-scripts
+      - name: build representative workspaces with Bun
+        run: |
+          set -e
+          bun run --filter @codragraph/shared build
+          bun run --filter @codragraph/graphstore build
+          bun run --filter @codragraph/cli build
+          bun run --filter @codragraph/harness build
+          bun run --filter @codragraph/compress build
+          bun run --filter @codragraph/sdk build
+      - name: run Bun workspace test smoke
+        run: bun run --filter @codragraph/sdk test
+
   # ── Build all publishable packages → ensures `npm publish` works ──
   build:
     runs-on: ubuntu-latest
-    needs: [typecheck, test]
+    needs: [typecheck, test, bun-compat]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

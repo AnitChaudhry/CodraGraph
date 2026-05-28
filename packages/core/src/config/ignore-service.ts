@@ -236,6 +236,8 @@ const IGNORED_EXTENSIONS = new Set([
 // Files to ignore by exact name
 const IGNORED_FILES = new Set([
   'package-lock.json',
+  'bun.lock',
+  'bun.lockb',
   'yarn.lock',
   'pnpm-lock.yaml',
   'composer.lock',

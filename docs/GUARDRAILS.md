@@ -20,6 +20,8 @@ Maintainer may widen scope per task.
 3. **Run impact analysis before editing shared symbols** — `impact` (upstream) for functions/classes/methods others call. Do not ignore HIGH/CRITICAL without maintainer sign-off.
 4. **Run `detect_changes` before commit** — confirm diffs map to expected symbols/processes when the graph is available.
 5. **Preserve embeddings** — if `.codragraph/meta.json` shows embeddings, use `npx @codragraph/cli analyze --embeddings`; plain `analyze` drops them.
+6. **Do not invent MCP HTTP routes** - HTTP MCP is mounted at `/api/mcp` and uses StreamableHTTP. `/api/mcp/tools/list` is not a supported route.
+7. **Do not clean indexes without approval** - `clean --force`, `clean --all --force`, deleting `.codragraph/`, or editing `cgdb`/`cgdb.wal` can destroy recoverable state.
 
 ---
 
@@ -57,6 +59,24 @@ Format: **Trigger → Instruction → Reason**. Append new Signs when the same m
 - **Do:** Stop overlapping processes (one writer at a time). Retry analyze or restart MCP.
 - **Why:** Embedded DB expects single-process ownership.
 
+### WAL checksum corruption
+
+- **Trigger:** Errors mention WAL checksum corruption or graphstore checksum failures.
+- **Do:** Stop overlapping MCP/analyze processes. Try `npx @codragraph/cli analyze --force`. If corruption remains, ask before `npx @codragraph/cli clean --force` and re-analyze.
+- **Why:** Manual edits to `cgdb`, `cgdb.wal`, or lock files can make recovery harder.
+
+### `.codragraph` is too large
+
+- **Trigger:** The index approaches a user-visible size budget, such as hundreds of MB, or grows disproportionately compared with source size.
+- **Do:** Inspect `.codragraph` size and `.codragraph/meta.json`; prefer `npx @codragraph/cli analyze --compress brotli` without embeddings for the next pass. Use zstd only on Node 22.15 or newer. See [STORAGE_AND_RETRIEVAL.md](STORAGE_AND_RETRIEVAL.md).
+- **Why:** BM25 and graph tools work without vectors; embeddings and stored source bodies are the common expensive layers.
+
+### MCP HTTP route confusion
+
+- **Trigger:** A shell probe like `Invoke-RestMethod http://127.0.0.1:4747/api/mcp/tools/list` fails.
+- **Do:** Use the CLI equivalents or a real MCP client pointed at `http://127.0.0.1:4747/api/mcp`.
+- **Why:** `/api/mcp` is a protocol endpoint, not a REST namespace.
+
 ---
 
 ## Publishing & supply chain
@@ -80,6 +100,8 @@ Stop and ask a **human maintainer** when:
 
 ## Related docs
 
+- [AI_AGENT_CLI_GUIDE.md](AI_AGENT_CLI_GUIDE.md) - command contract for agents
+- [STORAGE_AND_RETRIEVAL.md](STORAGE_AND_RETRIEVAL.md) - index size and retrieval tiers
 - [ARCHITECTURE.md](ARCHITECTURE.md) — components and data flow
 - [RUNBOOK.md](RUNBOOK.md) — commands for recovery
 - [CONTRIBUTING.md](CONTRIBUTING.md) — PR and commit expectations

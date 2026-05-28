@@ -64,9 +64,14 @@ fi
 
 # Run codragraph augment — must be fast (<500ms target)
 # augment writes to stderr (KuzuDB captures stdout at OS level), so capture stderr and discard stdout
-# Prefer the global bin if present; fall back to npx (npm package is @codragraph/cli, bin is `codragraph`)
+# Prefer the global bin if present; fall back to bunx when the hook is running
+# under Bun, otherwise npx (npm package is @codragraph/cli, bin is `codragraph`).
 if command -v codragraph >/dev/null 2>&1; then
   RESULT=$(cd "$CWD" && codragraph augment "$PATTERN" 2>&1 1>/dev/null)
+elif [ "${npm_config_user_agent#bun/}" != "$npm_config_user_agent" ] && command -v bunx >/dev/null 2>&1; then
+  RESULT=$(cd "$CWD" && bunx @codragraph/cli augment "$PATTERN" 2>&1 1>/dev/null)
+elif ! command -v npx >/dev/null 2>&1 && command -v bunx >/dev/null 2>&1; then
+  RESULT=$(cd "$CWD" && bunx @codragraph/cli augment "$PATTERN" 2>&1 1>/dev/null)
 else
   RESULT=$(cd "$CWD" && npx -y @codragraph/cli augment "$PATTERN" 2>&1 1>/dev/null)
 fi

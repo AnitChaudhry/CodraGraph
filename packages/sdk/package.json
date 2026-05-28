@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/sdk",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "One-import surface for the CodraGraph platform — graph intelligence, dynamic harness, compression. Works with Claude Code, Codex, OpenCode, any inference.",
   "author": {
     "name": "Thinqmesh Technologies",
@@ -59,11 +59,11 @@
     "README.md"
   ],
   "scripts": {
-    "prebuild": "npm --workspace @codragraph/harness run build",
+    "prebuild": "node ../../scripts/run-workspace-script.mjs @codragraph/harness build && node ../../scripts/run-workspace-script.mjs @codragraph/compress build",
     "build": "tsc",
-    "pretest": "npm --workspace @codragraph/harness run build",
+    "pretest": "node ../../scripts/run-workspace-script.mjs @codragraph/harness build && node ../../scripts/run-workspace-script.mjs @codragraph/compress build",
     "test": "vitest run --passWithNoTests",
-    "prepack": "npm run build"
+    "prepack": "node ../../scripts/run-workspace-script.mjs @codragraph/sdk build"
   },
   "dependencies": {
     "@codragraph/cli": "^2.1.0",

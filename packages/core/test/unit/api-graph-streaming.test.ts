@@ -12,7 +12,12 @@ vi.mock('../../src/core/cgdb/cgdb-adapter.js', async (importOriginal) => {
   return { ...actual, ...cgdbMocks };
 });
 
-import { ClientDisconnectedError, streamGraphNdjson } from '../../src/server/api.js';
+import {
+  ClientDisconnectedError,
+  getGraphStoreErrorResponse,
+  isGraphStoreCorruptionError,
+  streamGraphNdjson,
+} from '../../src/server/api.js';
 
 const createMockResponse = (writeImpl?: (chunk: string) => boolean) => {
   const response = new EventEmitter() as any;
@@ -231,5 +236,25 @@ describe('streamGraphNdjson', () => {
         },
       },
     });
+  });
+});
+
+describe('graphstore API error helpers', () => {
+  it('classifies WAL checksum corruption as a graphstore corruption error', () => {
+    const err = new Error('graphstore: WAL checksum corruption at frame 42');
+
+    expect(isGraphStoreCorruptionError(err)).toBe(true);
+    expect(getGraphStoreErrorResponse(err, 'api.query')).toMatchObject({
+      error: 'graphstore: WAL checksum corruption at frame 42',
+      code: 'GRAPHSTORE_CORRUPT',
+      operation: 'api.query',
+    });
+  });
+
+  it('leaves ordinary query failures for existing handlers', () => {
+    const err = new Error('Parser exception: Invalid input <MATCH>');
+
+    expect(isGraphStoreCorruptionError(err)).toBe(false);
+    expect(getGraphStoreErrorResponse(err, 'api.query')).toBeNull();
   });
 });

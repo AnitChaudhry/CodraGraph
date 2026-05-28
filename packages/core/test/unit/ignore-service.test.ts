@@ -125,6 +125,8 @@ describe('shouldIgnorePath', () => {
   describe('ignored files by exact name', () => {
     it.each([
       'package-lock.json',
+      'bun.lock',
+      'bun.lockb',
       'yarn.lock',
       'pnpm-lock.yaml',
       'composer.lock',

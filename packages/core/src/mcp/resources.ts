@@ -813,8 +813,8 @@ async function getSetupResource(backend: LocalBackend): Promise<string> {
       '',
       '## Cross-platform commands',
       '',
-      '- Use `npx @codragraph/cli ...` or `codragraph ...` in Windows PowerShell, macOS bash/zsh, and Linux shells.',
-      '- Prefer `npm --prefix <package> <script>` from repo root for package checks instead of shell-specific `cd dir && ...` chains.',
+      '- Use `npx @codragraph/cli ...`, `bunx @codragraph/cli ...`, or `codragraph ...` in Windows PowerShell, macOS bash/zsh, and Linux shells.',
+      '- Prefer `npm --prefix <package> <script>` or `bun run --filter <workspace> <script>` from repo root for package checks instead of shell-specific `cd dir && ...` chains.',
     ];
     sections.push(lines.join('\n'));
   }

@@ -21,11 +21,11 @@ AI coding tools don't understand your codebase structure. They edit a function w
 npx @codragraph/cli analyze
 ```
 
-That's it. This indexes the codebase, installs agent skills, registers Claude Code hooks, and creates `AGENTS.md` / `CLAUDE.md` context files — all in one command.
+That's it. This indexes the codebase, installs agent skills, registers Claude Code hooks, and creates `AGENTS.md` / `CLAUDE.md` context files â€” all in one command.
 
 The same CLI commands work in Windows PowerShell, macOS bash/zsh, and Linux shells. Use `npx @codragraph/cli ...` for no-install runs or `codragraph ...` after a global install.
 
-To configure MCP for your editor, run `npx @codragraph/cli setup` once — or set it up manually below.
+To configure MCP for your editor, run `npx @codragraph/cli setup` once â€” or set it up manually below.
 
 `codragraph setup` auto-detects your editors and writes the correct global MCP config. You only need to run it once.
 
@@ -34,10 +34,10 @@ To configure MCP for your editor, run `npx @codragraph/cli setup` once — or se
 | Editor | MCP | Skills | Hooks (auto-augment) | Support |
 |--------|-----|--------|---------------------|---------|
 | **Claude Code** | Yes | Yes | Yes (PreToolUse) | **Full** |
-| **Cursor** | Yes | Yes | — | MCP + Skills |
-| **Codex** | Yes | Yes | — | MCP + Skills |
-| **Windsurf** | Yes | — | — | MCP |
-| **OpenCode** | Yes | Yes | — | MCP + Skills |
+| **Cursor** | Yes | Yes | â€” | MCP + Skills |
+| **Codex** | Yes | Yes | â€” | MCP + Skills |
+| **Windsurf** | Yes | â€” | â€” | MCP |
+| **OpenCode** | Yes | Yes | â€” | MCP + Skills |
 
 > **Claude Code** gets the deepest integration: MCP tools + agent skills + PreToolUse hooks that automatically enrich grep/glob/bash calls with knowledge graph context.
 
@@ -51,32 +51,32 @@ To configure MCP for your editor, run `npx @codragraph/cli setup` once — or se
 
 If you prefer to configure manually instead of using `codragraph setup`:
 
-### Claude Code (full support — MCP + skills + hooks)
+### Claude Code (full support â€” MCP + skills + hooks)
 
 ```bash
 # macOS / Linux
-claude mcp add codragraph -- npx -y @codragraph/cli@2.1.1 mcp
+claude mcp add codragraph -- npx -y @codragraph/cli@2.1.2 mcp
 
 # Windows
-claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@2.1.1 mcp
+claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@2.1.2 mcp
 ```
 
-### Codex (full support — MCP + skills)
+### Codex (full support â€” MCP + skills)
 
 ```bash
-codex mcp add codragraph -- npx -y @codragraph/cli@2.1.1 mcp
+codex mcp add codragraph -- npx -y @codragraph/cli@2.1.2 mcp
 ```
 
 ### Cursor / Windsurf
 
-Add to `~/.cursor/mcp.json` (global — works for all projects):
+Add to `~/.cursor/mcp.json` (global â€” works for all projects):
 
 ```json
 {
   "mcpServers": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "@codragraph/cli@2.1.1", "mcp"]
+      "args": ["-y", "@codragraph/cli@2.1.2", "mcp"]
     }
   }
 }
@@ -91,7 +91,7 @@ Add to `~/.config/opencode/config.json`:
   "mcp": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "@codragraph/cli@2.1.1", "mcp"]
+      "args": ["-y", "@codragraph/cli@2.1.2", "mcp"]
     }
   }
 }
@@ -101,15 +101,15 @@ Add to `~/.config/opencode/config.json`:
 
 CodraGraph builds a complete knowledge graph of your codebase through a multi-phase indexing pipeline:
 
-1. **Structure** — Walks the file tree and maps folder/file relationships
-2. **Parsing** — Extracts functions, classes, methods, and interfaces using Tree-sitter ASTs
-3. **Resolution** — Resolves imports and function calls across files with language-aware logic
-   - **Field & Property Type Resolution** — Tracks field types across classes and interfaces for deep chain resolution (e.g., `user.address.city.getName()`)
-   - **Return-Type-Aware Variable Binding** — Infers variable types from function return types, enabling accurate call-result binding
-4. **Clustering** — Groups related symbols into structural communities
-5. **Processes** — Traces execution flows from entry points through call chains
-6. **Feature clusters** — Builds human-facing product/domain areas with members, dependencies, and line ranges
-7. **Search** — Builds hybrid search indexes for fast retrieval
+1. **Structure** â€” Walks the file tree and maps folder/file relationships
+2. **Parsing** â€” Extracts functions, classes, methods, and interfaces using Tree-sitter ASTs
+3. **Resolution** â€” Resolves imports and function calls across files with language-aware logic
+   - **Field & Property Type Resolution** â€” Tracks field types across classes and interfaces for deep chain resolution (e.g., `user.address.city.getName()`)
+   - **Return-Type-Aware Variable Binding** â€” Infers variable types from function return types, enabling accurate call-result binding
+4. **Clustering** â€” Groups related symbols into structural communities
+5. **Processes** â€” Traces execution flows from entry points through call chains
+6. **Feature clusters** â€” Builds human-facing product/domain areas with members, dependencies, and line ranges
+7. **Search** â€” Builds hybrid search indexes for fast retrieval
 
 The result is a **LadybugDB graph database** stored locally in `.codragraph/` with full-text search and semantic embeddings.
 
@@ -119,11 +119,11 @@ Your AI agent gets these tools automatically:
 
 | Tool | What It Does | `repo` Param |
 |------|-------------|--------------|
-| `list_repos` | Discover all indexed repositories | — |
+| `list_repos` | Discover all indexed repositories | â€” |
 | `query` | Process-grouped hybrid search (BM25 + semantic + RRF) | Optional |
-| `context` | 360-degree symbol view — categorized refs, process participation | Optional |
+| `context` | 360-degree symbol view â€” categorized refs, process participation | Optional |
 | `impact` | Blast radius analysis with depth grouping and confidence | Optional |
-| `detect_changes` | Git-diff impact — maps changed lines to affected processes | Optional |
+| `detect_changes` | Git-diff impact â€” maps changed lines to affected processes | Optional |
 | `rename` | Multi-file coordinated rename with graph + text search | Optional |
 | `feature_clusters` / `cluster_query` | Product/domain feature map for targeted context | Optional |
 | `feature_context` / `cluster_context` / `context_pack` | Files, line ranges, dependencies, and flows for one feature | Optional |
@@ -150,7 +150,7 @@ Your AI agent gets these tools automatically:
 
 | Prompt | What It Does |
 |--------|-------------|
-| `detect_impact` | Pre-commit change analysis — scope, affected processes, risk level |
+| `detect_impact` | Pre-commit change analysis â€” scope, affected processes, risk level |
 | `generate_map` | Architecture documentation from the knowledge graph with simple Mermaid diagrams |
 
 ## CLI Commands
@@ -171,8 +171,9 @@ codragraph cluster-query settings   # Search product/domain feature areas
 codragraph feature-context Settings # Focus files, line ranges, flows, dependencies for one feature
 codragraph context-pack Settings    # Compact agent context pack for one feature
 codragraph cluster-impact Settings --direction both  # Feature-level blast radius
-codragraph mcp                     # Start MCP server (stdio) — serves all indexed repos
-codragraph serve                   # Start local HTTP server (multi-repo) for web UI
+codragraph mcp                     # Start MCP server (stdio) â€” serves all indexed repos
+codragraph serve                   # Start local HTTP API + bundled web UI
+codragraph serve --web hosted      # API only; connect from hosted web UI
 codragraph index                   # Register an existing .codragraph/ folder into the global registry
 codragraph list                    # List all indexed repositories
 codragraph status                  # Show index status for current repo
@@ -232,30 +233,30 @@ TypeScript, JavaScript, Python, Java, C, C++, C#, Go, Rust, PHP, Kotlin, Swift, 
 
 | Language | Imports | Named Bindings | Exports | Heritage | Type Annotations | Constructor Inference | Config | Frameworks | Entry Points |
 |----------|---------|----------------|---------|----------|-----------------|---------------------|--------|------------|-------------|
-| TypeScript | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| JavaScript | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ | ✓ |
-| Python | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Java | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ |
-| Kotlin | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ |
-| C# | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Go | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Rust | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ |
-| PHP | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Ruby | ✓ | — | ✓ | ✓ | — | ✓ | — | ✓ | ✓ |
-| Swift | — | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| C | — | — | ✓ | — | ✓ | ✓ | — | ✓ | ✓ |
-| C++ | — | — | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ |
+| TypeScript | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ |
+| JavaScript | âœ“ | âœ“ | âœ“ | âœ“ | â€” | âœ“ | âœ“ | âœ“ | âœ“ |
+| Python | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ |
+| Java | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | â€” | âœ“ | âœ“ |
+| Kotlin | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | â€” | âœ“ | âœ“ |
+| C# | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ |
+| Go | âœ“ | â€” | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ |
+| Rust | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | â€” | âœ“ | âœ“ |
+| PHP | âœ“ | âœ“ | âœ“ | â€” | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ |
+| Ruby | âœ“ | â€” | âœ“ | âœ“ | â€” | âœ“ | â€” | âœ“ | âœ“ |
+| Swift | â€” | â€” | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ | âœ“ |
+| C | â€” | â€” | âœ“ | â€” | âœ“ | âœ“ | â€” | âœ“ | âœ“ |
+| C++ | â€” | â€” | âœ“ | âœ“ | âœ“ | âœ“ | â€” | âœ“ | âœ“ |
 
-**Imports** — cross-file import resolution · **Named Bindings** — `import { X as Y }` / re-export tracking · **Exports** — public/exported symbol detection · **Heritage** — class inheritance, interfaces, mixins · **Type Annotations** — explicit type extraction for receiver resolution · **Constructor Inference** — infer receiver type from constructor calls (`self`/`this` resolution included for all languages) · **Config** — language toolchain config parsing (tsconfig, go.mod, etc.) · **Frameworks** — AST-based framework pattern detection · **Entry Points** — entry point scoring heuristics
+**Imports** â€” cross-file import resolution Â· **Named Bindings** â€” `import { X as Y }` / re-export tracking Â· **Exports** â€” public/exported symbol detection Â· **Heritage** â€” class inheritance, interfaces, mixins Â· **Type Annotations** â€” explicit type extraction for receiver resolution Â· **Constructor Inference** â€” infer receiver type from constructor calls (`self`/`this` resolution included for all languages) Â· **Config** â€” language toolchain config parsing (tsconfig, go.mod, etc.) Â· **Frameworks** â€” AST-based framework pattern detection Â· **Entry Points** â€” entry point scoring heuristics
 
 ## Agent Skills
 
 CodraGraph ships with skill files that teach AI agents how to use the tools effectively:
 
-- **Exploring** — Navigate unfamiliar code using the knowledge graph
-- **Debugging** — Trace bugs through call chains
-- **Impact Analysis** — Analyze blast radius before changes
-- **Refactoring** — Plan safe refactors using dependency mapping
+- **Exploring** â€” Navigate unfamiliar code using the knowledge graph
+- **Debugging** â€” Trace bugs through call chains
+- **Impact Analysis** â€” Analyze blast radius before changes
+- **Refactoring** â€” Plan safe refactors using dependency mapping
 
 Installed automatically by both `codragraph analyze` (per-repo) and `codragraph setup` (global).
 
@@ -273,9 +274,9 @@ try in-flight fixes without waiting for the next stable cut. (Docs-only
 merges are skipped.)
 
 ```bash
-# Try the latest release candidate (pre-stable — may change at any time)
+# Try the latest release candidate (pre-stable â€” may change at any time)
 npm install -g @codragraph/cli@rc
-# — or —
+# â€” or â€”
 npx @codragraph/cli@rc analyze
 ```
 
@@ -283,7 +284,7 @@ Release-candidate versions follow the standard semver prerelease format
 `X.Y.Z-rc.N`, where `X.Y.Z` is the next stable target (bumped from the
 current `latest` by patch by default; `minor` or `major` when kicking off a
 bigger cycle) and `N` increments per published rc. Example sequence:
-`1.6.2-rc.1`, `1.6.2-rc.2`, …, then once `1.6.2` ships stable,
+`1.6.2-rc.1`, `1.6.2-rc.2`, â€¦, then once `1.6.2` ships stable,
 `1.6.3-rc.1`. Stable `latest` is unaffected.
 
 ## Troubleshooting
@@ -296,9 +297,9 @@ It is fixed in **codragraph v1.6.2+**. Upgrade to the current workspace
 version, or pin the version your team has validated:
 
 ```bash
-npx @codragraph/cli@2.1.1 analyze          # no global install
+npx @codragraph/cli@2.1.2 analyze          # no global install
 # or
-npm install -g @codragraph/cli@2.1.1       # upgrade a global install
+npm install -g @codragraph/cli@2.1.2       # upgrade a global install
 ```
 
 If you still hit npm install issues after upgrading, these generic workarounds
@@ -311,7 +312,7 @@ npm cache clean --force              # clear a possibly corrupt cache
 
 ### Installation fails with native module errors
 
-Some optional language grammars (Dart, Kotlin, Swift) require native compilation. If they fail, CodraGraph still works — those languages will be skipped.
+Some optional language grammars (Dart, Kotlin, Swift) require native compilation. If they fail, CodraGraph still works â€” those languages will be skipped.
 
 If `npm install -g @codragraph/cli` fails on native modules:
 
@@ -348,20 +349,20 @@ v8 heap snapshot at every phase boundary plus a JSONL timeline of
 
 ```bash
 codragraph profile-heap                       # writes .codragraph/heap-profiles/
-# → load any .heapsnapshot in Chrome DevTools → Memory → Load
+# â†’ load any .heapsnapshot in Chrome DevTools â†’ Memory â†’ Load
 ```
 
-Each snapshot is 100–500 MB, so the command is opt-in only. The JSONL
+Each snapshot is 100â€“500 MB, so the command is opt-in only. The JSONL
 timeline is small enough to share for triage even when the snapshots
 are too big.
 
-### Index size — opt-in per-row compression
+### Index size â€” opt-in per-row compression
 
 For repos where `.codragraph/cgdb` itself has grown large:
 
 ```bash
-codragraph analyze --compress brotli   # Node ≥ 18, brotli quality 6
-codragraph analyze --compress zstd     # Node ≥ 22.15, zstd level 3
+codragraph analyze --compress brotli   # Node â‰¥ 18, brotli quality 6
+codragraph analyze --compress zstd     # Node â‰¥ 22.15, zstd level 3
 codragraph analyze --compress none     # explicit default
 ```
 
@@ -374,7 +375,7 @@ against them (one-time cost, surfaced in the analyze log).
 
 ### Large files are being skipped
 
-By default the walker skips files larger than **512 KB** (see log line `Skipped N large files (>512KB)`). Raise the threshold via either the CLI flag or the environment variable — both accept a value in **KB**:
+By default the walker skips files larger than **512 KB** (see log line `Skipped N large files (>512KB)`). Raise the threshold via either the CLI flag or the environment variable â€” both accept a value in **KB**:
 
 ```bash
 # CLI flag (takes precedence over the env var)
@@ -400,9 +401,11 @@ Values above **32768 KB (32 MB)** are clamped to the tree-sitter parser ceiling;
 
 ## Web UI
 
-CodraGraph also has a browser-based UI at [codragraph.vercel.app](https://codragraph.vercel.app) — 100% client-side, your code never leaves the browser.
+CodraGraph also has a browser-based UI at [codragraph.vercel.app](https://codragraph.vercel.app) â€” 100% client-side, your code never leaves the browser.
 
-**Local Backend Mode:** Run `codragraph serve` and open the web UI locally — it auto-detects the server and shows all your indexed repos, feature clusters, dependency context, and full AI chat support. No need to re-upload or re-index. The agent's tools (Cypher queries, search, code navigation) route through the backend HTTP API automatically.
+**Local Backend Mode:** Run `codragraph serve` and open `http://localhost:4747`. The installed CLI serves the bundled dashboard from `dist/web` and does not package `apps/web/node_modules`. It auto-detects the server and shows all your indexed repos, feature clusters, dependency context, and full AI chat support. No need to re-upload or re-index. The agent's tools (Cypher queries, search, code navigation) route through the backend HTTP API automatically.
+
+**Hosted Dashboard Mode:** Run `codragraph serve --web hosted`, then open the hosted dashboard and connect it to `http://localhost:4747`. The UI is hosted, but project data still comes from your local API.
 
 ## License
 

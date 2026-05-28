@@ -11,23 +11,63 @@
  *  4. Copy packages/shared/dist → dist/_shared
  *  5. Rewrite bare '@codragraph/shared' specifiers → relative paths
  */
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 const ROOT = path.resolve(__dirname, '..');
+const MONOREPO_ROOT = path.resolve(ROOT, '..', '..');
 // Workspace directory names — packages live under `packages/<short>` on disk
 // and publish as `@codragraph/<short>` on npm.
 const SHARED_ROOT = path.resolve(ROOT, '..', 'shared');
 const GRAPHSTORE_ROOT = path.resolve(ROOT, '..', 'graphstore');
+const WEB_ROOT = path.resolve(MONOREPO_ROOT, 'apps', 'web');
 const DIST = path.join(ROOT, 'dist');
 const SHARED_DEST = path.join(DIST, '_shared');
+const WEB_DEST = path.join(DIST, 'web');
+const TSC_BIN = require.resolve('typescript/bin/tsc');
+
+function runTsc(cwd) {
+  execFileSync(process.execPath, [TSC_BIN], { cwd, stdio: 'inherit' });
+}
+
+function isRunningUnderBun() {
+  const userAgent = (process.env.npm_config_user_agent || '').toLowerCase();
+  const execBase = path.basename(process.env.npm_execpath || '').toLowerCase();
+  return userAgent.startsWith('bun/') || execBase === 'bun' || execBase === 'bun.exe';
+}
+
+function runPackageScript(cwd, script) {
+  const useBun = isRunningUnderBun();
+  const command = useBun ? 'bun' : process.platform === 'win32' ? 'cmd' : 'npm';
+  const args = useBun
+    ? ['run', script]
+    : process.platform === 'win32'
+      ? ['/c', 'npm', 'run', script]
+      : ['run', script];
+  execFileSync(command, args, { cwd, stdio: 'inherit' });
+}
+
+function getWebBuildSkipReason() {
+  if (process.env.CODRAGRAPH_SKIP_WEB_BUILD === '1') {
+    return 'CODRAGRAPH_SKIP_WEB_BUILD=1';
+  }
+  if (
+    process.env.npm_lifecycle_event === 'prepare' &&
+    fs.existsSync(path.join(WEB_DEST, 'index.html'))
+  ) {
+    return 'dist/web already exists from the preceding pack build';
+  }
+  return null;
+}
 
 // ── 1. Build @codragraph/shared ──────────────────────────────────────
 console.log('[build] compiling @codragraph/shared…');
-execSync('npx tsc', { cwd: SHARED_ROOT, stdio: 'inherit' });
+runTsc(SHARED_ROOT);
 
 // ── 2. Build @codragraph/graphstore ──────────────────────────────────
 // core depends on this for snapshot/branch/diff types. On a
@@ -37,12 +77,12 @@ execSync('npx tsc', { cwd: SHARED_ROOT, stdio: 'inherit' });
 // is not present (e.g. someone pinned an older monorepo layout).
 if (fs.existsSync(GRAPHSTORE_ROOT)) {
   console.log('[build] compiling @codragraph/graphstore…');
-  execSync('npx tsc', { cwd: GRAPHSTORE_ROOT, stdio: 'inherit' });
+  runTsc(GRAPHSTORE_ROOT);
 }
 
 // ── 3. Build @codragraph/cli ─────────────────────────────────────────
 console.log('[build] compiling @codragraph/cli…');
-execSync('npx tsc', { cwd: ROOT, stdio: 'inherit' });
+runTsc(ROOT);
 
 // ── 4. Copy shared dist ────────────────────────────────────────────
 console.log('[build] copying shared module into dist/_shared…');
@@ -86,5 +126,23 @@ walk(DIST, ['.js', '.d.ts'], rewriteFile);
 // ── 6. Make CLI entry executable ────────────────────────────────────
 const cliEntry = path.join(DIST, 'cli', 'index.js');
 if (fs.existsSync(cliEntry)) fs.chmodSync(cliEntry, 0o755);
+
+// ── 7. Bundle the web dashboard ─────────────────────────────────────
+// The npm package ships static web assets under dist/web. It never includes
+// apps/web/node_modules; npm only packs files included by packages/core/files.
+const webPackageJson = path.join(WEB_ROOT, 'package.json');
+if (fs.existsSync(webPackageJson)) {
+  const skipReason = getWebBuildSkipReason();
+  if (skipReason) {
+    console.log(`[build] skipping bundled web dashboard (${skipReason}).`);
+  } else {
+    console.log('[build] compiling bundled web dashboard…');
+    runPackageScript(WEB_ROOT, 'build');
+    fs.rmSync(WEB_DEST, { recursive: true, force: true });
+    fs.cpSync(path.join(WEB_ROOT, 'dist'), WEB_DEST, { recursive: true });
+  }
+} else {
+  console.log('[build] apps/web not found — skipping bundled web dashboard.');
+}
 
 console.log(`[build] done — rewrote ${rewritten} files.`);

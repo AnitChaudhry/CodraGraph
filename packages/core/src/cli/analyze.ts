@@ -24,6 +24,7 @@ import { getGitRoot, hasGitDir } from '../storage/git.js';
 import { runFullAnalysis } from '../core/run-analyze.js';
 import { getMaxFileSizeBannerMessage } from '../core/ingestion/utils/max-file-size.js';
 import fs from 'fs/promises';
+import { formatBytes, LARGE_INDEX_WARNING_BYTES, summarizeIndexStorage } from './status.js';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../../package.json') as { version: string };
@@ -454,6 +455,22 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
     );
     console.log(`  ${repoPath}`);
 
+    try {
+      const { storagePath } = getStoragePaths(repoPath);
+      const storageSummary = await summarizeIndexStorage(storagePath);
+      if (storageSummary) {
+        console.log(`  .codragraph size: ${formatBytes(storageSummary.bytes)}`);
+        if (storageSummary.bytes >= LARGE_INDEX_WARNING_BYTES) {
+          console.log(
+            `  Storage warning: index is >= ${formatBytes(LARGE_INDEX_WARNING_BYTES)}. ` +
+              `Use --compress brotli (or zstd on Node >=22.15) and reserve --embeddings for repos that need vector search.`,
+          );
+        }
+      }
+    } catch {
+      /* size summary is best-effort */
+    }
+
     // Surface @codragraph/compress's value prop with concrete numbers: how
     // many tokens of distilled context did we generate. Best-effort — never
     // fail the analyze for a stat read.
@@ -526,12 +543,13 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
       // 'node.target'" crash happens inside npm *before* codragraph code runs,
       // so it can't be caught here.  This branch handles dependency-resolution
       // errors that surface at runtime (e.g. dynamic require failures).
-      console.error('  This looks like an npm dependency resolution issue.');
+      console.error('  This looks like a package-manager dependency resolution issue.');
       console.error('  Suggestions:');
       console.error('    1. Clear the npm cache:    npm cache clean --force');
       console.error('    2. Update npm:             npm install -g npm@latest');
       console.error(`    3. Reinstall codragraph:     npm install -g ${CLI_PACKAGE_SPEC}`);
       console.error(`    4. Or try npx directly:    npx ${CLI_PACKAGE_SPEC} analyze`);
+      console.error(`    5. Bun alternative:        bunx ${CLI_PACKAGE_SPEC} analyze`);
       console.error('');
     } else if (
       msg.includes('MODULE_NOT_FOUND') ||
@@ -544,6 +562,7 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
       console.error(
         `    2. Clear cache: npm cache clean --force && npx ${CLI_PACKAGE_SPEC} analyze`,
       );
+      console.error(`    3. Bun cache:   bun pm cache rm && bunx ${CLI_PACKAGE_SPEC} analyze`);
       console.error('');
     }
 

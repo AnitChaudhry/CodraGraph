@@ -13,17 +13,49 @@ that matches your use case.
 ```sh
 # CLI + MCP server + web dashboard
 npm install -g @codragraph/cli
+# or, with Bun:
+bun add -g @codragraph/cli --trust
 codragraph setup
 codragraph analyze .
-codragraph serve   # → http://localhost:4747
+codragraph serve   # -> http://localhost:4747
 ```
 
 > The package on npm is `@codragraph/cli`; the binary it installs is
 > `codragraph`. Use the scoped name when installing, the short name
 > when invoking.
 
+> Bun installs from the same npm registry. Use `--trust` (or run
+> `bun pm trust @codragraph/cli` after install) so native parser lifecycle
+> scripts can run when needed.
+
 That gives you the analyzer, the MCP server, the local HTTP API, and
-the bundled web dashboard. Everything else is optional.
+the bundled web dashboard. The CLI package includes the built dashboard
+assets, not `node_modules`, so no separate frontend install is needed for
+normal users. Everything else is optional.
+
+The same command shapes work in Windows PowerShell, macOS bash/zsh, and
+Linux shells: use `codragraph ...` after a global install, `npx
+@codragraph/cli ...` without a global install, or `bunx @codragraph/cli ...`
+with Bun.
+
+When `codragraph serve` is running, REST health is:
+
+```powershell
+Invoke-RestMethod -Uri 'http://127.0.0.1:4747/api/info' -TimeoutSec 10
+```
+
+HTTP MCP itself is StreamableHTTP at `/api/mcp`; `/api/mcp/tools/list` is not
+a REST route.
+
+If you prefer the hosted dashboard, run the same local API in hosted mode:
+
+```sh
+codragraph serve --web hosted
+```
+
+Then open the hosted CodraGraph UI and connect it to `http://localhost:4747`.
+Your indexed project stays on the local machine; the hosted page only talks to
+the local API you started.
 
 ## The package matrix
 
@@ -34,12 +66,12 @@ restrictions.
 
 | Package | What you get | Install command |
 |---|---|---|
-| **`@codragraph/cli`** | CLI, MCP server, HTTP API, indexer, web dashboard, FeatureCluster context packs | `npm install -g @codragraph/cli` |
-| **`@codragraph/sdk`** | Programmatic API on top of CLI-indexed repos — graph, harness, graphstore, recipes, compress | `npm install @codragraph/sdk` |
-| **`@codragraph/graphstore`** | Just the versioned-graph store (snapshots / branches / diffs / merge) | `npm install @codragraph/graphstore` |
-| **`@codragraph/harness`** | Auto-tuned harness search + swarm + recipe memory | `npm install @codragraph/harness` |
-| **`@codragraph/compress`** | Graph-aware compression library | `npm install @codragraph/compress` |
-| **`@codragraph/org`** | Tenant/RBAC/audit helpers for hosted deployments | `npm install @codragraph/org` |
+| **`@codragraph/cli`** | CLI, MCP server, HTTP API, indexer, web dashboard, FeatureCluster context packs | `npm install -g @codragraph/cli` or `bun add -g @codragraph/cli --trust` |
+| **`@codragraph/sdk`** | Programmatic API on top of CLI-indexed repos — graph, harness, graphstore, recipes, compress | `npm install @codragraph/sdk` or `bun add @codragraph/sdk` |
+| **`@codragraph/graphstore`** | Just the versioned-graph store (snapshots / branches / diffs / merge) | `npm install @codragraph/graphstore` or `bun add @codragraph/graphstore` |
+| **`@codragraph/harness`** | Auto-tuned harness search + swarm + recipe memory | `npm install @codragraph/harness` or `bun add @codragraph/harness` |
+| **`@codragraph/compress`** | Graph-aware compression library | `npm install @codragraph/compress` or `bun add @codragraph/compress` |
+| **`@codragraph/org`** | Tenant/RBAC/audit helpers for hosted deployments | `npm install @codragraph/org` or `bun add @codragraph/org` |
 
 > `@codragraph/shared` is internal-only (TypeScript types).
 
@@ -49,10 +81,14 @@ restrictions.
 |---|---|---|
 | **Claude Code** | `@codragraph/claude-plugin` | `claude plugins install codragraph` *(once published to Anthropic's marketplace)* — or `claude plugins install file://path/to/integrations/claude` |
 | **Cursor** | `integrations/cursor` | Drop the directory into `.cursor/` of your repo; hooks register automatically |
-| **OpenAI Codex CLI** | `@codragraph/codex` | `npm install -g @codragraph/codex` then run `codragraph-codex` to wire the hooks + MCP server into `~/.codex/config.json` |
+| **OpenAI Codex CLI** | `@codragraph/codex` | `npm install -g @codragraph/codex` or `bun add -g @codragraph/codex --trust`, then run `codragraph-codex` to wire the hooks + MCP server into `~/.codex/config.json` |
 
 All three plugins are thin glue — they delegate to the `codragraph` CLI
 + MCP server. You need `@codragraph/cli` installed first.
+
+Agents and plugin authors should follow [AI_AGENT_CLI_GUIDE.md](AI_AGENT_CLI_GUIDE.md)
+for supported commands, MCP HTTP behavior, index cleanup rules, and
+large-repo storage choices.
 
 ## Decision tree
 

@@ -32,7 +32,7 @@ interface SetupResult {
 
 /**
  * Resolve the absolute path to the `codragraph` binary if it's installed
- * globally (or via npm -g / yarn global). Returns null when not found.
+ * globally (or via npm -g / bun -g / yarn global). Returns null when not found.
  *
  * Note: the npm package is `@codragraph/cli`, but the executable it installs
  * is `codragraph` (see package.json `bin`). PATH lookup must use the bin name.
@@ -59,7 +59,7 @@ function resolveCodragraphBin(): string | null {
 
     if (process.platform === 'win32') {
       // Prefer a Windows-executable shim. If none is on PATH, return null so
-      // the caller falls through to the `cmd /c npx -y @codragraph/cli` path.
+      // the caller falls through to the package-runner fallback.
       const exe = lines.find((l) => /\.(cmd|exe|bat)$/i.test(l));
       return exe ?? null;
     }
@@ -73,30 +73,39 @@ function resolveCodragraphBin(): string | null {
  * The MCP server entry for all editors.
  *
  * Prefers the globally-installed `codragraph` binary (starts in ~1 s) over
- * `npx -y @codragraph/cli@<version>` (cold-cache install of native deps can take
+ * `npx` / `bunx` package execution (cold-cache install of native deps can take
  * >60 s, exceeding Claude Code's 30 s MCP connection timeout).
  *
- * Falls back to npx when the binary isn't on PATH — e.g. first-time
- * users who ran `npx @codragraph/cli analyze` but haven't done `npm i -g`.
+ * Falls back to the package runner that invoked setup when the binary isn't on
+ * PATH — e.g. first-time `npx @codragraph/cli` or `bunx @codragraph/cli` users.
  *
  * Windows note: even when the bin is on PATH, we launch via `cmd /c codragraph
  * mcp` rather than writing the resolved path. Reason: `where codragraph`
  * returns the extensionless Unix shim before `codragraph.cmd`, and Node's
  * spawn/execFile cannot launch the extensionless shim on Windows. Letting
  * cmd resolve via PATHEXT is the only reliable path that works for npm-,
- * pnpm-, and yarn-installed shims alike.
+ * bun-, pnpm-, and yarn-installed shims alike.
  */
-function getMcpEntry() {
-  const bin = resolveCodragraphBin();
+function isRunningUnderBun(): boolean {
+  const userAgent = (process.env.npm_config_user_agent ?? '').toLowerCase();
+  const execPath = path.basename(process.env.npm_execpath ?? '').toLowerCase();
+  return userAgent.startsWith('bun/') || execPath === 'bun' || execPath === 'bun.exe';
+}
 
-  if (bin) {
+function getPackageRunnerMcpEntry() {
+  if (isRunningUnderBun()) {
     if (process.platform === 'win32') {
-      return { command: 'cmd', args: ['/c', 'codragraph', 'mcp'] };
+      return {
+        command: 'cmd',
+        args: ['/c', 'bunx', CLI_PACKAGE_SPEC, 'mcp'],
+      };
     }
-    return { command: bin, args: ['mcp'] };
+    return {
+      command: 'bunx',
+      args: [CLI_PACKAGE_SPEC, 'mcp'],
+    };
   }
 
-  // Fallback: npx (works without a global install, but slow cold-start)
   if (process.platform === 'win32') {
     return {
       command: 'cmd',
@@ -107,6 +116,19 @@ function getMcpEntry() {
     command: 'npx',
     args: ['-y', CLI_PACKAGE_SPEC, 'mcp'],
   };
+}
+
+function getMcpEntry() {
+  const bin = resolveCodragraphBin();
+
+  if (bin) {
+    if (process.platform === 'win32') {
+      return { command: 'cmd', args: ['/c', 'codragraph', 'mcp'] };
+    }
+    return { command: bin, args: ['mcp'] };
+  }
+
+  return getPackageRunnerMcpEntry();
 }
 
 /**
@@ -123,13 +145,8 @@ function getOpenCodeMcpEntry() {
     return { type: 'local', command: [bin, 'mcp'] };
   }
 
-  if (process.platform === 'win32') {
-    return {
-      type: 'local',
-      command: ['cmd', '/c', 'npx', '-y', CLI_PACKAGE_SPEC, 'mcp'],
-    };
-  }
-  return { type: 'local', command: ['npx', '-y', CLI_PACKAGE_SPEC, 'mcp'] };
+  const entry = getPackageRunnerMcpEntry();
+  return { type: 'local', command: [entry.command, ...entry.args] };
 }
 
 /**

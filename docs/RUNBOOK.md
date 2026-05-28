@@ -13,7 +13,14 @@ npm install
 npm --prefix packages/core run build
 ```
 
-Use `npx @codragraph/cli ...` from any path after global/published install, or `npm --prefix packages/core exec codragraph -- ...` when developing from the repo root with a local build.
+With Bun:
+
+```bash
+bun install
+bun run --filter @codragraph/cli build
+```
+
+Use `npx @codragraph/cli ...` or `bunx @codragraph/cli ...` from any path after global/published install. When developing from the repo root with a local build, use `npm --prefix packages/core exec codragraph -- ...` or `node packages/core/dist/cli/index.js ...`.
 
 ---
 
@@ -59,6 +66,8 @@ npx @codragraph/cli analyze --embeddings
 
 **Large repos:** Analyze may skip or limit embedding work when node counts are very high; watch CLI output.
 
+For disk-space decisions, see [STORAGE_AND_RETRIEVAL.md](STORAGE_AND_RETRIEVAL.md). BM25 and graph search work without embeddings, so do not enable vectors as a default recovery step.
+
 ---
 
 ## MCP: no repos / empty tools
@@ -73,13 +82,36 @@ npx @codragraph/cli analyze /path/to/repo
 
 Restart the editor MCP session if needed. The server **refreshes the registry lazily**; new analyzes are picked up without necessarily reinstalling MCP.
 
+**HTTP MCP:** The mounted HTTP MCP endpoint is `/api/mcp` and uses the MCP StreamableHTTP protocol. Do not probe invented REST routes such as `/api/mcp/tools/list`; use an MCP client or CLI equivalents. For REST health, use:
+
+```powershell
+Invoke-RestMethod -Uri 'http://127.0.0.1:4747/api/info' -TimeoutSec 10
+```
+
+`/api/info` returns version, Node version, launch context, and MCP route guidance. See [AI_AGENT_CLI_GUIDE.md](AI_AGENT_CLI_GUIDE.md).
+
 **Symptom:** Wrong repo when multiple are indexed — pass `repo` on tools or use `list_repos` first.
 
 ---
 
 ## Clean slate (corrupt or huge `.codragraph`)
 
-**Current repo only** (prompts for confirmation):
+Before cleanup, inspect the index and prefer a forced re-analyze when possible:
+
+```bash
+npx @codragraph/cli status
+npx @codragraph/cli analyze --force
+```
+
+For large but working indexes, prefer compression before deletion:
+
+```bash
+npx @codragraph/cli analyze --compress brotli
+```
+
+Use `--compress zstd` only on Node 22.15 or newer.
+
+**Current repo only** (preview; rerun with `--force` to delete):
 
 ```bash
 npx @codragraph/cli clean
@@ -99,16 +131,21 @@ npx @codragraph/cli clean --all --force
 
 Then re-run `npx @codragraph/cli analyze` (and `--embeddings` if you need vectors).
 
+Agents must ask before `clean --force`, `clean --all --force`, or deleting `.codragraph/` manually.
+
 ---
 
 ## Local bridge for the web UI
 
 ```bash
 npx @codragraph/cli serve
-# default http://127.0.0.1:4747 — see serve --help for port/host
+# default http://127.0.0.1:4747 — see serve --help for port/host/web mode
 ```
 
 Use when the browser UI should talk to **local** indexed repos instead of WASM-only mode.
+The installed CLI serves the bundled dashboard from the same local server.
+Use `npx @codragraph/cli serve --web hosted` when the user wants to open the
+hosted dashboard and connect it back to the local API.
 
 ---
 
@@ -156,8 +193,28 @@ Only one process should open a repo’s `.codragraph/cgdb` store at a time. If M
 
 ---
 
+## WAL checksum corruption
+
+If you see WAL checksum corruption, stop overlapping processes, try `npx @codragraph/cli analyze --force`, and only use `clean --force` after user approval. Do not edit `cgdb`, `cgdb.wal`, or lock files by hand.
+
+---
+
+## Reserved Cypher labels
+
+If raw graphstore/Cypher queries fail on labels such as `Union`, quote the label:
+
+```bash
+npx @codragraph/cli cypher 'MATCH (n:`Union`) RETURN n' --repo MyRepo
+```
+
+Generated graphstore reads should quote labels automatically in current builds. If an older CLI emits `MATCH (n:Union) RETURN n`, upgrade/retry before changing repo data.
+
+---
+
 ## Where to dig deeper
 
 - Architecture overview: [ARCHITECTURE.md](ARCHITECTURE.md)  
 - Agent safety rules: [GUARDRAILS.md](GUARDRAILS.md)  
+- AI agent CLI contract: [AI_AGENT_CLI_GUIDE.md](AI_AGENT_CLI_GUIDE.md)
+- Storage and retrieval policy: [STORAGE_AND_RETRIEVAL.md](STORAGE_AND_RETRIEVAL.md)
 - Tests: [TESTING.md](TESTING.md)

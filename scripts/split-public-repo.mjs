@@ -29,27 +29,27 @@ const downloadsDir = path.join(target, 'downloads', 'npm');
 const packages = [
   {
     name: '@codragraph/cli',
-    version: '2.1.1',
+    version: '2.1.2',
     purpose: 'CLI, MCP server, HTTP API, indexer, dashboard, feature-cluster context packs',
   },
   {
     name: '@codragraph/shared',
-    version: '2.1.1',
+    version: '2.1.2',
     purpose: 'Shared runtime/type contracts used by published packages',
   },
   {
     name: '@codragraph/graphstore',
-    version: '2.1.1',
+    version: '2.1.2',
     purpose: 'Content-addressed graph snapshots, diffs, branches, merges',
   },
   {
     name: '@codragraph/harness',
-    version: '2.1.1',
+    version: '2.1.2',
     purpose: 'Agent harness search, swarm, recipe memory',
   },
-  { name: '@codragraph/compress', version: '2.1.1', purpose: 'Context-pack compression utilities' },
-  { name: '@codragraph/sdk', version: '2.1.1', purpose: 'Programmatic SDK surface' },
-  { name: '@codragraph/org', version: '2.1.1', purpose: 'Tenant, RBAC, and audit helpers' },
+  { name: '@codragraph/compress', version: '2.1.2', purpose: 'Context-pack compression utilities' },
+  { name: '@codragraph/sdk', version: '2.1.2', purpose: 'Programmatic SDK surface' },
+  { name: '@codragraph/org', version: '2.1.2', purpose: 'Tenant, RBAC, and audit helpers' },
   { name: '@codragraph/claude-plugin', version: '0.1.2', purpose: 'Claude Code hooks and skills' },
   { name: '@codragraph/codex', version: '0.1.2', purpose: 'Codex hook installer' },
 ];
@@ -176,13 +176,13 @@ codragraph analyze .
 For local/offline verification, download the matching tarball from \`downloads/npm/\` and install it directly:
 
 \`\`\`bash
-npm install -g ./downloads/npm/codragraph-cli-2.1.1.tgz
+npm install -g ./downloads/npm/codragraph-cli-2.1.2.tgz
 \`\`\`
 
 Windows PowerShell:
 
 \`\`\`powershell
-npm install -g .\\downloads\\npm\\codragraph-cli-2.1.1.tgz
+npm install -g .\\downloads\\npm\\codragraph-cli-2.1.2.tgz
 codragraph analyze .
 \`\`\`
 
@@ -206,7 +206,7 @@ shasum -a 256 -c SHA256SUMS.txt
 Windows PowerShell:
 
 \`\`\`powershell
-Get-FileHash .\\downloads\\npm\\codragraph-cli-2.1.1.tgz -Algorithm SHA256
+Get-FileHash .\\downloads\\npm\\codragraph-cli-2.1.2.tgz -Algorithm SHA256
 \`\`\`
 
 ## License
@@ -233,13 +233,13 @@ codragraph analyze .
 ## Local tarball
 
 \`\`\`bash
-npm install -g ./downloads/npm/codragraph-cli-2.1.1.tgz
+npm install -g ./downloads/npm/codragraph-cli-2.1.2.tgz
 \`\`\`
 
 ## PowerShell
 
 \`\`\`powershell
-npm install -g .\\downloads\\npm\\codragraph-cli-2.1.1.tgz
+npm install -g .\\downloads\\npm\\codragraph-cli-2.1.2.tgz
 codragraph analyze .
 \`\`\`
 

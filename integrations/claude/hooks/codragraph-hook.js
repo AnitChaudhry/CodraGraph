@@ -106,7 +106,7 @@ function extractPattern(toolName, toolInput) {
  * Detects binary on PATH once, then runs exactly once.
  *
  * SECURITY: Never use shell: true with user-controlled arguments.
- * On Windows, invoke codragraph.cmd directly (no shell needed).
+ * On Windows, route through cmd /c so PATH shims resolve correctly.
  *
  * Note: the npm package is `@codragraph/cli`, but the executable it installs
  * is `codragraph`. PATH lookup must use the bin name; npx still uses the
@@ -115,10 +115,10 @@ function extractPattern(toolName, toolInput) {
 function runCodraGraphCli(args, cwd, timeout) {
   const isWin = process.platform === 'win32';
 
-  // Windows: direct spawn of `codragraph.cmd` / `npx.cmd` returns EINVAL on
+  // Windows: direct spawn of package-manager shims can return EINVAL on
   // Node 22 because Node refuses to spawn .cmd files outside a shell. Use
   // `cmd /c <bin> ...` and let cmd resolve via PATHEXT. This works whether
-  // `codragraph` is installed as `.cmd` shim, `.exe`, or via pnpm/yarn.
+  // `codragraph` is installed as `.cmd` shim, `.exe`, or via npm/bun/pnpm/yarn.
   // (Direct spawn is fine on POSIX; .cmd workaround is Windows-only.)
 
   // Detect whether 'codragraph' is on PATH (cheap check, no execution)
@@ -150,16 +150,23 @@ function runCodraGraphCli(args, cwd, timeout) {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   }
-  // npx fallback — also routed through `cmd /c` on Windows for the same reason.
+  // Package-runner fallback, routed through `cmd /c` on Windows for shim resolution.
+  const userAgent = (process.env.npm_config_user_agent || '').toLowerCase();
+  const execBase = path.basename(process.env.npm_execpath || '').toLowerCase();
+  const useBun = userAgent.startsWith('bun/') || execBase === 'bun' || execBase === 'bun.exe';
+  const runner = useBun
+    ? { bin: 'bunx', args: ['@codragraph/cli', ...args] }
+    : { bin: 'npx', args: ['-y', '@codragraph/cli', ...args] };
+
   if (isWin) {
-    return spawnSync('cmd', ['/c', 'npx', '-y', '@codragraph/cli', ...args], {
+    return spawnSync('cmd', ['/c', runner.bin, ...runner.args], {
       encoding: 'utf-8',
       timeout: timeout + 5000,
       cwd,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   }
-  return spawnSync('npx', ['-y', '@codragraph/cli', ...args], {
+  return spawnSync(runner.bin, runner.args, {
     encoding: 'utf-8',
     timeout: timeout + 5000,
     cwd,
@@ -263,7 +270,8 @@ function handlePostToolUse(input) {
   // If HEAD matches last indexed commit, no reindex needed
   if (currentHead && currentHead === lastCommit) return;
 
-  const analyzeCmd = `npx @codragraph/cli analyze${hadEmbeddings ? ' --embeddings' : ''}`;
+  const analyzeArgs = `analyze${hadEmbeddings ? ' --embeddings' : ''}`;
+  const analyzeCmd = `npx @codragraph/cli ${analyzeArgs} (or bunx @codragraph/cli ${analyzeArgs})`;
   sendHookResponse(
     'PostToolUse',
     `CodraGraph index is stale (last indexed: ${lastCommit ? lastCommit.slice(0, 7) : 'never'}). ` +

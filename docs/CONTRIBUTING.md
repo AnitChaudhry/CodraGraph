@@ -27,7 +27,7 @@ when sharing commands in docs, issues, or PRs.
 ## Branch and pull requests
 
 - Use short-lived branches off the default branch of the repo you are targeting.
-- **PR titles MUST follow the conventional-commit format** — `pr-labeler.yml` enforces this on every PR and auto-applies the matching label so release notes group the change correctly.
+- **PR titles MUST follow the conventional-commit format** â€” `pr-labeler.yml` enforces this on every PR and auto-applies the matching label so release notes group the change correctly.
 - **PR description:** what changed, why, how to verify (commands), and any risk or rollback notes.
 
 ### Pull request titles
@@ -38,29 +38,29 @@ Allowed types and the release-notes section each one lands in (defined in `.gith
 
 | Type | Label applied | Release-notes section |
 |------|---------------|-----------------------|
-| `feat` | `enhancement` | 🚀 Features |
-| `fix` | `bug` | 🐛 Bug Fixes |
-| `perf` | `performance` | 🏎️ Performance |
-| `refactor` | `refactor` | 🔄 Refactoring |
-| `test` | `test` | 🧪 Tests |
-| `ci` | `ci` | 👷 CI/CD |
-| `build` / `deps` | `dependencies` | 📦 Dependencies |
+| `feat` | `enhancement` | ðŸš€ Features |
+| `fix` | `bug` | ðŸ› Bug Fixes |
+| `perf` | `performance` | ðŸŽï¸ Performance |
+| `refactor` | `refactor` | ðŸ”„ Refactoring |
+| `test` | `test` | ðŸ§ª Tests |
+| `ci` | `ci` | ðŸ‘· CI/CD |
+| `build` / `deps` | `dependencies` | ðŸ“¦ Dependencies |
 | `docs` | `documentation` | (grouped under Other Changes unless a Docs section is added) |
 | `chore` / `revert` | `chore` | (excluded from release notes) |
 
-Append `!` to the type (e.g. `feat(api)!: drop /v1 endpoint`) or include `BREAKING CHANGE:` in the PR body to flag a breaking change — the labeler then adds the `breaking` label and the 💥 Breaking Changes section is rendered first.
+Append `!` to the type (e.g. `feat(api)!: drop /v1 endpoint`) or include `BREAKING CHANGE:` in the PR body to flag a breaking change â€” the labeler then adds the `breaking` label and the ðŸ’¥ Breaking Changes section is rendered first.
 
 Examples:
 
 ```text
 feat(web): add smart chat scroll
 fix(extractors): resolve silent contract mis-resolution
-perf: avoid O(n²) traversal in heritage walker
+perf: avoid O(nÂ²) traversal in heritage walker
 chore(deps): bump vitest to 3.0.0
 ci: standardize workflow concurrency
 ```
 
-Commits within a PR may use any style — only the **merged PR title** shows up in release notes, so that's the one the convention applies to.
+Commits within a PR may use any style â€” only the **merged PR title** shows up in release notes, so that's the one the convention applies to.
 
 ## Before you open a PR
 
@@ -68,22 +68,22 @@ Commits within a PR may use any style — only the **merged PR title** shows up 
 - [ ] Typecheck passes: `npm --prefix packages/core exec tsc -- --noEmit` and `npm --prefix apps/web exec tsc -- -b --noEmit`.
 - [ ] No secrets, tokens, or machine-specific paths committed.
 - [ ] Documentation updated if behavior or public CLI/MCP contract changes.
-- [ ] Pre-commit hook runs clean (`.husky/pre-commit` — formatting via lint-staged + typecheck for staged packages; tests run in CI only).
+- [ ] Pre-commit hook runs clean (`.husky/pre-commit` â€” formatting via lint-staged + typecheck for staged packages; tests run in CI only).
 
 ## Code review
 
 Maintainers may request changes for correctness, tests, performance, or consistency with existing patterns. Keeping diffs focused makes review faster.
 
-## GitHub Actions — Concurrency Convention
+## GitHub Actions â€” Concurrency Convention
 
 Every workflow under `.github/workflows/` MUST declare a top-level `concurrency:` block using this convention:
 
 - **Group key** starts with `${{ github.workflow }}` so no two workflows can collide on the same group name. The discriminator that follows is chosen per event shape:
   - Branch/tag scope: `${{ github.workflow }}-${{ github.ref }}`
   - Per-PR scope (for `issue_comment`, `pull_request_review*`, `pull_request` meta events): `${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}`
-  - `workflow_run` scope (e.g. `ci-report.yml`): `${{ github.workflow }}-${{ github.event.workflow_run.pull_requests[0].number || format('{0}/{1}', github.event.workflow_run.head_repository.full_name, github.event.workflow_run.head_branch) }}` — the fork fallback must be stable across reruns (never `workflow_run.id`, which is per-run-unique and defeats serialization).
+  - `workflow_run` scope (e.g. `ci-report.yml`): `${{ github.workflow }}-${{ github.event.workflow_run.pull_requests[0].number || format('{0}/{1}', github.event.workflow_run.head_repository.full_name, github.event.workflow_run.head_branch) }}` â€” the fork fallback must be stable across reruns (never `workflow_run.id`, which is per-run-unique and defeats serialization).
   - Global single-slot (manual dispatch utilities): `${{ github.workflow }}`
-  - **Reusable workflows invoked via `workflow_call`:** do NOT use `${{ github.workflow }}` in the group key — in called-workflow context its evaluation is ambiguous and can resolve to the caller's name, which would deadlock against the caller's own group. Use a hardcoded literal prefix and a `github.event_name`-aware expression that falls through to `github.run_id` for reusable invocations (see `ci.yml` for the canonical form). Approved literal prefixes: `CI-` (`ci.yml`) and `docker-build-push-` (`docker.yml`). The `check-workflow-concurrency.py` validation script must be updated whenever a new approved literal prefix is added.
+  - **Reusable workflows invoked via `workflow_call`:** do NOT use `${{ github.workflow }}` in the group key â€” in called-workflow context its evaluation is ambiguous and can resolve to the caller's name, which would deadlock against the caller's own group. Use a hardcoded literal prefix and a `github.event_name`-aware expression that falls through to `github.run_id` for reusable invocations (see `ci.yml` for the canonical form). Approved literal prefixes: `CI-` (`ci.yml`) and `docker-build-push-` (`docker.yml`). The `check-workflow-concurrency.py` validation script must be updated whenever a new approved literal prefix is added.
   - **Merge queue (`merge_group`)**: when this event is added, use `${{ github.workflow }}-${{ github.event.merge_group.head_ref }}` with `cancel-in-progress: false` (every queue entry is a distinct ref; never cancel).
 - **`cancel-in-progress` policy:**
 
@@ -121,7 +121,7 @@ Ubuntu, macOS, and Windows before the publish job is allowed to start.
 
 Trigger it in one of two ways:
 
-- Push a `v*` tag from the release commit, for example `v2.1.1`.
+- Push a `v*` tag from the release commit, for example `v2.1.2`.
 - Run the workflow manually with `publish=true` when maintainers need to
   republish missing packages or verify the release path.
 

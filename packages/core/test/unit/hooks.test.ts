@@ -118,15 +118,16 @@ describe('Windows .cmd extension handling', () => {
     ['CJS', CJS_HOOK],
     ['Plugin', PLUGIN_HOOK],
   ] as const) {
-    it(`${label} hook uses .cmd extensions for Windows npx`, () => {
+    it(`${label} hook routes package runners through cmd on Windows`, () => {
       const source = fs.readFileSync(hookPath, 'utf-8');
-      expect(source).toContain('npx.cmd');
+      expect(source).toContain("'/c'");
+      expect(source).toContain('runner.bin');
     });
   }
 
-  it('Plugin hook uses .cmd extension for Windows codragraph binary', () => {
+  it('Plugin hook uses cmd wrapper for Windows codragraph binary', () => {
     const source = fs.readFileSync(PLUGIN_HOOK, 'utf-8');
-    expect(source).toContain('codragraph.cmd');
+    expect(source).toContain("'/c', 'codragraph'");
   });
 });
 
