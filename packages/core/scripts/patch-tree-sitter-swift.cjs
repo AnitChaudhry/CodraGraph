@@ -49,7 +49,6 @@ if (!swiftDir) {
 const bindingPath = path.join(swiftDir, 'binding.gyp');
 
 try {
-
   const content = fs.readFileSync(bindingPath, 'utf8');
   let needsRebuild = false;
 

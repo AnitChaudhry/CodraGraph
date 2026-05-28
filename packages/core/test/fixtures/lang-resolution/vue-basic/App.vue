@@ -1,9 +1,7 @@
 <template>
   <div id="app">
     <h1>{{ title }}</h1>
-    <Button variant="primary" @click="onButtonClick">
-      Click me
-    </Button>
+    <Button variant="primary" @click="onButtonClick"> Click me </Button>
     <p>{{ userDisplay }}</p>
   </div>
 </template>
