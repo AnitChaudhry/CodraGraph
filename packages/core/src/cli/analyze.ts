@@ -354,7 +354,7 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
       console.warn = origWarn;
       console.error = origError;
       bar.stop();
-      console.log('  Already up to date\n');
+      console.log(`  ${result.reuseReason ?? 'Already up to date'}\n`);
       // Safe to return without process.exit(0) — the early-return path in
       // runFullAnalysis never opens LadybugDB, so no native handles prevent exit.
       return;

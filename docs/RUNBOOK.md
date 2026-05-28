@@ -34,6 +34,11 @@ Use `npx @codragraph/cli ...` or `bunx @codragraph/cli ...` from any path after 
 npx @codragraph/cli analyze
 ```
 
+On current builds, `analyze` first checks the previous indexed commit. If the
+new commit only touched files outside indexed code, Markdown/docs, config, and
+file structure, it reuses the existing graph and updates metadata instead of
+paying the full parse/load cost.
+
 **Force full rebuild** (same commit but suspect corruption or changed ignore rules):
 
 ```bash

@@ -11,8 +11,10 @@
 
 import path from 'path';
 import fs from 'fs/promises';
+import { execFileSync } from 'node:child_process';
 import * as fsSync from 'node:fs';
 import * as v8 from 'node:v8';
+import { getLanguageFromFilename } from '@codragraph/shared';
 import { runPipelineFromRepo } from './ingestion/pipeline.js';
 import {
   initCgdb,
@@ -31,8 +33,10 @@ import {
   registerRepo,
   cleanupOldKuzuFiles,
   INDEX_SCHEMA_VERSION,
+  type RepoMeta,
 } from '../storage/repo-manager.js';
 import { getCurrentCommit, getRemoteUrl, hasGitDir, getInferredRepoName } from '../storage/git.js';
+import { shouldIgnorePath } from '../config/ignore-service.js';
 import { recordAnalysisSnapshot } from './graphstore/index.js';
 import type { CachedEmbedding } from './embeddings/types.js';
 import type { ContentEncoding } from '@codragraph/graphstore';
@@ -105,12 +109,57 @@ export interface AnalyzeResult {
     embeddings?: number;
   };
   alreadyUpToDate?: boolean;
+  /** User-facing explanation for a reused index fast path. */
+  reuseReason?: string;
+  /** True when the git commit advanced but indexed inputs did not. */
+  reusedExistingIndex?: boolean;
   /** The raw pipeline result — only populated when needed by callers (e.g. skill generation). */
   pipelineResult?: any;
 }
 
 /** Threshold: auto-skip embeddings for repos with more nodes than this */
 const EMBEDDING_NODE_LIMIT = 50_000;
+
+const GENERATED_AGENT_CONTEXT_PATHS = new Set(['agents.md', 'claude.md']);
+const GENERATED_AGENT_CONTEXT_PREFIXES = [
+  '.claude/skills/generated/',
+  '.cursor/rules/codragraph-generated/',
+];
+const IGNORE_CONTROL_FILES = new Set(['.gitignore', '.codragraphignore']);
+const GRAPH_CONFIG_BASENAMES = new Set([
+  'package.json',
+  'tsconfig.json',
+  'jsconfig.json',
+  'go.mod',
+  'cargo.toml',
+  'pyproject.toml',
+  'requirements.txt',
+  'composer.json',
+  'gemfile',
+  'pom.xml',
+  'build.gradle',
+  'build.gradle.kts',
+  'settings.gradle',
+  'settings.gradle.kts',
+  'pubspec.yaml',
+  'pubspec.yml',
+  'mix.exs',
+  'rebar.config',
+  'cmakelists.txt',
+  'makefile',
+  'dockerfile',
+]);
+const GRAPH_CONFIG_PATTERNS = [/^tsconfig\..+\.json$/i, /^jsconfig\..+\.json$/i];
+const MARKDOWN_EXTENSIONS = new Set(['.md', '.mdx']);
+
+export interface AnalyzeChangedPath {
+  /** Git name-status token, e.g. M, A, D, R100. */
+  status: string;
+  /** Current path for additions/modifications, or deleted path for deletions. */
+  path: string;
+  /** Previous path for renames/copies. */
+  previousPath?: string;
+}
 
 export const PHASE_LABELS: Record<string, string> = {
   extracting: 'Scanning files',
@@ -127,6 +176,148 @@ export const PHASE_LABELS: Record<string, string> = {
   fts: 'Creating search indexes',
   embeddings: 'Generating embeddings',
   done: 'Done',
+};
+
+const normalizeGitPath = (filePath: string): string => filePath.replace(/\\/g, '/');
+
+export const parseGitNameStatus = (raw: string): AnalyzeChangedPath[] => {
+  const tokens = raw.split('\0').filter(Boolean);
+  const changes: AnalyzeChangedPath[] = [];
+
+  for (let i = 0; i < tokens.length; ) {
+    const status = tokens[i++] ?? '';
+    const code = status[0]?.toUpperCase();
+
+    if (code === 'R' || code === 'C') {
+      const previousPath = tokens[i++];
+      const nextPath = tokens[i++];
+      if (previousPath && nextPath) {
+        changes.push({
+          status,
+          path: normalizeGitPath(nextPath),
+          previousPath: normalizeGitPath(previousPath),
+        });
+      }
+      continue;
+    }
+
+    const changedPath = tokens[i++];
+    if (status && changedPath) {
+      changes.push({ status, path: normalizeGitPath(changedPath) });
+    }
+  }
+
+  return changes;
+};
+
+export const listChangedPathsBetweenCommits = (
+  repoPath: string,
+  fromRef: string,
+  toRef: string,
+): AnalyzeChangedPath[] | null => {
+  if (!fromRef || !toRef || fromRef === toRef) return [];
+
+  try {
+    const stdout = execFileSync('git', ['diff', '--name-status', '-z', `${fromRef}..${toRef}`], {
+      cwd: repoPath,
+      encoding: 'utf8',
+      maxBuffer: 20 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return parseGitNameStatus(stdout);
+  } catch {
+    return null;
+  }
+};
+
+export const isGeneratedAgentContextPath = (filePath: string): boolean => {
+  const normalized = normalizeGitPath(filePath).toLowerCase();
+  const basename = path.posix.basename(normalized);
+  return (
+    GENERATED_AGENT_CONTEXT_PATHS.has(basename) ||
+    GENERATED_AGENT_CONTEXT_PREFIXES.some((prefix) => normalized.startsWith(prefix))
+  );
+};
+
+export const isGraphContentPath = (filePath: string): boolean => {
+  const normalized = normalizeGitPath(filePath);
+  const basename = path.posix.basename(normalized);
+  const lowerBasename = basename.toLowerCase();
+
+  if (isGeneratedAgentContextPath(normalized)) return false;
+  if (IGNORE_CONTROL_FILES.has(lowerBasename)) return true;
+  if (shouldIgnorePath(normalized)) return false;
+  if (getLanguageFromFilename(normalized) !== null) return true;
+
+  const ext = path.posix.extname(lowerBasename);
+  if (MARKDOWN_EXTENSIONS.has(ext)) return true;
+  if (GRAPH_CONFIG_BASENAMES.has(lowerBasename)) return true;
+  return GRAPH_CONFIG_PATTERNS.some((pattern) => pattern.test(basename));
+};
+
+export const changedPathAffectsGraph = (change: AnalyzeChangedPath): boolean => {
+  const statusCode = change.status[0]?.toUpperCase();
+  const paths = [change.path, change.previousPath].filter((p): p is string => Boolean(p));
+
+  if (paths.some(isGraphContentPath)) return true;
+
+  // Add/delete/rename/copy can change File/Folder structure even when content
+  // is not parsed. Ignored or generated-agent paths are outside the index.
+  if (statusCode === 'A' || statusCode === 'D' || statusCode === 'R' || statusCode === 'C') {
+    return paths.some((p) => !isGeneratedAgentContextPath(p) && !shouldIgnorePath(p));
+  }
+
+  // Modified non-code/non-doc files keep the same path and are not read by the
+  // graph pipeline, so the existing graph can be reused.
+  if (statusCode === 'M' || statusCode === 'T') return false;
+
+  // Unknown git status: rebuild rather than risk stale graph state.
+  return true;
+};
+
+export const getGraphRelevantChangedPaths = (
+  changes: readonly AnalyzeChangedPath[],
+): AnalyzeChangedPath[] => changes.filter(changedPathAffectsGraph);
+
+export const getAnalyzeConfigRebuildReason = (
+  existingMeta: Pick<RepoMeta, 'compress' | 'stats'>,
+  options: Pick<AnalyzeOptions, 'compress' | 'embeddings'>,
+): string | null => {
+  const existingCompress = existingMeta.compress ?? 'none';
+  if (options.compress && options.compress !== existingCompress) {
+    return `requested compression changed from ${existingCompress} to ${options.compress}`;
+  }
+
+  if (options.embeddings && (existingMeta.stats?.embeddings ?? 0) === 0) {
+    return 'embeddings were requested but the existing index has no vectors';
+  }
+
+  return null;
+};
+
+const formatChangeForLog = (change: AnalyzeChangedPath): string =>
+  change.previousPath ? `${change.previousPath} -> ${change.path}` : change.path;
+
+const buildReusedMeta = (
+  existingMeta: RepoMeta,
+  repoPath: string,
+  currentCommit: string,
+): RepoMeta => ({
+  ...existingMeta,
+  repoPath,
+  lastCommit: currentCommit,
+  indexedAt: new Date().toISOString(),
+  schemaVersion: INDEX_SCHEMA_VERSION,
+  remoteUrl: hasGitDir(repoPath) ? getRemoteUrl(repoPath) : existingMeta.remoteUrl,
+});
+
+const pathExists = async (targetPath: string): Promise<boolean> => {
+  try {
+    await fs.stat(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 // ---------------------------------------------------------------------------
@@ -236,10 +427,21 @@ export async function runFullAnalysis(
   // CREATE NODE TABLE.
   const schemaUpToDate =
     !!existingMeta && (existingMeta.schemaVersion ?? 0) >= INDEX_SCHEMA_VERSION;
+  const existingCgdbPresent = existingMeta ? await pathExists(cgdbPath) : false;
+  const storageRebuildReason =
+    existingMeta && schemaUpToDate && !existingCgdbPresent
+      ? 'graph database files are missing'
+      : null;
+  const configRebuildReason =
+    storageRebuildReason ??
+    (existingMeta && schemaUpToDate && !options.force
+      ? getAnalyzeConfigRebuildReason(existingMeta, options)
+      : null);
   if (
     existingMeta &&
     schemaUpToDate &&
     !options.force &&
+    !configRebuildReason &&
     existingMeta.lastCommit === currentCommit
   ) {
     // Non-git folders have currentCommit = '' — always rebuild since we can't detect changes
@@ -250,6 +452,62 @@ export async function runFullAnalysis(
         stats: existingMeta.stats ?? {},
         alreadyUpToDate: true,
       };
+    }
+  }
+  if (existingMeta && schemaUpToDate && !options.force && configRebuildReason) {
+    log(`Re-analyzing: ${configRebuildReason}.`);
+  }
+  if (
+    existingMeta &&
+    schemaUpToDate &&
+    !options.force &&
+    !configRebuildReason &&
+    currentCommit !== '' &&
+    existingMeta.lastCommit !== currentCommit
+  ) {
+    const changedPaths = listChangedPathsBetweenCommits(
+      repoPath,
+      existingMeta.lastCommit,
+      currentCommit,
+    );
+
+    if (changedPaths) {
+      const graphRelevantChanges = getGraphRelevantChangedPaths(changedPaths);
+      if (graphRelevantChanges.length === 0) {
+        const reusedMeta = buildReusedMeta(existingMeta, repoPath, currentCommit);
+        await saveMeta(storagePath, reusedMeta);
+        const projectName = await registerRepo(repoPath, reusedMeta, {
+          name: options.registryName,
+          allowDuplicateName: options.allowDuplicateName,
+        });
+        if (hasGitDir(repoPath)) {
+          await addToGitignore(repoPath);
+        }
+
+        const reuseReason =
+          `Smart analyze reused the existing graph; ${changedPaths.length} changed ` +
+          `file(s) did not affect indexed code, docs, config, or file structure.`;
+        log(reuseReason);
+        progress('done', 100, 'Existing graph reused');
+        return {
+          repoName: projectName,
+          repoPath,
+          stats: reusedMeta.stats ?? {},
+          alreadyUpToDate: true,
+          reusedExistingIndex: true,
+          reuseReason,
+        };
+      }
+
+      const preview = graphRelevantChanges.slice(0, 5).map(formatChangeForLog).join(', ');
+      const suffix = graphRelevantChanges.length > 5 ? ', ...' : '';
+      log(
+        `Smart analyze: ${graphRelevantChanges.length} indexed change(s) require rebuild` +
+          (preview ? ` (${preview}${suffix})` : '') +
+          '.',
+      );
+    } else {
+      log('Smart analyze: could not inspect git diff; rebuilding.');
     }
   }
   if (existingMeta && !schemaUpToDate) {

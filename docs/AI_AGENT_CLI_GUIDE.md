@@ -43,6 +43,7 @@ Related docs:
 | Need to know what repos MCP can see | `npx @codragraph/cli list` or MCP `list_repos` | Pass `repo` on later tools when more than one repo is listed. |
 | First index or stale index | `npx @codragraph/cli analyze` | Run from the target repo root unless passing an explicit path. |
 | Same commit, suspect stale generated data | `npx @codragraph/cli analyze --force` | Does not require deleting `.codragraph/`. |
+| New commit touches only generated agent files, lockfiles, or ignored assets | `npx @codragraph/cli analyze` | Smart analyze reuses the existing graph and advances metadata when indexed inputs did not change. |
 | Existing index has vectors and the user wants to keep them | `npx @codragraph/cli analyze --embeddings` | Check `.codragraph/meta.json` for `stats.embeddings`. |
 | Large repo, first pass | `npx @codragraph/cli analyze --compress brotli` | Use `--compress zstd` only on Node 22.15 or newer. Avoid `--embeddings`. |
 | Corrupt or huge index after user approves reset | `npx @codragraph/cli clean --force` then `npx @codragraph/cli analyze` | Add `--embeddings` only if vectors are required. |
@@ -52,6 +53,12 @@ Related docs:
 | Need custom graph query | `npx @codragraph/cli cypher "MATCH (n) RETURN count(n) LIMIT 1" --repo MyRepo` | Read schema first when possible. |
 
 Use `bunx @codragraph/cli ...` as the Bun equivalent for each `npx @codragraph/cli ...` command.
+
+`analyze` is incremental at the command level: if the previous index is on the
+current schema and the new commit changed only files outside indexed code,
+Markdown/docs, config, and file structure, it prints a smart-reuse message
+instead of rebuilding LadybugDB. Use `--force` when ignore rules changed or you
+need to rebuild generated graph data despite an unchanged commit.
 
 ## Monorepo Source CLI
 

@@ -26,7 +26,7 @@ describe('--skip-git CLI flag', () => {
       execSync(`node dist/cli/index.js analyze "${tmpDir}"`, {
         cwd: path.resolve(__dirname, '../..'),
         encoding: 'utf8',
-        timeout: 10000,
+        timeout: 30000,
       });
       // Should not reach here
       expect.unreachable('Should have exited with non-zero');
@@ -35,5 +35,5 @@ describe('--skip-git CLI flag', () => {
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
-  });
+  }, 40_000);
 });

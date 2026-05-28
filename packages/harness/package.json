@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/harness",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Auto-tuned harnesses for AI agents — Meta-Harness algorithm with Pareto search over (accuracy, tokens, latency)",
   "author": {
     "name": "Thinqmesh Technologies",
