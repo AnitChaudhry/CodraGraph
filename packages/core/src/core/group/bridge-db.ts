@@ -300,6 +300,25 @@ export async function retryRename(src: string, dst: string, attempts = 3): Promi
   }
 }
 
+async function removeBridgeArtifacts(basePath: string): Promise<void> {
+  for (const candidate of [basePath, `${basePath}.wal`, `${basePath}.lock`]) {
+    try {
+      await fsp.rm(candidate, { recursive: true, force: true });
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+async function renameBridgeArtifactIfExists(src: string, dst: string): Promise<void> {
+  try {
+    await fsp.access(src);
+  } catch {
+    return;
+  }
+  await retryRename(src, dst);
+}
+
 /* ------------------------------------------------------------------ */
 /*  writeBridgeMeta / readBridgeMeta                                  */
 /* ------------------------------------------------------------------ */
@@ -400,12 +419,9 @@ export async function writeBridge(
     }
   };
 
-  // Clean up any leftover tmp
-  try {
-    await fsp.rm(tmpPath, { recursive: true, force: true });
-  } catch {
-    /* ignore */
-  }
+  // Clean up any leftover tmp plus native sidecars. LadybugDB stores WAL/lock
+  // files next to the database path, not inside it.
+  await removeBridgeArtifacts(tmpPath);
 
   // 1. Create temp DB, insert all data.
   //
@@ -575,15 +591,25 @@ export async function writeBridge(
   }
 
   // 3. Atomic swap: old→.bak, tmp→final, rm .bak
+  // Keep LadybugDB sidecars paired with the path rename. WAL files live next
+  // to the DB path, so renaming only the base path can hide fresh schema/data.
+  await removeBridgeArtifacts(bakPath);
   try {
     await fsp.access(finalPath);
     await retryRename(finalPath, bakPath);
+    await renameBridgeArtifactIfExists(`${finalPath}.wal`, `${bakPath}.wal`);
   } catch {
     /* no existing db */
   }
   await retryRename(tmpPath, finalPath);
+  await renameBridgeArtifactIfExists(`${tmpPath}.wal`, `${finalPath}.wal`);
   try {
-    await fsp.rm(bakPath, { recursive: true, force: true });
+    await fsp.rm(`${tmpPath}.lock`, { force: true });
+  } catch {
+    /* ignore */
+  }
+  try {
+    await removeBridgeArtifacts(bakPath);
   } catch {
     /* ignore */
   }
@@ -616,6 +642,8 @@ export async function openBridgeDbReadOnly(groupDir: string): Promise<BridgeHand
     try {
       await fsp.access(bakPath);
       await retryRename(bakPath, dbPath);
+      await renameBridgeArtifactIfExists(`${bakPath}.wal`, `${dbPath}.wal`);
+      await fsp.rm(`${bakPath}.lock`, { force: true });
     } catch {
       return null;
     }
