@@ -127,7 +127,7 @@ export function findContractNode(
 export async function openBridgeDb(dbPath: string): Promise<BridgeHandle> {
   const parentDir = path.dirname(dbPath);
   await fsp.mkdir(parentDir, { recursive: true });
-  const db = new cgdb.Database(dbPath, 0, false, false); // writable
+  const db = new cgdb.Database(dbPath, 0, false, false, BRIDGE_MAX_DB_SIZE_BYTES); // writable
   const conn = new cgdb.Connection(db);
   return { _db: db, _conn: conn, groupDir: parentDir } as BridgeHandle;
 }
@@ -357,6 +357,10 @@ export interface WriteBridgeReport {
 }
 
 const MAX_SAMPLE_ERRORS = 10;
+// LadybugDB defaults maxDBSize to an 8 TiB mmap window on some platforms.
+// Bridge databases are small contract registries, so cap the mapping to keep
+// CI and low-resource user machines from failing before the first query.
+const BRIDGE_MAX_DB_SIZE_BYTES = 512 * 1024 * 1024;
 
 function errMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
@@ -638,7 +642,7 @@ export async function openBridgeDbReadOnly(groupDir: string): Promise<BridgeHand
     let db: cgdb.Database | undefined;
     let conn: cgdb.Connection | undefined;
     try {
-      db = new cgdb.Database(dbPath, 0, false, true); // readOnly
+      db = new cgdb.Database(dbPath, 0, false, true, BRIDGE_MAX_DB_SIZE_BYTES); // readOnly
       conn = new cgdb.Connection(db);
       return { _db: db, _conn: conn, groupDir } as BridgeHandle;
     } catch (err) {

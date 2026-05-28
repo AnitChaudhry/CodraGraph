@@ -124,7 +124,7 @@ jobs:
         with:
           bun-version: latest
       - name: install with Bun
-        run: bun install --no-save --ignore-scripts
+        run: rm -f package-lock.json && bun install --no-save --ignore-scripts --no-lockfile
       - name: build representative workspaces with Bun
         run: |
           set -e

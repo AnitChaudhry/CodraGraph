@@ -88,7 +88,11 @@ function resolveCodragraphBin(): string | null {
  */
 function isRunningUnderBun(): boolean {
   const userAgent = (process.env.npm_config_user_agent ?? '').toLowerCase();
-  const execPath = path.basename(process.env.npm_execpath ?? '').toLowerCase();
+  const rawExecPath = process.env.npm_execpath ?? '';
+  const execPath =
+    process.platform === 'win32'
+      ? path.win32.basename(rawExecPath).toLowerCase()
+      : path.basename(rawExecPath).toLowerCase();
   return userAgent.startsWith('bun/') || execPath === 'bun' || execPath === 'bun.exe';
 }
 
