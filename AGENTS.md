@@ -151,6 +151,12 @@ Indexed as **CodraGraph** (4325 symbols, 10556 relationships, 300 execution flow
 3. `codragraph_detect_changes()` confirms expected scope
 4. All d=1 dependents were updated
 
+For this monorepo's source CLI, run the pre-commit graph check from the repo
+root as `npm run codragraph:detect-staged`. Avoid
+`npm --prefix packages/core exec tsx src/cli/index.ts ...` from the root; on
+Windows/npm it can resolve `src/cli/index.ts` relative to the root instead of
+`packages/core/`.
+
 ## Keeping the Index Fresh
 
 ```bash

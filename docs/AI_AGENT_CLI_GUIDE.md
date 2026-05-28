@@ -53,6 +53,30 @@ Related docs:
 
 Use `bunx @codragraph/cli ...` as the Bun equivalent for each `npx @codragraph/cli ...` command.
 
+## Monorepo Source CLI
+
+When working inside the CodraGraph monorepo and running the TypeScript CLI from
+source, use the root scripts:
+
+```powershell
+npm run codragraph:source -- detect-changes --scope staged
+npm run codragraph:detect-staged
+```
+
+Do not run this from the repo root:
+
+```powershell
+npm --prefix packages/core exec tsx src/cli/index.ts detect-changes --scope staged
+```
+
+That form lets `tsx` resolve `src/cli/index.ts` from the root directory on some
+npm/Windows combinations, so it fails before the CLI can run. If you need to
+call `tsx` directly from the root, use the explicit path:
+
+```powershell
+npx tsx packages/core/src/cli/index.ts detect-changes --scope staged
+```
+
 ## MCP Over HTTP
 
 The HTTP MCP endpoint is:

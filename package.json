@@ -1,7 +1,7 @@
 {
   "name": "codragraph-monorepo",
   "private": true,
-  "description": "CodraGraph monorepo — code intelligence platform (CLI/MCP, web UI, shared types, plugins, harness, SDK)",
+  "description": "CodraGraph monorepo - code intelligence platform (CLI/MCP, web UI, shared types, plugins, harness, SDK)",
   "author": {
     "name": "Thinqmesh Technologies",
     "email": "hello@thinqmesh.com",
@@ -30,6 +30,8 @@
   ],
   "scripts": {
     "prepare": "husky",
+    "codragraph:source": "tsx packages/core/src/cli/index.ts",
+    "codragraph:detect-staged": "tsx packages/core/src/cli/index.ts detect-changes --scope staged",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
