@@ -1,4 +1,4 @@
-# CodraGraph PR Review â€” composite GitHub Action.
+# CodraGraph PR Review - composite GitHub Action.
 #
 # Indexes the PR's base and head refs, runs `codragraph diff --semantic --json`,
 # formats the result as a sticky PR comment. Two modes:

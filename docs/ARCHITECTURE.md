@@ -2,6 +2,41 @@
 
 Monorepo: **CLI/MCP** (`packages/core/`) + **browser UI** (`apps/web/`) + SDK, harness, graphstore, compression, org, and editor integrations.
 
+## Public Architecture Overview
+
+CodraGraph is a local-first code intelligence stack. The CLI indexes a user's
+repo, writes a local `.codragraph/` graph store, and exposes the same graph
+through four public surfaces: CLI commands, MCP tools/resources, HTTP API, and
+the web dashboard.
+
+```mermaid
+flowchart TB
+    UserRepo["User repository"] --> CLI["codragraph analyze"]
+    CLI --> Pipeline["Ingestion pipeline"]
+    Pipeline --> Graph[".codragraph / LadybugDB"]
+    Graph --> Search["BM25 + optional embeddings"]
+    Graph --> Graphstore["Versioned graphstore snapshots"]
+    Graph --> Tools["MCP tools and resources"]
+    Graph --> Api["HTTP API /api/*"]
+    Api --> Dashboard["Bundled or hosted web dashboard"]
+    Tools --> Agents["Claude, Cursor, Codex, OpenCode, custom MCP clients"]
+```
+
+The public repo includes this documentation, branding, downloadable package
+tarballs, and package README mirrors. It intentionally does not expose private
+development source directories; published package contents are available in the
+npm tarballs under `downloads/npm/`.
+
+## Runtime Surfaces
+
+| Surface | Entry point | Primary users | Notes |
+|---|---|---|---|
+| CLI | `codragraph analyze/query/context/impact/serve` | Humans and shell-driven agents | Cross-platform command forms for PowerShell, macOS, and Linux. |
+| MCP stdio | `codragraph mcp` | Agent hosts | Native tools such as `query`, `context`, `impact`, `detect_changes`, and `feature_context`. |
+| HTTP API | `codragraph serve` | Web dashboard and custom clients | REST health is `/api/info`; HTTP MCP is StreamableHTTP at `/api/mcp`. |
+| Web dashboard | `http://127.0.0.1:4747` or hosted UI | Local users and hosted UI users | Local data stays on the user's machine. |
+| SDK | `@codragraph/sdk` | Agent builders | Programmatic graph, harness, graphstore, recipes, and compression surfaces. |
+
 ## Repository layout
 
 | Path | Role |

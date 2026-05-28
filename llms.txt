@@ -1,20 +1,34 @@
-CodraGraph monorepo (CLI + web UI)
+CodraGraph public context for LLMs and AI coding agents
 
-# Core docs (read first for any contribution)
-- AGENTS.md — canonical agent instructions, CodraGraph MCP tool reference
-- GUARDRAILS.md — non-negotiables and escalation triggers
+Core reading order:
+- README.md - product overview, install commands, package matrix, dashboard usage.
+- docs/README.md - public documentation index and architecture reading order.
+- docs/INSTALL.md - npm, Bun, local dashboard, hosted dashboard, plugin setup.
+- docs/ARCHITECTURE.md - runtime topology, ingestion pipeline, graph schema.
+- docs/AI_AGENT_CLI_GUIDE.md - supported commands, MCP HTTP behavior, recovery rules.
+- docs/STORAGE_AND_RETRIEVAL.md - index size, BM25, embeddings, compression, corruption recovery.
+- docs/GUARDRAILS.md - safety boundaries for cleanup, embeddings, MCP routes, and DB files.
+- docs/RUNBOOK.md - operational checks and copy-paste recovery commands.
 
-# Operational (read when running commands or debugging)
-- RUNBOOK.md — copy-paste commands for common workflows
-- TESTING.md — test commands for both packages
-- CONTRIBUTING.md — contribution workflow and PR conventions
+Key runtime packages:
+- packages/core - @codragraph/cli: CLI, MCP, HTTP API, indexer, web dashboard bundle.
+- apps/web - React/Vite dashboard served by codragraph serve.
+- packages/shared - shared graph/API types.
+- packages/sdk - programmatic SDK over graph, harness, graphstore, and compression.
+- packages/graphstore - content-addressed graph snapshots, diff, branch, merge, blame.
+- packages/harness - harness search, swarm, recipe memory.
+- packages/compress - context-pack compression utilities.
+- packages/org - tenant, RBAC, and audit helpers.
 
-# Architecture (read for design context)
-- ARCHITECTURE.md — system overview, data flow, component relationships
+Public repo note:
+- The public distribution repo mirrors docs, branding, package README files, and npm tarballs.
+- It intentionally excludes private source directories such as packages/, apps/, integrations/, infra/, and marketing/.
+- Package README mirrors are under docs/packages/ and docs/integrations/ in the public export.
 
-# Key directories
-- codragraph/ (CLI/core, MCP server — TypeScript)
-- codragraph-web/ (web UI — React/Vite/WASM)
-- eval/ (SWE-bench evaluation harness — Python)
-- codragraph-claude-plugin/ (Claude marketplace config)
-- codragraph-cursor-integration/ (Cursor integration config)
+Agent rules:
+- Use GET /api/info for REST health checks.
+- Use POST /api/mcp only through an MCP StreamableHTTP client.
+- Do not call invented REST routes such as /api/mcp/tools/list.
+- Do not delete .codragraph/, edit cgdb/cgdb.wal, or run clean --force without user approval.
+- Do not enable --embeddings by default; BM25 and graph search work without vectors.
+- Prefer analyze --compress brotli for large repos before adding vectors.

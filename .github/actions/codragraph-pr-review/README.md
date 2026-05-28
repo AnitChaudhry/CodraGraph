@@ -1,6 +1,6 @@
 # CodraGraph PR Review Action
 
-> âš ï¸ **Requires `@codragraph/cli â‰¥ 1.7.0`.** This action depends on three CLI
+> ⚠️ **Requires `@codragraph/cli ≥ 1.7.0`.** This action depends on three CLI
 > flags introduced in 1.7.0: `analyze --no-setup`, `diff --semantic --json`,
 > and the graphstore `headCommit` write to `.codragraph/meta.json`. With an
 > earlier CLI the action hard-fails on the analyze step. Pin
@@ -9,17 +9,17 @@
 Posts a structural-diff comment on every PR using `codragraph diff --semantic
 --json`. Two modes:
 
-- **`deterministic`** (default, free) â€” pure structural diff: removed APIs,
+- **`deterministic`** (default, free) — pure structural diff: removed APIs,
   added APIs, modified signatures, added/removed execution flows. No LLM
   calls. Sticky comment updates on every push.
-- **`review`** (opt-in, paid) â€” same as deterministic, plus calls Anthropic
+- **`review`** (opt-in, paid) — same as deterministic, plus calls Anthropic
   with the diff JSON to generate a richer human-readable review (risk
   justification, likely d=1 callers, what's probably missing). Falls back
   to deterministic if the API call fails.
 
 This is the **automation side** of PR review. The interactive side
 (`codragraph-pr-review` skill) lets a human ask Claude to review a PR using
-the same MCP tools â€” both can run on the same PR.
+the same MCP tools — both can run on the same PR.
 
 Indexes created by current `@codragraph/cli` builds include FeatureCluster
 nodes, so future semantic diffs can show when a PR changes the shape of a
@@ -65,7 +65,7 @@ jobs:
 | Input | Required | Default | Notes |
 |-------|----------|---------|-------|
 | `mode` | no | `deterministic` | `deterministic` or `review`. |
-| `anthropic-api-key` | when `mode=review` | â€” | Use a repo secret, never hardcode. |
+| `anthropic-api-key` | when `mode=review` | — | Use a repo secret, never hardcode. |
 | `anthropic-model` | no | `claude-sonnet-4-6` | Any Anthropic model id. |
 | `codragraph-version` | no | `2.1.2` | Exact version recommended; npm dist-tags are accepted when you intentionally want floating upgrades. |
 | `comment-marker` | no | `<!-- codragraph-pr-review -->` | HTML marker the action looks for to update its sticky comment. |
@@ -73,11 +73,11 @@ jobs:
 
 ## What the comment looks like
 
-> ## CodraGraph PR Review â€” Structural Diff
+> ## CodraGraph PR Review — Structural Diff
 >
 > **Risk:** MEDIUM
 >
-> **Base:** `abc1234â€¦`  **Head:** `def5678â€¦`
+> **Base:** `abc1234…`  **Head:** `def5678…`
 >
 > ### Summary
 >
@@ -87,14 +87,14 @@ jobs:
 > | Modified | 5 |
 > | Added flows | 1 |
 >
-> ### âš ï¸ Removed APIs
+> ### ⚠️ Removed APIs
 > - `validatePayment` (Function)
 > - `PaymentInputV1` (Class)
 >
 > ### Modified symbols
 > | Symbol | Table | Changes |
 > |--------|-------|---------|
-> | `â€¦` | Function | params 3â†’4 |
+> | `…` | Function | params 3→4 |
 
 In `review` mode, an additional `### Review notes` section appears above the
 summary with risk justification, likely callers affected, and what's
@@ -104,10 +104,10 @@ probably missing.
 
 1. Checkout with full history (`fetch-depth: 0`).
 2. Install `@codragraph/cli` globally on the runner.
-3. `git checkout <base-sha>` â†’ `codragraph analyze --no-setup`.
-4. Read `.codragraph/meta.json#headCommit` â†’ save as `BASE_COMMIT`.
-5. `git checkout <head-sha>` â†’ `codragraph analyze --no-setup`.
-6. Read `.codragraph/meta.json#headCommit` â†’ save as `HEAD_COMMIT`.
+3. `git checkout <base-sha>` → `codragraph analyze --no-setup`.
+4. Read `.codragraph/meta.json#headCommit` → save as `BASE_COMMIT`.
+5. `git checkout <head-sha>` → `codragraph analyze --no-setup`.
+6. Read `.codragraph/meta.json#headCommit` → save as `HEAD_COMMIT`.
 7. `codragraph diff "$BASE_COMMIT" "$HEAD_COMMIT" --semantic --json > diff.json`.
 8. Render Markdown via `format-comment.mjs`.
 9. (review mode only) Pipe through `llm-review.mjs` for the augmented version.
@@ -117,13 +117,13 @@ probably missing.
 
 - `deterministic` mode: pure compute. Action minutes only.
 - `review` mode: one Anthropic API call per PR push, with a compacted diff
-  (top 30 added/removed APIs, top 50 modifications). Typical PR â‰ˆ $0.02â€“$0.10
+  (top 30 added/removed APIs, top 50 modifications). Typical PR ≈ $0.02–$0.10
   depending on diff size and chosen model. Use a smaller model
   (`claude-haiku-4-5-20251001`) for high-volume repos.
 
 ## Caveats
 
-- The action runs `codragraph analyze` twice per PR â€” once for base, once for
+- The action runs `codragraph analyze` twice per PR — once for base, once for
   head. On a 50k-LoC repo this is ~30s + ~30s plus the cli install (~30s cold).
   Budget ~2 minutes per PR push.
 - If your repo's tree-sitter native deps don't build on `ubuntu-latest`,

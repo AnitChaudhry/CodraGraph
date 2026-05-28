@@ -1,20 +1,20 @@
-# Definition of Done â€” CodraGraph
+# Definition of Done — CodraGraph
 
-Last reviewed: 2026-05-25 Â· Version: 2.1.2
+Last reviewed: 2026-05-25 · Version: 2.1.2
 
 This document defines the repo-wide completion bar for production-ready changes in CodraGraph. It is the stable baseline. Implementation prompts, agent behavior, and review workflows may add task-specific checks, but they must never weaken this bar.
 
 Use it together with:
 
-- `AGENTS.md` â€” agent-facing rules of engagement
-- `GUARDRAILS.md` â€” hard safety constraints
-- `CONTRIBUTING.md` â€” contributor workflow
-- `TESTING.md` â€” test strategy and coverage expectations
-- `ARCHITECTURE.md` â€” pipeline boundaries, Call-Resolution DAG, LanguageProvider contract
+- `AGENTS.md` — agent-facing rules of engagement
+- `GUARDRAILS.md` — hard safety constraints
+- `CONTRIBUTING.md` — contributor workflow
+- `TESTING.md` — test strategy and coverage expectations
+- `ARCHITECTURE.md` — pipeline boundaries, Call-Resolution DAG, LanguageProvider contract
 
 ## 1. Scope and Intent
 
-A change is **Done** when it is correct, safely integrated, appropriately tested, operationally sound, and a net improvement to the codebase â€” not merely "the code compiles and a test passes."
+A change is **Done** when it is correct, safely integrated, appropriately tested, operationally sound, and a net improvement to the codebase — not merely "the code compiles and a test passes."
 
 This DoD applies to:
 
@@ -31,7 +31,7 @@ Every change must satisfy **every relevant item** below. If an item does not app
 
 ### 2.1 Correctness and Completeness
 
-- [ ] The requested behavior is implemented end-to-end in the **real runtime path** for the affected surface â€” no dead code, partial wiring, test-only shims, or "works in isolation but not in production" seams.
+- [ ] The requested behavior is implemented end-to-end in the **real runtime path** for the affected surface — no dead code, partial wiring, test-only shims, or "works in isolation but not in production" seams.
 - [ ] Edge cases relevant to the changed surface are handled or explicitly documented as out of scope.
 - [ ] Error handling is proportionate: inputs at system boundaries (user input, external APIs, filesystem, process spawn) are validated; internal, framework-guaranteed paths are trusted.
 - [ ] The change produces the same result on re-run (idempotent where expected) and does not rely on accidental ordering.
@@ -40,18 +40,18 @@ Every change must satisfy **every relevant item** below. If an item does not app
 
 - [ ] The change is placed in the correct package and layer:
   - `packages/core/` for CLI, MCP, HTTP bridge, ingestion, graph, and runtime logic
-  - `apps/web/` for browser UI (thin client â€” no WASM workers, all queries via HTTP API)
+  - `apps/web/` for browser UI (thin client — no WASM workers, all queries via HTTP API)
   - `packages/shared/` for shared contracts, types, and constants
-- [ ] Pipeline and architecture boundaries remain explicit. Shared ingestion code in `packages/core/src/core/ingestion/` must not name languages â€” use `LanguageProvider` hooks (see `AGENTS.md` and `ARCHITECTURE.md` Â§ Call-Resolution DAG).
+- [ ] Pipeline and architecture boundaries remain explicit. Shared ingestion code in `packages/core/src/core/ingestion/` must not name languages — use `LanguageProvider` hooks (see `AGENTS.md` and `ARCHITECTURE.md` § Call-Resolution DAG).
 - [ ] No hidden cross-phase coupling; no leaking of language-specific logic into shared infrastructure without a documented architectural reason.
-- [ ] Runtime and graph behavior are consistent â€” the real source of truth is fixed at the source, not symptom-patched in a downstream layer.
+- [ ] Runtime and graph behavior are consistent — the real source of truth is fixed at the source, not symptom-patched in a downstream layer.
 - [ ] Direct imports from `packages/shared` are used. No barrel re-exports introduced to paper over drift between packages.
 
 ### 2.3 Design and Readability
 
 - [ ] The implementation is the **smallest correct solution** for the requirement. No speculative abstraction, unnecessary indirection, clever but hard-to-follow control flow, or unrelated cleanup.
 - [ ] Naming, control flow, ownership, and extension points are clear enough that the next contributor can extend the code without archaeology.
-- [ ] Comments are minimal and useful â€” they explain intent, invariants, contracts, or non-obvious constraints. No stale comments, placeholder comments, narrated code, commented-out code, or "what" comments where a good name would do.
+- [ ] Comments are minimal and useful — they explain intent, invariants, contracts, or non-obvious constraints. No stale comments, placeholder comments, narrated code, commented-out code, or "what" comments where a good name would do.
 - [ ] No copy-paste duplication created for convenience; no premature deduplication of three similar lines.
 
 ### 2.4 Contracts and Compatibility
@@ -71,22 +71,22 @@ Every change must satisfy **every relevant item** below. If an item does not app
 ### 2.6 Performance and Resource Use
 
 - [ ] No repeated avoidable work, unnecessary scans, unnecessary round-trips, unbounded caches, or obvious hot-path regressions.
-- [ ] Tree-sitter buffer sizing follows the adaptive 512KBâ€“32MB convention (`getTreeSitterBufferSize`) â€” do not hard-code new buffer sizes.
+- [ ] Tree-sitter buffer sizing follows the adaptive 512KB–32MB convention (`getTreeSitterBufferSize`) — do not hard-code new buffer sizes.
 - [ ] Memory and handle lifecycles are explicit: database handles (LadybugDB) close cleanly, no dangling process watchers, no leaked tree-sitter parsers.
 - [ ] Long-running or large-graph paths remain bounded or are measurably streamed; degradation on large real repos is considered, not assumed benign.
 
 ### 2.7 Tests
 
-- [ ] Tests cover the **real changed path** â€” they would fail if behavior, wiring, or contracts were broken, not only if a mock were misconfigured.
+- [ ] Tests cover the **real changed path** — they would fail if behavior, wiring, or contracts were broken, not only if a mock were misconfigured.
 - [ ] Integration tests hit a real database where the production path does; do not introduce mocks that hide migration or schema drift.
 - [ ] Assertions are meaningful. Use `toBe` / `toEqual` for exact expectations; avoid `toBeGreaterThanOrEqual` and other bounds-only assertions that mask regressions.
-- [ ] Fixtures are realistic enough for the risk of the change â€” a one-file fixture is not sufficient for a pipeline-wide behavior change.
+- [ ] Fixtures are realistic enough for the risk of the change — a one-file fixture is not sufficient for a pipeline-wide behavior change.
 - [ ] New tests are deterministic and do not depend on network, clock, or host-specific paths without explicit isolation.
 
 ### 2.8 Observability and Operability
 
 - [ ] Errors surfaced to users or callers are actionable: they name what failed, what input was involved (without leaking secrets), and how to recover where possible.
-- [ ] Logging is proportionate â€” no noisy debug logs left in hot paths, no silent catches that swallow diagnostics.
+- [ ] Logging is proportionate — no noisy debug logs left in hot paths, no silent catches that swallow diagnostics.
 - [ ] CLI exit codes and MCP tool responses are correct for each outcome (success, user error, internal error).
 - [ ] Progress reporting (`PipelineProgress` and similar shared contracts) remains accurate after the change.
 
@@ -100,10 +100,10 @@ Every change must satisfy **every relevant item** below. If an item does not app
 
 When the change is produced with or reviewed by an AI agent, the following additional gates apply:
 
-- [ ] **Scope match.** The final diff matches the intended symbols, files, and processes â€” no speculative refactors, unrelated formatting churn, or collateral edits outside the task scope.
+- [ ] **Scope match.** The final diff matches the intended symbols, files, and processes — no speculative refactors, unrelated formatting churn, or collateral edits outside the task scope.
 - [ ] **Evidence-based edits.** Claims about repo state are verified against the current code, not trusted from memory or stale documentation.
 - [ ] **Impact analysis.** Where CodraGraph graph tooling is available and relevant, impact of non-trivial symbol, contract, or runtime-path changes is checked **before** editing.
-- [ ] **Embeddings preserved.** If an indexed repo already has embeddings and re-analysis is required, embeddings are preserved â€” not accidentally dropped by a destructive reindex.
+- [ ] **Embeddings preserved.** If an indexed repo already has embeddings and re-analysis is required, embeddings are preserved — not accidentally dropped by a destructive reindex.
 - [ ] **No false-done.** "Done" is claimed only after the Validation Baseline below has been run or any gap is explicitly named. Green tests on an unrelated path do not constitute validation.
 - [ ] **Five-axis self-review** before handing off: correctness, readability, architecture, security, performance.
 
@@ -113,7 +113,7 @@ Run the commands relevant to the touched area. If something cannot be run in the
 
 ### 4.1 Build ordering
 
-- [ ] `packages/shared/` dist is built before consuming packages are typechecked or tested (CI uses the `setup-codragraph` action for this â€” local runs must match).
+- [ ] `packages/shared/` dist is built before consuming packages are typechecked or tested (CI uses the `setup-codragraph` action for this — local runs must match).
 
 ### 4.2 If `packages/core/` changed
 
@@ -130,7 +130,7 @@ Run the commands relevant to the touched area. If something cannot be run in the
 ### 4.4 If `packages/shared/` changed
 
 - [ ] Shared package builds cleanly (`npm run build` in `packages/shared/`)
-- [ ] Dependent packages still typecheck and test after the shared change â€” verify both CLI and web consumers together
+- [ ] Dependent packages still typecheck and test after the shared change — verify both CLI and web consumers together
 
 ### 4.5 If `packages/harness/` or `packages/sdk/` changed
 
@@ -140,19 +140,19 @@ Run the commands relevant to the touched area. If something cannot be run in the
 ### 4.6 If CI workflows or release pipelines changed
 
 - [ ] The workflow passes a dry-run or triggered run before merge; concurrency (`cancel-in-progress`) and the `setup-codragraph` action remain wired correctly.
-- [ ] `CHANGELOG.md` is **not** edited here â€” it is owned by the release process.
+- [ ] `CHANGELOG.md` is **not** edited here — it is owned by the release process.
 
 ## 5. Review Gates
 
 A reviewer (human or agent) should be able to answer **yes** to each of the following before approving:
 
-1. **Correctness** â€” Does the change do what it claims on the real runtime path?
-2. **Readability** â€” Will the next contributor understand this in six months without asking?
-3. **Architecture** â€” Is it in the right package, layer, and phase? Are boundaries respected?
-4. **Security** â€” No new injection, leak, or trust-boundary violation?
-5. **Performance** â€” No obvious regression on realistic inputs?
-6. **Tests** â€” Would a regression in the changed behavior fail loudly?
-7. **Scope** â€” Does the diff match the intended change, with no unrelated churn?
+1. **Correctness** — Does the change do what it claims on the real runtime path?
+2. **Readability** — Will the next contributor understand this in six months without asking?
+3. **Architecture** — Is it in the right package, layer, and phase? Are boundaries respected?
+4. **Security** — No new injection, leak, or trust-boundary violation?
+5. **Performance** — No obvious regression on realistic inputs?
+6. **Tests** — Would a regression in the changed behavior fail loudly?
+7. **Scope** — Does the diff match the intended change, with no unrelated churn?
 
 ## 6. "Not Done" Signals
 
@@ -180,7 +180,7 @@ Use this in implementation and review prompts. Keep it short and tailor it to th
 - [ ] Tests prove the changed behavior and catch broken wiring.
 - [ ] Required validation for touched packages has been run, or any gap is explicitly noted.
 - [ ] Repo boundaries, security, performance, and operational safety are respected.
-- [ ] The diff contains only the intended change â€” no unrelated churn.
+- [ ] The diff contains only the intended change — no unrelated churn.
 ```
 
 ## 8. How to Use This File in Claude Review
@@ -204,7 +204,7 @@ This DoD is living. Revisit it when:
 - A gate becomes consistently ceremonial without catching issues (remove or merge it).
 - The architecture evolves in a way that changes what "done" means (update placement, validation, or contracts sections).
 
-Track material updates in the changelog below. Keep the file tight â€” if it grows past a single read-in-one-sitting, something has drifted into the wrong place.
+Track material updates in the changelog below. Keep the file tight — if it grows past a single read-in-one-sitting, something has drifted into the wrong place.
 
 ## Changelog
 
