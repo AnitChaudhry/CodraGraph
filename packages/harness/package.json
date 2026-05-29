@@ -59,7 +59,7 @@
     "@codragraph/shared": "^2.1.0",
     "commander": "^14.0.3",
     "esbuild": "^0.24.0",
-    "openai": "^4.70.0"
+    "openai": "^6.39.1"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
