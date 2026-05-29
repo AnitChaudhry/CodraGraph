@@ -4,6 +4,32 @@ All notable changes to CodraGraph will be documented in this file.
 
 ## [Unreleased]
 
+## [2.1.5] - 2026-05-29
+
+### Added
+
+- `codragraph analyze` now refreshes `.codragraph/structure/`, a compact
+  what/why/how/when/where agent memory pack with branch/index state,
+  bounded history, `state.json`, and SQLite seed SQL.
+
+### Changed
+
+- Direct graph CLI commands now resolve the indexed repo under the current
+  working directory and fail clearly when the cwd is unindexed, instead of
+  silently falling back to another registered repo.
+- Analyzer worker parsing uses smaller sub-batches and progress-reset idle
+  timeouts, including the worker flush/finalize phase, to reduce false
+  sequential fallback on large repositories.
+- Claude and Codex hooks stay read-only in the agent hot path: no background
+  analyze, no `detect-changes`, and no package-runner install/fetch from hooks.
+- Workspace packages, web app, and integrations bumped to `2.1.5`.
+
+### Fixed
+
+- Generated `.codragraph/structure/` files are ignored by the indexer so agent
+  memory does not feed back into future graph rebuild decisions.
+- Codex hook augmentation now reads graph context from stderr or stdout.
+
 ## [2.1.4] - 2026-05-28
 
 ### Added

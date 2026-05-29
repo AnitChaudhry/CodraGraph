@@ -29,6 +29,7 @@ describe('run-analyze module', () => {
     expect(mod.isGraphContentPath('package.json')).toBe(true);
     expect(mod.isGraphContentPath('.gitignore')).toBe(true);
     expect(mod.isGraphContentPath('AGENTS.md')).toBe(false);
+    expect(mod.isGraphContentPath('.codragraph/structure/WHAT.md')).toBe(false);
     expect(mod.isGraphContentPath('package-lock.json')).toBe(false);
     expect(mod.isGraphContentPath('branding/logo.png')).toBe(false);
 
@@ -36,12 +37,19 @@ describe('run-analyze module', () => {
       mod.getGraphRelevantChangedPaths([
         { status: 'M', path: 'package-lock.json' },
         { status: 'M', path: 'AGENTS.md' },
+        { status: 'M', path: 'docs/architecture/openanalyst.md' },
+        { status: 'M', path: 'external/10x-template-sources/catalog.json' },
         { status: 'M', path: 'src/core/run-analyze.ts' },
         { status: 'A', path: 'notes/architecture.txt' },
+        { status: 'A', path: 'src/new-entry.ts' },
+        { status: 'D', path: 'src/removed-entry.ts' },
       ]),
     ).toEqual([
+      { status: 'M', path: 'docs/architecture/openanalyst.md' },
       { status: 'M', path: 'src/core/run-analyze.ts' },
       { status: 'A', path: 'notes/architecture.txt' },
+      { status: 'A', path: 'src/new-entry.ts' },
+      { status: 'D', path: 'src/removed-entry.ts' },
     ]);
   });
 

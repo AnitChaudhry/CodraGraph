@@ -87,87 +87,6 @@ const FALLBACK_FIELD_WEIGHTS: Record<string, number> = {
 };
 
 /**
- * Per-process cache for the MCP pool path: tracks which `(repoId, table)`
- * pairs have been ensured. The CLI/pipeline path gets its own cache inside
- * `cgdb-adapter.ts` keyed by table/index, scoped to the singleton connection.
- *
- * IMPORTANT: an entry is added ONLY when the index was confirmed to exist
- * (CREATE_FTS_INDEX succeeded, or failed with `'already exists'`). Other
- * failures (transient lock errors, missing extension, etc.) leave the key
- * unset so the next query retries instead of silently caching the failure.
- *
- * Entries for a given repoId are invalidated when its pool is closed —
- * see the `addPoolCloseListener` registration in `searchFTSFromCgdb`.
- */
-const ensuredPoolFTS = new Set<string>();
-
-/**
- * Drop all ensured-FTS cache entries for a given repoId.
- *
- * Called from the pool-close listener so that a pool teardown / recreation
- * forces the next `searchFTSFromCgdb` call to re-issue `CREATE_FTS_INDEX`
- * against the fresh connection rather than trust stale ensure-state from a
- * previous pool lifetime.
- *
- * Exported for tests; the listener wiring is internal.
- */
-export function invalidateEnsuredFTSForRepo(repoId: string): void {
-  const prefix = `${repoId}:`;
-  for (const key of ensuredPoolFTS) {
-    if (key.startsWith(prefix)) ensuredPoolFTS.delete(key);
-  }
-}
-
-/**
- * Tracks whether we've already wired the pool-close listener for this
- * process. The pool adapter is dynamically imported, so registration
- * happens lazily on the first MCP-pool-backed FTS query.
- */
-let poolCloseListenerRegistered = false;
-function registerPoolCloseListenerOnce(
-  addPoolCloseListener: (listener: (repoId: string) => void) => void,
-): void {
-  if (poolCloseListenerRegistered) return;
-  poolCloseListenerRegistered = true;
-  addPoolCloseListener((repoId) => invalidateEnsuredFTSForRepo(repoId));
-}
-
-async function ensureFTSIndexViaExecutor(
-  executor: (cypher: string) => Promise<any[]>,
-  repoId: string,
-  table: string,
-  indexName: string,
-  properties: readonly string[],
-): Promise<void> {
-  const key = `${repoId}:${table}:${indexName}`;
-  if (ensuredPoolFTS.has(key)) return;
-  const propList = properties.map((p) => `'${p}'`).join(', ');
-  try {
-    await executor(
-      `CALL CREATE_FTS_INDEX('${table}', '${indexName}', [${propList}], stemmer := 'porter')`,
-    );
-    // Index was created successfully — safe to cache.
-    ensuredPoolFTS.add(key);
-  } catch (e: any) {
-    // 'already exists' is the happy path (index persists on disk between
-    // process invocations) — cache it. Anything else is treated as a
-    // transient failure: surface a one-time warning and leave the key
-    // unset so the NEXT query retries rather than silently using a
-    // cached failure (which previously disabled BM25 for the whole
-    // process for that repo).
-    const msg = String(e?.message ?? '');
-    if (msg.includes('already exists')) {
-      ensuredPoolFTS.add(key);
-    } else {
-      console.warn(
-        `[codragraph] FTS index ensure failed for repo "${repoId}" table "${table}" ` +
-          `(index "${indexName}"): ${msg || e}. Will retry on next query.`,
-      );
-    }
-  }
-}
-
-/**
  * Execute a single FTS query via a custom executor (for MCP connection pool).
  * Returns the same shape as core queryFTS (from LadybugDB adapter).
  */
@@ -332,24 +251,17 @@ export const searchFTSFromCgdb = async (
     // IMPORTANT: FTS queries run sequentially to avoid connection contention.
     // The MCP pool supports multiple connections, but FTS is best run serially.
     const poolMod = await import('../cgdb/pool-adapter.js');
-    const { executeQuery, addPoolCloseListener } = poolMod;
-    // Register the pool-close listener lazily on first use so a teardown of
-    // the pool entry (LRU eviction, idle timeout, explicit close) drops the
-    // matching `ensuredPoolFTS` entries. Without this, stale ensure-state
-    // can outlive the pool that produced it.
-    registerPoolCloseListenerOnce(addPoolCloseListener);
+    const { executeQuery } = poolMod;
     const executor = (cypher: string) => executeQuery(repoId, cypher);
 
-    // Lazy-create FTS indexes on first query for this repo (analyze no longer
-    // creates them up-front, so we ensure them here). Cached per-process.
-    // RFC 0001 Phase 2.5: drop `content` from FTS properties for repos
-    // analysed with --compress brotli|zstd — the column holds encoded
-    // bytes and would tokenise to garbage.
+    // The MCP/LocalBackend pool is opened read-only so it can safely coexist
+    // with `codragraph analyze`. Do not issue CREATE_FTS_INDEX here: when
+    // persisted FTS indexes are missing, QUERY_FTS_INDEX falls through to the
+    // bounded BM25 fallback below without noisy write-failure retries.
+    // RFC 0001 Phase 2.5: drop `content` from fallback scoring for repos
+    // analysed with --compress brotli|zstd — the column holds encoded bytes.
     const compress = await getCompressMode(repoId);
     const properties = ftsPropertiesFor(compress);
-    for (const { table, indexName } of FTS_TABLES) {
-      await ensureFTSIndexViaExecutor(executor, repoId, table, indexName, properties);
-    }
 
     fileResults = await queryFTSViaExecutor(executor, 'File', 'file_fts', query, limit);
     functionResults = await queryFTSViaExecutor(executor, 'Function', 'function_fts', query, limit);

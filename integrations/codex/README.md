@@ -33,9 +33,11 @@ codragraph-codex
 
 - **Pre-tool hook**: when Codex is about to Grep / Glob / Read / Bash,
   the hook calls `codragraph augment <pattern>` and prepends the graph
-  context to Codex's next prompt.
-- **Post-edit hook**: after Edit / Write, runs `codragraph detect-changes`
-  to flag whether the index needs refreshing.
+  context to Codex's next prompt. The hook reads bounded output from stdout or
+  stderr because `augment` may write graph context on either stream.
+- **Post-edit hook**: after Edit / Write, performs a cheap metadata staleness
+  check and a read-only working-tree dirty check. It never opens LadybugDB,
+  never runs `detect-changes`, and never starts `analyze` in the background.
 - **MCP server**: registers a `codragraph` Codex MCP server (launching
   `codragraph mcp`, or `cmd /c codragraph mcp` on Windows) so Codex can
   call query / context / impact / feature_clusters / feature_context / cypher directly.

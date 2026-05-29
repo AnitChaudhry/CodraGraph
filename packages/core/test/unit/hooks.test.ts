@@ -39,6 +39,17 @@ const PLUGIN_HOOK = path.resolve(
   'hooks',
   'codragraph-hook.js',
 );
+const CODEX_HOOK = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  '..',
+  '..',
+  'integrations',
+  'codex',
+  'hooks',
+  'codragraph-codex-hook.js',
+);
 
 // ─── Test fixtures: temporary .codragraph directory ───────────────────
 
@@ -84,6 +95,10 @@ describe('Hook files exist', () => {
   it('Plugin hook exists', () => {
     expect(fs.existsSync(PLUGIN_HOOK)).toBe(true);
   });
+
+  it('Codex hook exists', () => {
+    expect(fs.existsSync(CODEX_HOOK)).toBe(true);
+  });
 });
 
 // ─── Source code regression: no shell: true ──────────────────────────
@@ -118,17 +133,23 @@ describe('Windows .cmd extension handling', () => {
     ['CJS', CJS_HOOK],
     ['Plugin', PLUGIN_HOOK],
   ] as const) {
-    it(`${label} hook routes package runners through cmd on Windows`, () => {
+    it(`${label} hook never invokes package runners from the hot path`, () => {
       const source = fs.readFileSync(hookPath, 'utf-8');
-      expect(source).toContain("'/c'");
-      expect(source).toContain('runner.bin');
+      expect(source).not.toContain('runner.bin');
+      expect(source).not.toContain("'npx'");
+      expect(source).not.toContain("'bunx'");
     });
   }
 
-  it('Plugin hook uses cmd wrapper for Windows codragraph binary', () => {
-    const source = fs.readFileSync(PLUGIN_HOOK, 'utf-8');
-    expect(source).toContain("'/c', 'codragraph'");
-  });
+  for (const [label, hookPath] of [
+    ['CJS', CJS_HOOK],
+    ['Plugin', PLUGIN_HOOK],
+  ] as const) {
+    it(`${label} hook uses cmd wrapper for Windows codragraph binary`, () => {
+      const source = fs.readFileSync(hookPath, 'utf-8');
+      expect(source).toContain("'/c', 'codragraph'");
+    });
+  }
 });
 
 // ─── Source code regression: cwd validation ─────────────────────────
@@ -204,6 +225,90 @@ describe('Debug error message truncation', () => {
 });
 
 // ─── extractPattern regression (via source analysis) ────────────────
+
+describe('Hook write-path guard', () => {
+  for (const [label, hookPath] of [
+    ['CJS', CJS_HOOK],
+    ['Plugin', PLUGIN_HOOK],
+  ] as const) {
+    it(`${label} PostToolUse does not start background analyze`, () => {
+      const source = fs.readFileSync(hookPath, 'utf-8');
+      expect(source).not.toContain('CODRAGRAPH_AUTO_REINDEX');
+      expect(source).not.toContain('autoReindex');
+      expect(source).not.toContain('.reindex.coalesce');
+      expect(source).toContain('Hooks never start analyze in the background');
+    });
+  }
+});
+
+describe('Codex hook regressions', () => {
+  it('never invokes package runners from the hot path', () => {
+    const source = fs.readFileSync(CODEX_HOOK, 'utf-8');
+    expect(source).not.toContain("'npx'");
+    expect(source).not.toContain("'bunx'");
+  });
+
+  it('does not run detect-changes from the post-edit path', () => {
+    const source = fs.readFileSync(CODEX_HOOK, 'utf-8');
+    expect(source).not.toContain("['detect-changes'");
+    expect(source).not.toContain("['detect_changes'");
+    expect(source).toContain('hasWorkingTreeChanges');
+  });
+
+  it('uses stderr graph context when augment writes there', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codragraph-codex-hook-'));
+    const fakeBin = path.join(tempDir, 'bin');
+    fs.mkdirSync(fakeBin, { recursive: true });
+    const fakeCli = path.join(
+      fakeBin,
+      process.platform === 'win32' ? 'codragraph.cmd' : 'codragraph',
+    );
+    fs.writeFileSync(
+      fakeCli,
+      process.platform === 'win32'
+        ? '@echo off\r\necho GRAPH_FROM_STDERR 1>&2\r\nexit /b 0\r\n'
+        : '#!/bin/sh\necho GRAPH_FROM_STDERR >&2\nexit 0\n',
+    );
+    if (process.platform !== 'win32') fs.chmodSync(fakeCli, 0o755);
+
+    try {
+      const result = spawnSync(process.execPath, [CODEX_HOOK], {
+        input: JSON.stringify({ args: { pattern: 'auth' }, repoRoot: tmpDir }),
+        encoding: 'utf-8',
+        timeout: 10000,
+        env: {
+          ...process.env,
+          PATH: `${fakeBin}${path.delimiter}${process.env.PATH ?? ''}`,
+        },
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      const output = JSON.parse(result.stdout.trim());
+      expect(output.context).toContain('GRAPH_FROM_STDERR');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('warns on uncommitted working-tree edits without opening the graph DB', () => {
+    const head = getHeadCommit();
+    fs.writeFileSync(path.join(codragraphDir, 'meta.json'), JSON.stringify({ lastCommit: head }));
+    const dummyPath = path.join(tmpDir, 'dummy.txt');
+    fs.writeFileSync(dummyPath, 'changed');
+
+    try {
+      const result = spawnSync(process.execPath, [CODEX_HOOK, '--post'], {
+        input: JSON.stringify({ repoRoot: tmpDir }),
+        encoding: 'utf-8',
+        timeout: 10000,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      const output = JSON.parse(result.stdout.trim());
+      expect(output.context).toContain('uncommitted changes');
+    } finally {
+      fs.writeFileSync(dummyPath, 'hello');
+    }
+  });
+});
 
 describe('extractPattern coverage', () => {
   for (const [label, hookPath] of [

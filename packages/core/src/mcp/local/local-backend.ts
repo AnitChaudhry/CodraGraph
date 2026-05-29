@@ -96,6 +96,131 @@ export const VALID_NODE_LABELS = new Set([
   'Tool',
 ]);
 
+const SIMPLE_LABELLESS_MATCH_RE = /^MATCH\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)/i;
+const CYPHER_LIMIT_RE = /\bLIMIT\s+(\d+)\s*;?\s*$/i;
+const CYPHER_RELATION_RE = /--|-\[|\]-|->|<-/;
+const NATIVE_UNSAFE_NODE_LABELS = new Set(['Union']);
+
+function quoteKnownNodeLabels(query: string): string {
+  return query;
+}
+
+function getNativeUnsafeNodeLabel(query: string): string | null {
+  const labelRe = /\(\s*[A-Za-z_][A-Za-z0-9_]*\s*:\s*`?([A-Za-z_][A-Za-z0-9_]*)`?(?=[\s){])/g;
+  for (const match of query.matchAll(labelRe)) {
+    const label = match[1];
+    if (NATIVE_UNSAFE_NODE_LABELS.has(label)) return label;
+  }
+  return null;
+}
+
+function safeNodeLabelForCypher(typeOrLabel: unknown, nodeId?: unknown): string | null {
+  const explicit = typeof typeOrLabel === 'string' ? typeOrLabel.trim() : '';
+  if (explicit && VALID_NODE_LABELS.has(explicit) && !NATIVE_UNSAFE_NODE_LABELS.has(explicit)) {
+    return explicit;
+  }
+
+  const id = typeof nodeId === 'string' ? nodeId : '';
+  const fromId = id.includes(':') ? id.slice(0, id.indexOf(':')) : '';
+  if (fromId && VALID_NODE_LABELS.has(fromId) && !NATIVE_UNSAFE_NODE_LABELS.has(fromId)) {
+    return fromId;
+  }
+
+  return null;
+}
+
+function firstNonEmptyString(...values: unknown[]): string {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim().length > 0) return value.trim();
+  }
+  return '';
+}
+
+interface SimpleNodeScanQuery {
+  alias: string;
+  label?: string;
+  returnClause: string;
+  limit: number;
+}
+
+function parseSimpleNodeScanQuery(query: string): SimpleNodeScanQuery | null {
+  const match =
+    /^MATCH\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)(?:\s*:\s*`?([A-Za-z_][A-Za-z0-9_]*)`?)?\s*\)\s*RETURN\s+(.+?)\s+LIMIT\s+(\d+)\s*;?\s*$/i.exec(
+      query.trim(),
+    );
+  if (!match) return null;
+
+  const limit = Number.parseInt(match[4], 10);
+  if (!Number.isFinite(limit) || limit <= 0) return null;
+
+  return {
+    alias: match[1],
+    label: match[2],
+    returnClause: match[3].trim(),
+    limit: Math.min(Math.trunc(limit), 1000),
+  };
+}
+
+function projectSimpleNodeRow(
+  node: Record<string, unknown>,
+  label: string,
+  scan: SimpleNodeScanQuery,
+): Record<string, unknown> | null {
+  const row: Record<string, unknown> = {};
+  const parts = scan.returnClause.split(/\s*,\s*/).filter(Boolean);
+
+  for (const part of parts) {
+    const asMatch = /^(.+?)\s+AS\s+([A-Za-z_][A-Za-z0-9_]*)$/i.exec(part.trim());
+    const expr = (asMatch?.[1] ?? part).trim();
+    const outKey = asMatch?.[2] ?? expr;
+
+    if (expr === scan.alias) {
+      row[outKey] = { ...node, _label: label };
+      continue;
+    }
+
+    const labelsMatch = new RegExp(`^labels\\(\\s*${scan.alias}\\s*\\)\\[0\\]$`, 'i').exec(expr);
+    if (labelsMatch) {
+      row[outKey] = label;
+      continue;
+    }
+
+    const propMatch = new RegExp(`^${scan.alias}\\.([A-Za-z_][A-Za-z0-9_]*)$`).exec(expr);
+    if (propMatch) {
+      row[outKey] = node[propMatch[1]];
+      continue;
+    }
+
+    return null;
+  }
+
+  return row;
+}
+
+function getSimpleLabellessNodeAlias(query: string): string | null {
+  const trimmed = query.trim();
+  const match = SIMPLE_LABELLESS_MATCH_RE.exec(trimmed);
+  if (!match) return null;
+  if (CYPHER_RELATION_RE.test(trimmed)) return null;
+  if (/\bMATCH\b/i.test(trimmed.slice(match[0].length))) return null;
+  return match[1];
+}
+
+function getCypherLimit(query: string): number | null {
+  const match = CYPHER_LIMIT_RE.exec(query);
+  if (!match) return null;
+  const limit = Number.parseInt(match[1], 10);
+  return Number.isFinite(limit) && limit > 0 ? limit : null;
+}
+
+function withCypherLimit(query: string, limit: number): string {
+  const safeLimit = Math.max(1, Math.trunc(limit));
+  if (CYPHER_LIMIT_RE.test(query)) {
+    return query.replace(CYPHER_LIMIT_RE, `LIMIT ${safeLimit}`);
+  }
+  return `${query.replace(/;\s*$/, '')} LIMIT ${safeLimit}`;
+}
+
 /** Valid relation types for impact analysis filtering */
 export const VALID_RELATION_TYPES = new Set([
   'CALLS',
@@ -1393,13 +1518,64 @@ export class LocalBackend {
     return this.cypher(repo, { query });
   }
 
-  private async cypher(repo: RepoHandle, params: { query: string }): Promise<any> {
-    await this.ensureInitialized(repo.id);
+  private async trySimpleGraphstoreNodeScan(
+    repo: RepoHandle,
+    query: string,
+  ): Promise<any[] | null> {
+    const scan = parseSimpleNodeScanQuery(query);
+    if (!scan) return null;
+    if (scan.label && NATIVE_UNSAFE_NODE_LABELS.has(scan.label)) return [];
 
-    if (!isCgdbReady(repo.id)) {
-      return { error: 'LadybugDB not ready. Index may be corrupted.' };
+    const objectsRoot = path.join(repo.storagePath, 'graphstore', 'objects');
+    try {
+      const stat = await fs.stat(objectsRoot);
+      if (!stat.isDirectory()) return null;
+    } catch {
+      return null;
     }
+    const rows: any[] = [];
 
+    const visitDir = async (dir: string): Promise<void> => {
+      if (rows.length >= scan.limit) return;
+
+      let entries: Array<{ name: string; isDirectory: () => boolean; isFile: () => boolean }>;
+      try {
+        entries = await fs.readdir(dir, { withFileTypes: true });
+      } catch {
+        return;
+      }
+
+      for (const entry of entries) {
+        if (rows.length >= scan.limit) return;
+        const entryPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          await visitDir(entryPath);
+          continue;
+        }
+        if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+
+        try {
+          const raw = await fs.readFile(entryPath, 'utf-8');
+          const obj = JSON.parse(raw) as Record<string, unknown>;
+          const id = typeof obj.id === 'string' ? obj.id : '';
+          if (!id || typeof obj.from === 'string' || typeof obj.to === 'string') continue;
+          const label = id.includes(':') ? id.slice(0, id.indexOf(':')) : '';
+          if (!label || (scan.label && label !== scan.label)) continue;
+          if (NATIVE_UNSAFE_NODE_LABELS.has(label)) continue;
+
+          const row = projectSimpleNodeRow(obj, label, scan);
+          if (row) rows.push(row);
+        } catch {
+          // Ignore malformed graphstore objects; the native path remains available.
+        }
+      }
+    };
+
+    await visitDir(objectsRoot);
+    return rows;
+  }
+
+  private async cypher(repo: RepoHandle, params: { query: string }): Promise<any> {
     // Block write operations (defense-in-depth — DB is already read-only)
     if (isWriteQuery(params.query)) {
       return {
@@ -1408,12 +1584,65 @@ export class LocalBackend {
       };
     }
 
+    const query = quoteKnownNodeLabels(params.query);
+    const unsafeLabel = getNativeUnsafeNodeLabel(query);
+    if (unsafeLabel) {
+      return [];
+    }
+
+    const graphstoreRows = await this.trySimpleGraphstoreNodeScan(repo, query);
+    if (graphstoreRows) {
+      return graphstoreRows;
+    }
+
+    await this.ensureInitialized(repo.id);
+
+    if (!isCgdbReady(repo.id)) {
+      return { error: 'LadybugDB not ready. Index may be corrupted.' };
+    }
+
+    const labellessAlias = getSimpleLabellessNodeAlias(query);
+
     try {
-      const result = await executeQuery(repo.id, params.query);
+      const result = labellessAlias
+        ? await this.executeLabellessNodeScan(repo.id, query, labellessAlias)
+        : await executeQuery(repo.id, query);
       return result;
     } catch (err: any) {
       return { error: err.message || 'Query failed' };
     }
+  }
+
+  private async executeLabellessNodeScan(
+    repoId: string,
+    query: string,
+    alias: string,
+  ): Promise<any[]> {
+    const limit = getCypherLimit(query) ?? 100;
+    const rows: any[] = [];
+    let lastError: Error | null = null;
+
+    for (const label of VALID_NODE_LABELS) {
+      if (NATIVE_UNSAFE_NODE_LABELS.has(label)) continue;
+      if (rows.length >= limit) break;
+
+      const labelQuery = withCypherLimit(
+        query.replace(SIMPLE_LABELLESS_MATCH_RE, `MATCH (${alias}:\`${label}\`)`),
+        limit - rows.length,
+      );
+
+      try {
+        const labelRows = await executeQuery(repoId, labelQuery);
+        rows.push(...labelRows);
+      } catch (err: any) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+      }
+    }
+
+    if (rows.length === 0 && lastError) {
+      throw lastError;
+    }
+    return rows.slice(0, limit);
   }
 
   /**
@@ -1724,7 +1953,7 @@ export class LocalBackend {
       const symbol = {
         id: (r.id ?? r[0]) as string,
         name: (r.name ?? r[1]) as string,
-        type: (r.type ?? r[2] ?? '') as string,
+        type: firstNonEmptyString(r.type, r.__cgLabel, r[2]),
         filePath: (r.filePath ?? r[3]) as string,
         startLine: (r.startLine ?? r[4]) as number,
         endLine: (r.endLine ?? r[5]) as number,
@@ -1769,7 +1998,7 @@ export class LocalBackend {
     const normalized = rows.map((r: any) => ({
       id: (r.id ?? r[0]) as string,
       name: (r.name ?? r[1]) as string,
-      type: (r.type ?? r[2] ?? '') as string,
+      type: firstNonEmptyString(r.type, r.__cgLabel, r[2]),
       filePath: (r.filePath ?? r[3]) as string,
       startLine: (r.startLine ?? r[4]) as number,
       endLine: (r.endLine ?? r[5]) as number,
@@ -2778,6 +3007,9 @@ export class LocalBackend {
     const impacted: any[] = [];
     const visited = new Set<string>([symId]);
     let frontier = [symId];
+    const frontierTypes = new Map<string, string>();
+    const symLabel = safeNodeLabelForCypher(symType, symId);
+    if (symLabel) frontierTypes.set(symId, symLabel);
     let traversalComplete = true;
 
     // Fix #480: For Java (and other JVM) Class/Interface nodes, CALLS edges
@@ -2794,9 +3026,9 @@ export class LocalBackend {
           executeParameterized(
             repo.id,
             `
-            MATCH (n)-[hm:CodeRelation]->(c:Constructor)
+            MATCH (n:${symLabel ?? symType})-[hm:CodeRelation]->(c:Constructor)
             WHERE n.id = $symId AND hm.type = 'HAS_METHOD'
-            RETURN c.id AS id, c.name AS name, labels(c)[0] AS type, c.filePath AS filePath
+            RETURN c.id AS id, c.name AS name, 'Constructor' AS type, c.filePath AS filePath
           `,
             { symId },
           ),
@@ -2805,9 +3037,9 @@ export class LocalBackend {
           executeParameterized(
             repo.id,
             `
-            MATCH (f:File)-[rel:CodeRelation]->(n)
+            MATCH (f:File)-[rel:CodeRelation]->(n:${symLabel ?? symType})
             WHERE n.id = $symId AND rel.type = 'DEFINES'
-            RETURN f.id AS id, f.name AS name, labels(f)[0] AS type, f.filePath AS filePath
+            RETURN f.id AS id, f.name AS name, 'File' AS type, f.filePath AS filePath
           `,
             { symId },
           ),
@@ -2818,6 +3050,8 @@ export class LocalBackend {
           if (rid && !visited.has(rid)) {
             visited.add(rid);
             frontier.push(rid);
+            const label = safeNodeLabelForCypher(r.type ?? r[2], rid);
+            if (label) frontierTypes.set(rid, label);
           }
         }
         for (const r of fileRows) {
@@ -2825,6 +3059,8 @@ export class LocalBackend {
           if (rid && !visited.has(rid)) {
             visited.add(rid);
             frontier.push(rid);
+            const label = safeNodeLabelForCypher(r.type ?? r[2], rid);
+            if (label) frontierTypes.set(rid, label);
           }
         }
       } catch (e) {
@@ -2835,15 +3071,25 @@ export class LocalBackend {
     for (let depth = 1; depth <= maxDepth && frontier.length > 0; depth++) {
       const nextFrontier: string[] = [];
 
-      // Batch frontier nodes into a single Cypher query per depth level
-      const idList = frontier.map((id) => `'${id.replace(/'/g, "''")}'`).join(', ');
-      const query =
-        direction === 'upstream'
-          ? `MATCH (caller)-[r:CodeRelation]->(n) WHERE n.id IN [${idList}] AND r.type IN [${relTypeFilter}]${confidenceFilter} RETURN n.id AS sourceId, caller.id AS id, caller.name AS name, labels(caller)[0] AS type, caller.filePath AS filePath, r.type AS relType, r.confidence AS confidence`
-          : `MATCH (n)-[r:CodeRelation]->(callee) WHERE n.id IN [${idList}] AND r.type IN [${relTypeFilter}]${confidenceFilter} RETURN n.id AS sourceId, callee.id AS id, callee.name AS name, labels(callee)[0] AS type, callee.filePath AS filePath, r.type AS relType, r.confidence AS confidence`;
-
       try {
-        const related = await executeQuery(repo.id, query);
+        const frontierByLabel = new Map<string, string[]>();
+        for (const id of frontier) {
+          const label = frontierTypes.get(id) ?? safeNodeLabelForCypher(undefined, id) ?? '';
+          const ids = frontierByLabel.get(label) ?? [];
+          ids.push(id);
+          frontierByLabel.set(label, ids);
+        }
+
+        const related: any[] = [];
+        for (const [label, ids] of frontierByLabel) {
+          const idList = ids.map((id) => `'${id.replace(/'/g, "''")}'`).join(', ');
+          const targetPattern = label ? `(n:${label})` : '(n)';
+          const query =
+            direction === 'upstream'
+              ? `MATCH (caller)-[r:CodeRelation]->${targetPattern} WHERE n.id IN [${idList}] AND r.type IN [${relTypeFilter}]${confidenceFilter} RETURN n.id AS sourceId, caller.id AS id, caller.name AS name, labels(caller)[0] AS type, caller.filePath AS filePath, r.type AS relType, r.confidence AS confidence`
+              : `MATCH ${targetPattern}-[r:CodeRelation]->(callee) WHERE n.id IN [${idList}] AND r.type IN [${relTypeFilter}]${confidenceFilter} RETURN n.id AS sourceId, callee.id AS id, callee.name AS name, labels(callee)[0] AS type, callee.filePath AS filePath, r.type AS relType, r.confidence AS confidence`;
+          related.push(...(await executeQuery(repo.id, query)));
+        }
 
         for (const rel of related) {
           const relId = rel.id || rel[1];
@@ -2854,6 +3100,9 @@ export class LocalBackend {
           if (!visited.has(relId)) {
             visited.add(relId);
             nextFrontier.push(relId);
+            const relTypeLabel = firstNonEmptyString(rel.type, rel.__cgLabel, rel[3]);
+            const relLabel = safeNodeLabelForCypher(relTypeLabel, relId);
+            if (relLabel) frontierTypes.set(relId, relLabel);
             const storedConfidence = rel.confidence ?? rel[6];
             const relationType = rel.relType || rel[5];
             // Prefer the stored confidence from the graph (set at analysis time);
@@ -2866,7 +3115,7 @@ export class LocalBackend {
               depth,
               id: relId,
               name: rel.name || rel[2],
-              type: rel.type || rel[3],
+              type: relTypeLabel,
               filePath,
               relationType,
               confidence: effectiveConfidence,

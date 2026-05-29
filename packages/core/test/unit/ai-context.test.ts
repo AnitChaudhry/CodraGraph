@@ -34,6 +34,100 @@ describe('generateAIContextFiles', () => {
     expect(result.files.length).toBeGreaterThan(0);
   });
 
+  it('creates a compact .codragraph/structure pack for agents', async () => {
+    const structureDir = await fs.mkdtemp(path.join(os.tmpdir(), 'gn-ai-structure-'));
+    const structureStorage = path.join(structureDir, '.codragraph');
+    await fs.mkdir(structureStorage, { recursive: true });
+    await fs.writeFile(
+      path.join(structureStorage, 'meta.json'),
+      JSON.stringify({
+        repoPath: structureDir,
+        lastCommit: 'abc1234567890',
+        indexedAt: '2026-05-29T00:00:00.000Z',
+        schemaVersion: 4,
+        compress: 'brotli',
+        currentBranch: 'main',
+        headCommit: 'graph-head-1',
+        stats: { files: 7, nodes: 11, edges: 13, featureClusters: 2, processes: 3, embeddings: 0 },
+      }),
+      'utf-8',
+    );
+
+    try {
+      const result = await generateAIContextFiles(structureDir, structureStorage, 'TestProject', {
+        files: 7,
+        nodes: 11,
+        edges: 13,
+        clusters: 2,
+        processes: 3,
+      });
+
+      expect(result.files).toContain('.codragraph/structure/ (12 files)');
+      const agentStructureDir = path.join(structureStorage, 'structure');
+      for (const fileName of [
+        'README.md',
+        'WHAT.md',
+        'WHY.md',
+        'HOW.md',
+        'WHEN.md',
+        'WHERE.md',
+        'BRANCHES.md',
+        'INDEX.md',
+        'SQLITE.md',
+        'HISTORY.md',
+        'agent-memory.sql',
+      ]) {
+        await expect(fs.stat(path.join(agentStructureDir, fileName))).resolves.toBeDefined();
+      }
+
+      const what = await fs.readFile(path.join(agentStructureDir, 'WHAT.md'), 'utf-8');
+      expect(what).toContain('CodraGraph index name: **TestProject**');
+      expect(what).toContain('| Symbols | 11 |');
+
+      const sql = await fs.readFile(path.join(agentStructureDir, 'agent-memory.sql'), 'utf-8');
+      expect(sql).toContain('CREATE TABLE IF NOT EXISTS codragraph_agent_context');
+      expect(sql).toContain("'project_name', 'TestProject'");
+    } finally {
+      await fs.rm(structureDir, { recursive: true, force: true });
+    }
+  });
+
+  it('updates structure history by commit without duplicating existing entries', async () => {
+    const historyDir = await fs.mkdtemp(path.join(os.tmpdir(), 'gn-ai-history-'));
+    const historyStorage = path.join(historyDir, '.codragraph');
+    await fs.mkdir(historyStorage, { recursive: true });
+    const metaPath = path.join(historyStorage, 'meta.json');
+
+    try {
+      await fs.writeFile(
+        metaPath,
+        JSON.stringify({ lastCommit: 'commit-one', indexedAt: '2026-05-29T00:00:00.000Z' }),
+        'utf-8',
+      );
+      await generateAIContextFiles(historyDir, historyStorage, 'TestProject', { nodes: 1 });
+      await generateAIContextFiles(historyDir, historyStorage, 'TestProject', { nodes: 1 });
+
+      let history = await fs.readFile(
+        path.join(historyStorage, 'structure', 'HISTORY.md'),
+        'utf-8',
+      );
+      expect((history.match(/codragraph:history-entry:commit-one/g) || []).length).toBe(1);
+
+      await fs.writeFile(
+        metaPath,
+        JSON.stringify({ lastCommit: 'commit-two', indexedAt: '2026-05-29T00:01:00.000Z' }),
+        'utf-8',
+      );
+      await generateAIContextFiles(historyDir, historyStorage, 'TestProject', { nodes: 2 });
+
+      history = await fs.readFile(path.join(historyStorage, 'structure', 'HISTORY.md'), 'utf-8');
+      expect(history.indexOf('commit-two')).toBeLessThan(history.indexOf('commit-one'));
+      expect((history.match(/codragraph:history-entry:/g) || []).length).toBe(2);
+    } finally {
+      await fs.rm(historyDir, { recursive: true, force: true });
+    }
+  });
+
   it('creates or updates CLAUDE.md with CodraGraph section', async () => {
     const stats = { nodes: 50, edges: 100, processes: 5 };
     await generateAIContextFiles(tmpDir, storagePath, 'TestProject', stats);
@@ -160,6 +254,7 @@ describe('generateAIContextFiles', () => {
 
     expect(result.files).toContain('AGENTS.md (skipped via --skip-agents-md)');
     expect(result.files).toContain('CLAUDE.md (skipped via --skip-agents-md)');
+    expect(result.files).toContain('.codragraph/structure/ (12 files)');
 
     const agentsAfter = await fs.readFile(agentsPath, 'utf-8');
     const claudeAfter = await fs.readFile(claudePath, 'utf-8');

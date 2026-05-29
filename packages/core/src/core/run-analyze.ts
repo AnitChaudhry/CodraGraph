@@ -261,8 +261,10 @@ export const changedPathAffectsGraph = (change: AnalyzeChangedPath): boolean => 
 
   if (paths.some(isGraphContentPath)) return true;
 
-  // Add/delete/rename/copy can change File/Folder structure even when content
-  // is not parsed. Ignored or generated-agent paths are outside the index.
+  // Add/delete/rename/copy affect the graph's File/Folder topology even when
+  // the path is not source code. Ignore only generated agent context and
+  // configured ignored paths; staying conservative here prevents stale file
+  // and documentation surfaces after path-only commits.
   if (statusCode === 'A' || statusCode === 'D' || statusCode === 'R' || statusCode === 'C') {
     return paths.some((p) => !isGeneratedAgentContextPath(p) && !shouldIgnorePath(p));
   }
@@ -309,6 +311,15 @@ const buildReusedMeta = (
   indexedAt: new Date().toISOString(),
   schemaVersion: INDEX_SCHEMA_VERSION,
   remoteUrl: hasGitDir(repoPath) ? getRemoteUrl(repoPath) : existingMeta.remoteUrl,
+});
+
+const metaStatsForAIContext = (stats: RepoMeta['stats'] = {}) => ({
+  files: stats.files,
+  nodes: stats.nodes,
+  edges: stats.edges,
+  communities: stats.communities,
+  clusters: stats.featureClusters,
+  processes: stats.processes,
 });
 
 const pathExists = async (targetPath: string): Promise<boolean> => {
@@ -446,8 +457,22 @@ export async function runFullAnalysis(
   ) {
     // Non-git folders have currentCommit = '' — always rebuild since we can't detect changes
     if (currentCommit !== '') {
+      const repoName =
+        options.registryName ?? getInferredRepoName(repoPath) ?? path.basename(repoPath);
+      try {
+        await generateAIContextFiles(
+          repoPath,
+          storagePath,
+          repoName,
+          metaStatsForAIContext(existingMeta.stats),
+          undefined,
+          { skipAgentsMd: options.skipAgentsMd, noStats: options.noStats },
+        );
+      } catch {
+        // Best-effort only.
+      }
       return {
-        repoName: options.registryName ?? getInferredRepoName(repoPath) ?? path.basename(repoPath),
+        repoName,
         repoPath,
         stats: existingMeta.stats ?? {},
         alreadyUpToDate: true,
@@ -483,10 +508,22 @@ export async function runFullAnalysis(
         if (hasGitDir(repoPath)) {
           await addToGitignore(repoPath);
         }
+        try {
+          await generateAIContextFiles(
+            repoPath,
+            storagePath,
+            projectName,
+            metaStatsForAIContext(reusedMeta.stats),
+            undefined,
+            { skipAgentsMd: options.skipAgentsMd, noStats: options.noStats },
+          );
+        } catch {
+          // Best-effort only.
+        }
 
         const reuseReason =
           `Smart analyze reused the existing graph; ${changedPaths.length} changed ` +
-          `file(s) did not affect indexed code, docs, config, or file structure.`;
+          `file(s) did not affect indexed graph inputs.`;
         log(reuseReason);
         progress('done', 100, 'Existing graph reused');
         return {
@@ -502,7 +539,7 @@ export async function runFullAnalysis(
       const preview = graphRelevantChanges.slice(0, 5).map(formatChangeForLog).join(', ');
       const suffix = graphRelevantChanges.length > 5 ? ', ...' : '';
       log(
-        `Smart analyze: ${graphRelevantChanges.length} indexed change(s) require rebuild` +
+        `Smart analyze: ${graphRelevantChanges.length} indexed graph input change(s) require rebuild` +
           (preview ? ` (${preview}${suffix})` : '') +
           '.',
       );

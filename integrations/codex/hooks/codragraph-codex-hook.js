@@ -12,6 +12,7 @@
  */
 
 const fs = require('node:fs');
+const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 // On Windows, npm-installed bins are .cmd shims. Node 22's spawn refuses
@@ -22,6 +23,58 @@ const runCli = (args, opts) =>
   IS_WIN
     ? spawnSync('cmd', ['/c', 'codragraph', ...args], opts)
     : spawnSync('codragraph', args, opts);
+
+const findCodraGraphDir = (startDir) => {
+  let dir = startDir || process.cwd();
+  for (let i = 0; i < 8; i++) {
+    const candidate = path.join(dir, '.codragraph');
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+};
+
+const readMeta = (codragraphDir) => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(codragraphDir, 'meta.json'), 'utf-8'));
+  } catch {
+    return null;
+  }
+};
+
+const currentGitHead = (cwd) => {
+  try {
+    const result = spawnSync('git', ['rev-parse', 'HEAD'], {
+      cwd,
+      encoding: 'utf-8',
+      timeout: 3000,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    return result.status === 0 ? (result.stdout || '').trim() : '';
+  } catch {
+    return '';
+  }
+};
+
+const hasWorkingTreeChanges = (cwd) => {
+  const gitQuiet = (args) => {
+    try {
+      return spawnSync('git', args, {
+        cwd,
+        timeout: 3000,
+        stdio: ['ignore', 'ignore', 'ignore'],
+      });
+    } catch {
+      return { status: null };
+    }
+  };
+
+  const unstaged = gitQuiet(['diff', '--quiet', '--ignore-submodules', '--']);
+  const staged = gitQuiet(['diff', '--cached', '--quiet', '--ignore-submodules', '--']);
+  return unstaged.status === 1 || staged.status === 1;
+};
 
 const main = async () => {
   const isPost = process.argv.includes('--post');
@@ -39,16 +92,20 @@ const main = async () => {
   }
 
   if (isPost) {
-    // Post-edit: ask codragraph whether the index is now stale.
-    const result = runCli(['detect-changes', '--scope=unstaged'], {
-      cwd: payload.repoRoot ?? process.cwd(),
-      encoding: 'utf-8',
-      timeout: 8000,
-    });
-    const note =
-      result.status === 0 && result.stdout
-        ? `[CodraGraph] post-edit detect-changes:\n${result.stdout.slice(0, 1500)}`
-        : '';
+    // Post-edit hooks must stay cheap and must never open LadybugDB. Running
+    // detect-changes here can contend with MCP/analyze and makes every edit pay
+    // DB startup cost. Compare git HEAD to meta.json instead and let the agent
+    // decide when to run analyze.
+    const cwd = payload.repoRoot ?? process.cwd();
+    const codragraphDir = findCodraGraphDir(cwd);
+    const meta = codragraphDir ? readMeta(codragraphDir) : null;
+    const head = currentGitHead(cwd);
+    let note = '';
+    if (head && meta?.lastCommit && head !== meta.lastCommit) {
+      note = `[CodraGraph] index is behind HEAD. Run \`codragraph analyze\` when you need fresh graph context.`;
+    } else if (hasWorkingTreeChanges(cwd)) {
+      note = `[CodraGraph] working tree has uncommitted changes. Run \`codragraph analyze\` when you need graph context for these edits.`;
+    }
     process.stdout.write(JSON.stringify({ context: note, blocked: false }));
     return;
   }
@@ -65,9 +122,10 @@ const main = async () => {
     encoding: 'utf-8',
     timeout: 8000,
   });
+  const graphOutput = result.stderr || result.stdout || '';
   const enrichment =
-    result.status === 0 && result.stdout
-      ? `[CodraGraph] graph context for ${JSON.stringify(target)}:\n${result.stdout.slice(0, 2000)}`
+    result.status === 0 && graphOutput
+      ? `[CodraGraph] graph context for ${JSON.stringify(target)}:\n${graphOutput.slice(0, 2000)}`
       : '';
   process.stdout.write(JSON.stringify({ context: enrichment, blocked: false }));
 };

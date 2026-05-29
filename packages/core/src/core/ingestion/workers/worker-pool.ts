@@ -21,6 +21,20 @@ export interface WorkerPool {
   readonly size: number;
 }
 
+export interface WorkerPoolOptions {
+  /**
+   * Max files to send to a worker in one postMessage. Lower values reduce
+   * structured-clone memory spikes and give the main thread more chances to
+   * observe progress on large repos.
+   */
+  subBatchSize?: number;
+  /**
+   * Idle timeout while waiting for a worker response. Reset by worker progress
+   * so slow-but-moving chunks do not get retried sequentially.
+   */
+  subBatchIdleTimeoutMs?: number;
+}
+
 /** Message shapes sent back by worker threads. */
 type WorkerOutgoingMessage =
   | { type: 'progress'; filesProcessed: number }
@@ -33,16 +47,30 @@ type WorkerOutgoingMessage =
  * Max files to send to a worker in a single postMessage.
  * Keeps structured-clone memory bounded per sub-batch.
  */
-const SUB_BATCH_SIZE = 1500;
+const DEFAULT_SUB_BATCH_SIZE = 250;
 
-/** Per sub-batch timeout. If a single sub-batch takes longer than this,
- *  likely a pathological file (e.g. minified 50MB JS). Fail fast. */
-const SUB_BATCH_TIMEOUT_MS = 30_000;
+/**
+ * Idle timeout while waiting for a worker response. This is not a wall-clock
+ * limit: worker progress resets it. Large repos can legitimately need more
+ * than 30s for a chunk, but a wedged parser should still fall back.
+ */
+const DEFAULT_SUB_BATCH_IDLE_TIMEOUT_MS = 120_000;
+
+const positiveIntFromEnv = (name: string, fallback: number): number => {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
 
 /**
  * Create a pool of worker threads.
  */
-export const createWorkerPool = (workerUrl: URL, poolSize?: number): WorkerPool => {
+export const createWorkerPool = (
+  workerUrl: URL,
+  poolSize?: number,
+  options: WorkerPoolOptions = {},
+): WorkerPool => {
   // Validate worker script exists before spawning to prevent uncaught
   // MODULE_NOT_FOUND crashes in worker threads (e.g. when running from src/ via vitest)
   const workerPath = fileURLToPath(workerUrl);
@@ -51,6 +79,12 @@ export const createWorkerPool = (workerUrl: URL, poolSize?: number): WorkerPool 
   }
 
   const size = poolSize ?? Math.min(8, Math.max(1, os.cpus().length - 1));
+  const subBatchSize =
+    options.subBatchSize ??
+    positiveIntFromEnv('CODRAGRAPH_WORKER_SUB_BATCH_SIZE', DEFAULT_SUB_BATCH_SIZE);
+  const subBatchIdleTimeoutMs =
+    options.subBatchIdleTimeoutMs ??
+    positiveIntFromEnv('CODRAGRAPH_WORKER_IDLE_TIMEOUT_MS', DEFAULT_SUB_BATCH_IDLE_TIMEOUT_MS);
   const workers: Worker[] = [];
 
   for (let i = 0; i < size; i++) {
@@ -75,47 +109,49 @@ export const createWorkerPool = (workerUrl: URL, poolSize?: number): WorkerPool 
       const worker = workers[i];
       return new Promise<TResult>((resolve, reject) => {
         let settled = false;
-        let subBatchTimer: ReturnType<typeof setTimeout> | null = null;
+        let workerIdleTimer: ReturnType<typeof setTimeout> | null = null;
 
         const cleanup = () => {
-          if (subBatchTimer) clearTimeout(subBatchTimer);
+          if (workerIdleTimer) clearTimeout(workerIdleTimer);
           worker.removeListener('message', handler);
           worker.removeListener('error', errorHandler);
           worker.removeListener('exit', exitHandler);
         };
 
-        const resetSubBatchTimer = () => {
-          if (subBatchTimer) clearTimeout(subBatchTimer);
-          subBatchTimer = setTimeout(() => {
+        const resetWorkerIdleTimer = () => {
+          if (workerIdleTimer) clearTimeout(workerIdleTimer);
+          workerIdleTimer = setTimeout(() => {
             if (!settled) {
               settled = true;
               cleanup();
               reject(
                 new Error(
-                  `Worker ${i} sub-batch timed out after ${SUB_BATCH_TIMEOUT_MS / 1000}s (chunk: ${chunk.length} items).`,
+                  `Worker ${i} was idle for ${subBatchIdleTimeoutMs / 1000}s while waiting for a response (chunk: ${chunk.length} items).`,
                 ),
               );
             }
-          }, SUB_BATCH_TIMEOUT_MS);
+          }, subBatchIdleTimeoutMs);
         };
 
         let subBatchIdx = 0;
 
         const sendNextSubBatch = () => {
-          const start = subBatchIdx * SUB_BATCH_SIZE;
+          const start = subBatchIdx * subBatchSize;
           if (start >= chunk.length) {
+            resetWorkerIdleTimer();
             worker.postMessage({ type: 'flush' });
             return;
           }
-          const subBatch = chunk.slice(start, start + SUB_BATCH_SIZE);
+          const subBatch = chunk.slice(start, start + subBatchSize);
           subBatchIdx++;
-          resetSubBatchTimer();
+          resetWorkerIdleTimer();
           worker.postMessage({ type: 'sub-batch', files: subBatch });
         };
 
         const handler = (msg: WorkerOutgoingMessage) => {
           if (settled) return;
           if (msg.type === 'progress') {
+            resetWorkerIdleTimer();
             workerProgress[i] = msg.filesProcessed;
             if (onProgress) {
               const total = workerProgress.reduce((a, b) => a + b, 0);

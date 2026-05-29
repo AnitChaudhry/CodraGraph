@@ -758,7 +758,7 @@ const processBatch = (
 
   let totalProcessed = 0;
   let lastReported = 0;
-  const PROGRESS_INTERVAL = 100; // report every 100 files
+  const PROGRESS_INTERVAL = 25; // report often enough to keep worker idle timers fresh
 
   const onFileProcessed = onProgress
     ? () => {

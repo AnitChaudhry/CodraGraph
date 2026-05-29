@@ -40,6 +40,7 @@ const FIXTURE_SRC = path.resolve(testDir, '..', 'fixtures', 'mini-repo');
 // still works), `afterAll` rms the parent tmpdir.
 let MINI_REPO: string;
 let tmpParent: string;
+let testCodragraphHome: string;
 
 beforeAll(() => {
   // Ensure `dist/cli/index.js` exists (we spawn it instead of tsx-loaded
@@ -56,6 +57,8 @@ beforeAll(() => {
   // `--repo mini-repo` CLI arg (which matches by basename) still works.
   tmpParent = fs.mkdtempSync(path.join(os.tmpdir(), 'gn-cli-e2e-'));
   MINI_REPO = path.join(tmpParent, 'mini-repo');
+  testCodragraphHome = path.join(tmpParent, 'codragraph-home');
+  fs.mkdirSync(testCodragraphHome, { recursive: true });
   fs.cpSync(FIXTURE_SRC, MINI_REPO, { recursive: true });
 
   // Initialize mini-repo as a git repo so the CLI analyze command
@@ -107,6 +110,7 @@ function runCli(command: string, cwd: string, timeoutMs = 15000) {
     stdio: ['pipe', 'pipe', 'pipe'],
     env: {
       ...process.env,
+      CODRAGRAPH_HOME: testCodragraphHome,
       // Pre-set --max-old-space-size so analyzeCommand's ensureHeap() sees it
       // and skips the re-exec. (Re-exec is harmless when running dist, but
       // skipping it shaves a few seconds off every test invocation.)
@@ -127,6 +131,7 @@ function runCliRaw(extraArgs: string[], cwd: string, timeoutMs = 15000) {
     stdio: ['pipe', 'pipe', 'pipe'],
     env: {
       ...process.env,
+      CODRAGRAPH_HOME: testCodragraphHome,
       NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} --max-old-space-size=8192`.trim(),
     },
   });
@@ -150,6 +155,7 @@ function runCliWithEnv(
     stdio: ['pipe', 'pipe', 'pipe'],
     env: {
       ...process.env,
+      CODRAGRAPH_HOME: testCodragraphHome,
       NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} --max-old-space-size=8192`.trim(),
       ...extraEnv,
     },
@@ -1072,6 +1078,7 @@ describe('CLI end-to-end', () => {
             stdio: ['ignore', 'pipe', 'pipe'],
             env: {
               ...process.env,
+              CODRAGRAPH_HOME: testCodragraphHome,
               NODE_OPTIONS: `${process.env.NODE_OPTIONS || ''} --max-old-space-size=8192`.trim(),
             },
           },

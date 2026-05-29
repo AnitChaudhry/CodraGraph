@@ -45,10 +45,13 @@ Bun installs from the same npm registry. Use `--trust` or
 `bun pm trust @codragraph/cli` so native parser lifecycle scripts can run when
 needed.
 
-`analyze` is intentionally conservative: source, Markdown/docs, config,
-file-structure, schema, compression, and requested embedding changes rebuild
-the graph; generated agent context, lockfile-only changes, and ignored assets
-reuse the existing graph and only advance metadata.
+`analyze` is intentionally conservative about indexed inputs: source files,
+Markdown/MDX graph docs, language config, schema, compression, and requested
+embedding changes rebuild the graph. Generated agent context, lockfile-only
+changes, and ignored assets reuse the existing graph and only advance metadata.
+Each analyze or smart-reuse pass also refreshes `.codragraph/structure/`, a
+small pre-seeded markdown pack for agents (`WHAT`, `WHY`, `HOW`, `WHEN`,
+`WHERE`, branch/index state, bounded history, and SQLite seed SQL).
 
 ## What you get
 
@@ -343,30 +346,14 @@ runs the same MCP tools on demand. Both can run on the same PR.
 
 ---
 
-## Auto-reindex on commit
+## Hook staleness checks
 
-The Claude Code `PostToolUse` hook (installed by `codragraph setup`)
-detects when a `git commit` / `merge` / `rebase` / `pull` made the
-index stale. Default behavior is to notify the agent so it can reindex
-at a quiet point. To enable background auto-reindex instead:
-
-```sh
-# macOS/Linux bash/zsh:
-export CODRAGRAPH_AUTO_REINDEX=1
-
-# Windows PowerShell:
-$env:CODRAGRAPH_AUTO_REINDEX = "1"
-```
-
-Or persist `{ "autoReindex": true }` in `~/.codragraph/config.json`; that
-survives Windows GUI launches as well.
-
-When enabled, the hook spawns a detached `codragraph analyze --no-setup`
-in the background. A `.codragraph/.reindex.coalesce` file gates
-concurrent runs (single in-flight reindex per repo); analyze deletes it
-on exit. If an MCP server is currently holding LadybugDB, the
-background reindex fails silently — run `codragraph analyze` manually
-after closing the agent session.
+The Claude Code `PostToolUse` hook (installed by `codragraph setup`) detects
+when a `git commit` / `merge` / `rebase` / `pull` made the index stale. The
+Codex post-edit hook also checks for uncommitted working-tree edits. Hooks
+never start `codragraph analyze` in the background and never open LadybugDB for
+write; they only perform cheap git/meta checks and tell the agent to run
+`codragraph analyze` when fresh graph context is actually needed.
 
 ---
 
@@ -455,6 +442,24 @@ Each `.heapsnapshot` is 100–500 MB, so this is opt-in only. The JSONL
 timeline is small enough to ship around for triage even when the
 snapshots are too big to share. Use the per-phase RSS column to figure
 out which phase to focus on before reaching for the full snapshots.
+
+### Analyzer worker tuning
+
+Worker parsing uses small sub-batches by default and treats timeouts as idle
+guards. If a very large repo still reports worker fallback while progress is
+being made, lower the sub-batch size and extend the idle window:
+
+```sh
+CODRAGRAPH_WORKER_SUB_BATCH_SIZE=100 CODRAGRAPH_WORKER_IDLE_TIMEOUT_MS=180000 npx @codragraph/cli analyze
+```
+
+Windows PowerShell equivalent:
+
+```powershell
+$env:CODRAGRAPH_WORKER_SUB_BATCH_SIZE = "100"
+$env:CODRAGRAPH_WORKER_IDLE_TIMEOUT_MS = "180000"
+npx @codragraph/cli analyze
+```
 
 ---
 
@@ -727,15 +732,15 @@ Current workspace versions:
 
 | Package | Version | Notes |
 |---|---|---|
-| `@codragraph/cli` | 2.1.4 | CLI, MCP, HTTP, web dashboard, FeatureCluster context packs |
-| `@codragraph/shared` | 2.1.4 | Shared graph, schema, and FeatureCluster contracts |
-| `@codragraph/graphstore` | 2.1.4 | Content-addressed snapshots, diff, branch, merge, blame |
-| `@codragraph/harness` | 2.1.4 | Harness search, swarm, recipe memory, graph clients |
-| `@codragraph/compress` | 2.1.4 | LLM-context compression and FeatureCluster context-pack compression |
-| `@codragraph/sdk` | 2.1.4 | One-import programmatic surface over graph, harness, graphstore, compress |
-| `@codragraph/org` | 2.1.4 | Tenant, RBAC, and audit helpers for hosted/team deployments |
-| `@codragraph/codex` | 2.1.4 | Codex hooks and MCP wiring |
-| `@codragraph/claude-plugin` | 2.1.4 | Claude Code hooks, skills, and MCP wiring |
+| `@codragraph/cli` | 2.1.5 | CLI, MCP, HTTP, web dashboard, FeatureCluster context packs |
+| `@codragraph/shared` | 2.1.5 | Shared graph, schema, and FeatureCluster contracts |
+| `@codragraph/graphstore` | 2.1.5 | Content-addressed snapshots, diff, branch, merge, blame |
+| `@codragraph/harness` | 2.1.5 | Harness search, swarm, recipe memory, graph clients |
+| `@codragraph/compress` | 2.1.5 | LLM-context compression and FeatureCluster context-pack compression |
+| `@codragraph/sdk` | 2.1.5 | One-import programmatic surface over graph, harness, graphstore, compress |
+| `@codragraph/org` | 2.1.5 | Tenant, RBAC, and audit helpers for hosted/team deployments |
+| `@codragraph/codex` | 2.1.5 | Codex hooks and MCP wiring |
+| `@codragraph/claude-plugin` | 2.1.5 | Claude Code hooks, skills, and MCP wiring |
 
 Pre-context-pack indexes (`schemaVersion < 4`) are auto-detected and force
 a full re-analyze on first 2.1+ run so the FeatureCluster table, feature

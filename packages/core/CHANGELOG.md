@@ -4,7 +4,18 @@ All notable changes to CodraGraph will be documented in this file.
 
 ## [Unreleased]
 
-(none yet — next cycle's entries go here)
+## [2.1.5] - 2026-05-29
+
+- Smart analyze keeps source files, Markdown/MDX graph docs, language config,
+  and path topology changes rebuild-relevant, while skipping generated agent
+  context, lockfiles, and ignored assets when the existing graph can be reused.
+- `analyze` now refreshes `.codragraph/structure/`, a compact agent memory pack
+  with what/why/how/when/where markdown, branch/index state, bounded history,
+  `state.json`, and SQLite seed SQL.
+- Worker parsing now uses smaller sub-batches and an idle timeout that resets
+  on progress, reducing false sequential fallbacks on large repositories.
+- Claude/Codex hooks are notification-only for stale indexes; they never start
+  background `analyze` or run DB-writing commands from the agent hot path.
 
 ## [2.0.0] - 2026-04-30
 

@@ -280,6 +280,7 @@ export async function runChunkedParseAndResolve(
         .filter((p) => chunkContents.has(p))
         .map((p) => ({ path: p, content: chunkContents.get(p)! }));
 
+      const usedWorkerPoolForChunk = workerPool !== undefined;
       const chunkWorkerData = await processParsing(
         graph,
         chunkFiles,
@@ -303,6 +304,9 @@ export async function runChunkedParseAndResolve(
         },
         workerPool,
       );
+      if (usedWorkerPoolForChunk && !chunkWorkerData) {
+        workerPool = undefined;
+      }
 
       const chunkBasePercent = 20 + (filesParsedSoFar / totalParseable) * 62;
 

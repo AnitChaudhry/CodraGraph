@@ -18,6 +18,7 @@ import { processHeritage } from '../../src/core/ingestion/heritage-processor.js'
 import { createSymbolTable } from '../../src/core/ingestion/model/symbol-table.js';
 import { createResolutionContext } from '../../src/core/ingestion/model/resolution-context.js';
 import * as parserLoader from '../../src/core/tree-sitter/parser-loader.js';
+import type { WorkerPool } from '../../src/core/ingestion/workers/worker-pool.js';
 
 describe('sequential native parser availability', () => {
   beforeEach(() => {
@@ -188,5 +189,33 @@ describe('sequential native parser availability', () => {
     } else {
       process.env.CODRAGRAPH_VERBOSE = previous;
     }
+  });
+
+  it('terminates the worker pool before sequential fallback after worker failure', async () => {
+    vi.mocked(parserLoader.isLanguageAvailable).mockReturnValue(false);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const workerPool = {
+      size: 1,
+      dispatch: vi.fn(async () => {
+        throw new Error('worker stuck');
+      }) as WorkerPool['dispatch'],
+      terminate: vi.fn(async () => undefined),
+    };
+
+    await expect(
+      processParsing(
+        createKnowledgeGraph(),
+        [{ path: 'App.swift', content: 'class AppViewController: UIViewController {}' }],
+        createSymbolTable(),
+        createASTCache(),
+        undefined,
+        undefined,
+        workerPool,
+      ),
+    ).resolves.toBeNull();
+
+    expect(workerPool.dispatch).toHaveBeenCalledTimes(1);
+    expect(workerPool.terminate).toHaveBeenCalledTimes(1);
+    warnSpy.mockRestore();
   });
 });

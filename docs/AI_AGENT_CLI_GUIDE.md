@@ -15,7 +15,8 @@ Related docs:
 
 1. Start with read-only checks: `codragraph status`, `codragraph list`,
    `npx @codragraph/cli status`, `bunx @codragraph/cli status`, MCP
-   `list_repos`, or `codragraph://repo/{name}/context`.
+   `list_repos`, `.codragraph/structure/README.md`, or
+   `codragraph://repo/{name}/context`.
 2. Do not run destructive cleanup without explicit user approval. This includes
    `codragraph clean --force`, `codragraph clean --all --force`, deleting
    `.codragraph/`, deleting `~/.codragraph/registry.json`, or editing DB/WAL
@@ -25,14 +26,18 @@ Related docs:
    search or an existing index already has embeddings that must be preserved.
 4. Do not start multiple `codragraph analyze` processes for the same repo. One
    writer should own `.codragraph/cgdb` at a time.
-5. For REST health checks, call `/api/info`. Do not probe MCP internals with
+5. Editor hooks must stay read-only and bounded. They may run `augment` or
+   cheap git/meta checks (`HEAD` versus `.codragraph/meta.json`, or
+   `git diff --quiet`), but they must not run `analyze`, `detect-changes`,
+   `clean`, or any DB-writing command.
+6. For REST health checks, call `/api/info`. Do not probe MCP internals with
    invented routes such as `/api/mcp/tools/list`.
-6. Do not use find-and-replace for symbol renames. Use the MCP `rename` tool
+7. Do not use find-and-replace for symbol renames. Use the MCP `rename` tool
    with `dry_run: true`, then review graph edits versus text-search edits.
-7. Before editing shared symbols, run MCP `impact` upstream when graph tools are
+8. Before editing shared symbols, run MCP `impact` upstream when graph tools are
    available. Before committing, run MCP `detect_changes` when graph tools are
    available.
-8. Report the exact command that failed and the exact error. Do not hide MCP,
+9. Report the exact command that failed and the exact error. Do not hide MCP,
    LadybugDB, parser, native-binding, or PowerShell errors behind "try again."
 
 ## Command Decision Tree
@@ -54,11 +59,46 @@ Related docs:
 
 Use `bunx @codragraph/cli ...` as the Bun equivalent for each `npx @codragraph/cli ...` command.
 
+Direct graph commands such as `query`, `context`, `impact`, `cypher`,
+`feature-clusters`, `context-pack`, and `detect-changes` default to the
+indexed repo under the current working directory. If the cwd is not indexed,
+they must fail with "Current repository is not indexed" instead of falling
+back to some other repo in the global registry. Pass `--repo <name>` or
+`--repo @<group>` when intentionally querying a different repo.
+
 `analyze` is incremental at the command level: if the previous index is on the
-current schema and the new commit changed only files outside indexed code,
-Markdown/docs, config, and file structure, it prints a smart-reuse message
-instead of rebuilding LadybugDB. Use `--force` when ignore rules changed or you
-need to rebuild generated graph data despite an unchanged commit.
+current schema and the new commit changed only generated agent context,
+lockfiles, or ignored assets, it prints a smart-reuse message instead of
+rebuilding LadybugDB. Source files, Markdown/MDX graph docs, language config,
+and add/delete/rename/copy path changes stay rebuild-relevant so graph file,
+folder, and documentation surfaces do not go stale. Use `--force` when ignore
+rules changed or you need to rebuild generated graph data despite an unchanged
+commit.
+
+Every analyze or smart-reuse pass also refreshes `.codragraph/structure/`.
+Agents should read that folder for the pre-seeded what/why/how/when/where
+orientation, branch/index state, bounded analyze history, and
+`agent-memory.sql` SQLite seed before inventing their own local memory format.
+
+## Analyze Performance Knobs
+
+Do not tune these by default. Use them only when the user reports analyzer
+stalls, worker fallback, or memory pressure and a normal `analyze` still
+fails.
+
+```powershell
+$env:CODRAGRAPH_WORKER_SUB_BATCH_SIZE = "100"
+$env:CODRAGRAPH_WORKER_IDLE_TIMEOUT_MS = "180000"
+npx @codragraph/cli analyze
+```
+
+`CODRAGRAPH_WORKER_SUB_BATCH_SIZE` limits how many files are sent to a worker
+in one message. Smaller values reduce peak memory on large repos. The default
+is 250.
+
+`CODRAGRAPH_WORKER_IDLE_TIMEOUT_MS` is an idle timer, not a wall-clock limit.
+Worker progress resets it, so slow-but-moving parses should continue instead
+of falling back to sequential parsing. The default is 120000.
 
 ## Monorepo Source CLI
 

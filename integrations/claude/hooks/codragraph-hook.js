@@ -33,7 +33,7 @@ function readInput() {
  */
 function findCodraGraphDir(startDir) {
   let dir = startDir || process.cwd();
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 8; i++) {
     const candidate = path.join(dir, '.codragraph');
     if (fs.existsSync(candidate)) return candidate;
     const parent = path.dirname(dir);
@@ -150,28 +150,15 @@ function runCodraGraphCli(args, cwd, timeout) {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   }
-  // Package-runner fallback, routed through `cmd /c` on Windows for shim resolution.
-  const userAgent = (process.env.npm_config_user_agent || '').toLowerCase();
-  const execBase = path.basename(process.env.npm_execpath || '').toLowerCase();
-  const useBun = userAgent.startsWith('bun/') || execBase === 'bun' || execBase === 'bun.exe';
-  const runner = useBun
-    ? { bin: 'bunx', args: ['@codragraph/cli', ...args] }
-    : { bin: 'npx', args: ['-y', '@codragraph/cli', ...args] };
-
-  if (isWin) {
-    return spawnSync('cmd', ['/c', runner.bin, ...runner.args], {
-      encoding: 'utf-8',
-      timeout: timeout + 5000,
-      cwd,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-  }
-  return spawnSync(runner.bin, runner.args, {
-    encoding: 'utf-8',
-    timeout: timeout + 5000,
-    cwd,
-    stdio: ['pipe', 'pipe', 'pipe'],
-  });
+  // Hooks run in the agent hot path. Never invoke npx/bunx here because that
+  // can install/fetch packages and hang PowerShell sessions. If the CLI is not
+  // already available, stay silent and let MCP/skills guide setup.
+  return {
+    status: 127,
+    stdout: '',
+    stderr: '',
+    error: new Error('codragraph binary not found on PATH'),
+  };
 }
 
 /**
@@ -219,11 +206,10 @@ function handlePreToolUse(input) {
 /**
  * PostToolUse handler — detect index staleness after git mutations.
  *
- * Instead of spawning a full `codragraph analyze` synchronously (which blocks
- * the agent for up to 120s and risks LadybugDB corruption on timeout), we do a
- * lightweight staleness check: compare `git rev-parse HEAD` against the
- * lastCommit stored in `.codragraph/meta.json`. If they differ, notify the
- * agent so it can decide when to reindex.
+ * Hooks must not own writes to `.codragraph`. They run inside the agent's hot
+ * path, so starting analyze from here can contend with MCP/LadybugDB and make
+ * normal edits feel hung. Keep this to a cheap metadata comparison and let the
+ * user or agent run the CLI explicitly when fresh graph context is required.
  */
 function handlePostToolUse(input) {
   const toolName = input.tool_name || '';
@@ -275,7 +261,7 @@ function handlePostToolUse(input) {
   sendHookResponse(
     'PostToolUse',
     `CodraGraph index is stale (last indexed: ${lastCommit ? lastCommit.slice(0, 7) : 'never'}). ` +
-      `Run \`${analyzeCmd}\` to update the knowledge graph.`,
+      `Run \`${analyzeCmd}\` when you need fresh graph context. Hooks never start analyze in the background.`,
   );
 }
 

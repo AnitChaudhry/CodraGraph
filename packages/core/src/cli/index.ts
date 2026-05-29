@@ -12,6 +12,29 @@ const _require = createRequire(import.meta.url);
 const pkg = _require('../../package.json');
 const program = new Command();
 
+const exitOneShot = (code: number): never => {
+  const reallyExit = (process as NodeJS.Process & { reallyExit?: (code?: number) => never })
+    .reallyExit;
+  if (typeof reallyExit === 'function') {
+    reallyExit(code);
+  }
+  process.exit(code);
+};
+
+const createOneShotLazyAction = (loader: () => Promise<any>, exportName: string) => {
+  const action = createLazyAction(loader, exportName as never);
+  return async (...args: unknown[]): Promise<void> => {
+    await action(...args);
+    const code =
+      typeof process.exitCode === 'number'
+        ? process.exitCode
+        : process.exitCode
+          ? Number(process.exitCode) || 1
+          : 0;
+    exitOneShot(code);
+  };
+};
+
 program.name('codragraph').description('CodraGraph local CLI and MCP server').version(pkg.version);
 
 program
@@ -173,7 +196,7 @@ program
   .option('-g, --goal <text>', 'What you want to find')
   .option('-l, --limit <n>', 'Max processes to return (default: 5)')
   .option('--content', 'Include full symbol source code')
-  .action(createLazyAction(() => import('./tool.js'), 'queryCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'queryCommand'));
 
 program
   .command('context [name]')
@@ -182,7 +205,7 @@ program
   .option('-u, --uid <uid>', 'Direct symbol UID (zero-ambiguity lookup)')
   .option('-f, --file <path>', 'File path to disambiguate common names')
   .option('--content', 'Include full symbol source code')
-  .action(createLazyAction(() => import('./tool.js'), 'contextCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'contextCommand'));
 
 program
   .command('impact <target>')
@@ -191,48 +214,48 @@ program
   .option('-r, --repo <name>', 'Target repository')
   .option('--depth <n>', 'Max relationship depth (default: 3)')
   .option('--include-tests', 'Include test files in results')
-  .action(createLazyAction(() => import('./tool.js'), 'impactCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'impactCommand'));
 
 program
   .command('cypher <query>')
   .description('Execute raw Cypher query against the knowledge graph')
   .option('-r, --repo <name>', 'Target repository')
-  .action(createLazyAction(() => import('./tool.js'), 'cypherCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'cypherCommand'));
 
 program
   .command('feature-clusters')
   .description('List human-facing feature clusters for targeted context building')
   .option('-r, --repo <name>', 'Target repository')
   .option('-l, --limit <n>', 'Max feature clusters to return (default: 100)')
-  .action(createLazyAction(() => import('./tool.js'), 'featureClustersCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'featureClustersCommand'));
 
 program
   .command('cluster-query [query]')
   .description('Alias for feature-clusters: list product/domain clusters')
   .option('-r, --repo <name>', 'Target repository')
   .option('-l, --limit <n>', 'Max feature clusters to return (default: 100)')
-  .action(createLazyAction(() => import('./tool.js'), 'clusterQueryCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'clusterQueryCommand'));
 
 program
   .command('feature-context <name>')
   .description('Show members, line ranges, and dependencies for a feature cluster')
   .option('-r, --repo <name>', 'Target repository')
   .option('-l, --limit <n>', 'Max members to return (default: 100)')
-  .action(createLazyAction(() => import('./tool.js'), 'featureContextCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'featureContextCommand'));
 
 program
   .command('cluster-context <name>')
   .description('Alias for feature-context: show a feature cluster context pack')
   .option('-r, --repo <name>', 'Target repository')
   .option('-l, --limit <n>', 'Max members to return (default: 100)')
-  .action(createLazyAction(() => import('./tool.js'), 'clusterContextCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'clusterContextCommand'));
 
 program
   .command('context-pack <name>')
   .description('Generate the compact agent context pack for a feature cluster')
   .option('-r, --repo <name>', 'Target repository')
   .option('-l, --limit <n>', 'Max members to return (default: 100)')
-  .action(createLazyAction(() => import('./tool.js'), 'contextPackCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'contextPackCommand'));
 
 program
   .command('cluster-impact <name>')
@@ -240,7 +263,7 @@ program
   .option('-d, --direction <dir>', 'upstream, downstream, or both', 'upstream')
   .option('-r, --repo <name>', 'Target repository')
   .option('-l, --limit <n>', 'Max context-pack members to include (default: 100)')
-  .action(createLazyAction(() => import('./tool.js'), 'clusterImpactCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'clusterImpactCommand'));
 
 program
   .command('detect-changes')
@@ -249,7 +272,7 @@ program
   .option('-s, --scope <scope>', 'What to analyze: unstaged, staged, all, or compare', 'unstaged')
   .option('-b, --base-ref <ref>', 'Branch/commit for compare scope (e.g. main)')
   .option('-r, --repo <name>', 'Target repository')
-  .action(createLazyAction(() => import('./tool.js'), 'detectChangesCommand'));
+  .action(createOneShotLazyAction(() => import('./tool.js'), 'detectChangesCommand'));
 
 // ─── Eval Server (persistent daemon for SWE-bench) ─────────────────
 

@@ -1263,6 +1263,44 @@ describe('cypher result formatting', () => {
     expect(result.markdown).toContain('name');
     expect(result.markdown).toContain('main');
     expect(result.row_count).toBe(2);
+    expect(executeQuery).toHaveBeenCalledWith(
+      'test-project',
+      'MATCH (n:Function) RETURN n.name AS name, n.filePath AS filePath',
+    );
+  });
+
+  it('short-circuits native-unsafe node labels before executing raw cypher', async () => {
+    (executeQuery as any).mockResolvedValue([]);
+    const result = await backend.callTool('cypher', {
+      query: 'MATCH (n:Union) RETURN n.name LIMIT 5',
+    });
+
+    expect(result).toEqual([]);
+    expect(executeQuery).not.toHaveBeenCalled();
+  });
+
+  it('emulates simple label-less node scans across concrete labels', async () => {
+    (executeQuery as any).mockImplementation(async (_repoId: string, query: string) => {
+      if (query.includes('`File`')) return [{ 'n.name': 'src/index.ts' }];
+      if (query.includes('`Folder`')) return [{ 'n.name': 'src' }];
+      return [];
+    });
+
+    const result = await backend.callTool('cypher', {
+      query: 'MATCH (n) RETURN n.name LIMIT 2',
+    });
+
+    expect(executeQuery).toHaveBeenNthCalledWith(
+      1,
+      'test-project',
+      'MATCH (n:`File`) RETURN n.name LIMIT 2',
+    );
+    expect(executeQuery).toHaveBeenNthCalledWith(
+      2,
+      'test-project',
+      'MATCH (n:`Folder`) RETURN n.name LIMIT 1',
+    );
+    expect(result).toHaveProperty('row_count', 2);
   });
 
   it('returns empty array as-is', async () => {

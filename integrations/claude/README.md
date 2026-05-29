@@ -20,9 +20,10 @@ claude plugins install integrations/claude
 
 ## What's in the box
 
-- **Hooks**: PreToolUse + PostToolUse on Grep/Glob/Bash → run a
-  side-channel CodraGraph query and prepend the result to Claude's
-  context.
+- **Hooks**: PreToolUse on Grep/Glob/Bash runs a bounded side-channel
+  CodraGraph query and prepends the result to Claude's context. PostToolUse
+  only performs a cheap staleness check; it never starts `analyze` in the
+  background.
 - **Feature context**: `feature_clusters` and `feature_context` expose
   focused files, line ranges, dependencies, and flows for one product area.
 - **Skills**: 7 skill packs Claude can invoke directly:

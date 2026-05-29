@@ -17,6 +17,7 @@
 
 import fs from 'fs/promises';
 import cgdb from '@ladybugdb/core';
+import { NODE_TABLES } from './schema.js';
 
 /** Per-repo pool: one Database, many Connections */
 interface PoolEntry {
@@ -34,6 +35,48 @@ interface PoolEntry {
 }
 
 const pool = new Map<string, PoolEntry>();
+
+const SIMPLE_LABELLESS_MATCH_RE = /^MATCH\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)/i;
+const CYPHER_LIMIT_RE = /\bLIMIT\s+(\d+)\s*;?\s*$/i;
+const CYPHER_RELATION_RE = /--|-\[|\]-|->|<-/;
+const NATIVE_UNSAFE_NODE_LABELS = new Set(['Union']);
+
+function quoteKnownNodeLabels(query: string): string {
+  return query;
+}
+
+function getNativeUnsafeNodeLabel(query: string): string | null {
+  const labelRe = /\(\s*[A-Za-z_][A-Za-z0-9_]*\s*:\s*`?([A-Za-z_][A-Za-z0-9_]*)`?(?=[\s){])/g;
+  for (const match of query.matchAll(labelRe)) {
+    const label = match[1];
+    if (NATIVE_UNSAFE_NODE_LABELS.has(label)) return label;
+  }
+  return null;
+}
+
+function getSimpleLabellessNodeAlias(query: string): string | null {
+  const trimmed = query.trim();
+  const match = SIMPLE_LABELLESS_MATCH_RE.exec(trimmed);
+  if (!match) return null;
+  if (CYPHER_RELATION_RE.test(trimmed)) return null;
+  if (/\bMATCH\b/i.test(trimmed.slice(match[0].length))) return null;
+  return match[1];
+}
+
+function getCypherLimit(query: string): number | null {
+  const match = CYPHER_LIMIT_RE.exec(query);
+  if (!match) return null;
+  const limit = Number.parseInt(match[1], 10);
+  return Number.isFinite(limit) && limit > 0 ? limit : null;
+}
+
+function withCypherLimit(query: string, limit: number): string {
+  const safeLimit = Math.max(1, Math.trunc(limit));
+  if (CYPHER_LIMIT_RE.test(query)) {
+    return query.replace(CYPHER_LIMIT_RE, `LIMIT ${safeLimit}`);
+  }
+  return `${query.replace(/;\s*$/, '')} LIMIT ${safeLimit}`;
+}
 
 /**
  * Listeners notified when a pool entry is torn down (LRU eviction, idle
@@ -558,18 +601,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
-export const executeQuery = async (repoId: string, cypher: string): Promise<any[]> => {
-  const entry = pool.get(repoId);
-  if (!entry) {
-    throw new Error(`LadybugDB not initialized for repo "${repoId}". Call initCgdb first.`);
-  }
-
-  if (isWriteQuery(cypher)) {
-    throw new Error('Write operations are not allowed. The pool adapter is read-only.');
-  }
-
-  entry.lastUsed = Date.now();
-
+async function runQueryOnEntry(entry: PoolEntry, cypher: string): Promise<any[]> {
   const conn = await checkout(entry);
   silenceStdout();
   activeQueryCount++;
@@ -583,24 +615,13 @@ export const executeQuery = async (repoId: string, cypher: string): Promise<any[
     restoreStdout();
     checkin(entry, conn);
   }
-};
+}
 
-/**
- * Execute a parameterized query on a specific repo's connection pool.
- * Uses prepare/execute pattern to prevent Cypher injection.
- */
-export const executeParameterized = async (
-  repoId: string,
+async function runParameterizedOnEntry(
+  entry: PoolEntry,
   cypher: string,
   params: Record<string, any>,
-): Promise<any[]> => {
-  const entry = pool.get(repoId);
-  if (!entry) {
-    throw new Error(`LadybugDB not initialized for repo "${repoId}". Call initCgdb first.`);
-  }
-
-  entry.lastUsed = Date.now();
-
+): Promise<any[]> {
   const conn = await checkout(entry);
   silenceStdout();
   activeQueryCount++;
@@ -619,6 +640,120 @@ export const executeParameterized = async (
     restoreStdout();
     checkin(entry, conn);
   }
+}
+
+async function runLabellessNodeScan(
+  query: string,
+  alias: string,
+  runner: (labelQuery: string) => Promise<any[]>,
+): Promise<any[]> {
+  const limit = getCypherLimit(query) ?? 100;
+  const rows: any[] = [];
+  let lastError: Error | null = null;
+
+  for (const label of NODE_TABLES as readonly string[]) {
+    if (NATIVE_UNSAFE_NODE_LABELS.has(label)) continue;
+    if (rows.length >= limit) break;
+
+    const labelQuery = withCypherLimit(
+      query.replace(SIMPLE_LABELLESS_MATCH_RE, `MATCH (${alias}:\`${label}\`)`),
+      limit - rows.length,
+    );
+
+    try {
+      const labelRows = await runner(labelQuery);
+      rows.push(...decorateLabellessRows(labelRows, label));
+    } catch (err: any) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      if (!isBenignLabelScanError(error)) {
+        lastError = error;
+      }
+    }
+  }
+
+  if (rows.length === 0 && lastError) {
+    throw lastError;
+  }
+  return rows.slice(0, limit);
+}
+
+function decorateLabellessRows(rows: any[], label: string): any[] {
+  return rows.map((row) => {
+    if (!row || typeof row !== 'object' || Array.isArray(row)) return row;
+    const decorated = { ...row, __cgLabel: label };
+    for (const key of ['type', 'kind', 'label']) {
+      const value = decorated[key];
+      if (value === '' || value === null || value === undefined) {
+        decorated[key] = label;
+      }
+    }
+    return decorated;
+  });
+}
+
+function isBenignLabelScanError(error: Error): boolean {
+  const message = error.message.toLowerCase();
+  return (
+    message.includes('cannot find property') ||
+    message.includes('does not have property') ||
+    message.includes('property') && message.includes('not found')
+  );
+}
+
+export const executeQuery = async (repoId: string, cypher: string): Promise<any[]> => {
+  const entry = pool.get(repoId);
+  if (!entry) {
+    throw new Error(`LadybugDB not initialized for repo "${repoId}". Call initCgdb first.`);
+  }
+
+  const safeCypher = quoteKnownNodeLabels(cypher);
+  if (isWriteQuery(safeCypher)) {
+    throw new Error('Write operations are not allowed. The pool adapter is read-only.');
+  }
+  if (getNativeUnsafeNodeLabel(safeCypher)) {
+    return [];
+  }
+
+  entry.lastUsed = Date.now();
+
+  const labellessAlias = getSimpleLabellessNodeAlias(safeCypher);
+  if (labellessAlias) {
+    return runLabellessNodeScan(safeCypher, labellessAlias, (labelQuery) =>
+      runQueryOnEntry(entry, labelQuery),
+    );
+  }
+
+  return runQueryOnEntry(entry, safeCypher);
+};
+
+/**
+ * Execute a parameterized query on a specific repo's connection pool.
+ * Uses prepare/execute pattern to prevent Cypher injection.
+ */
+export const executeParameterized = async (
+  repoId: string,
+  cypher: string,
+  params: Record<string, any>,
+): Promise<any[]> => {
+  const entry = pool.get(repoId);
+  if (!entry) {
+    throw new Error(`LadybugDB not initialized for repo "${repoId}". Call initCgdb first.`);
+  }
+
+  entry.lastUsed = Date.now();
+
+  const safeCypher = quoteKnownNodeLabels(cypher);
+  if (getNativeUnsafeNodeLabel(safeCypher)) {
+    return [];
+  }
+  const labellessAlias = getSimpleLabellessNodeAlias(safeCypher);
+  if (labellessAlias) {
+    return runLabellessNodeScan(safeCypher, labellessAlias, (labelQuery) =>
+      runParameterizedOnEntry(entry, labelQuery, params),
+    );
+  }
+
+  return runParameterizedOnEntry(entry, safeCypher, params);
 };
 
 /**

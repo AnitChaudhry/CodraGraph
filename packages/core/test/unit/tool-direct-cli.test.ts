@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const initMock = vi.fn();
 const callToolMock = vi.fn();
 const writeSyncMock = vi.fn();
+const findRepoMock = vi.fn();
 
 vi.mock('../../src/mcp/local/local-backend.js', () => ({
   LocalBackend: class {
@@ -15,13 +16,20 @@ vi.mock('node:fs', () => ({
   writeSync: writeSyncMock,
 }));
 
+vi.mock('../../src/storage/repo-manager.js', () => ({
+  findRepo: findRepoMock,
+}));
+
 describe('direct CLI tool commands', () => {
   beforeEach(() => {
     vi.resetModules();
     initMock.mockReset();
     callToolMock.mockReset();
     writeSyncMock.mockReset();
+    findRepoMock.mockReset();
     initMock.mockResolvedValue(true);
+    findRepoMock.mockResolvedValue({ repoPath: 'D:\\repo' });
+    process.exitCode = undefined;
   });
 
   it('dispatches detect_changes with CLI-shaped arguments', async () => {
@@ -46,7 +54,72 @@ describe('direct CLI tool commands', () => {
       base_ref: 'main',
       repo: '@codragraph/cli',
     });
+    expect(findRepoMock).not.toHaveBeenCalled();
     expect(writeSyncMock).toHaveBeenCalledWith(1, expect.stringContaining('Risk level: low'));
+  });
+
+  it('defaults query to the indexed repo under cwd instead of any single registry repo', async () => {
+    callToolMock.mockResolvedValue({ results: [] });
+    const { queryCommand } = await import('../../src/cli/tool.js');
+
+    await queryCommand('auth flow', {});
+
+    expect(callToolMock).toHaveBeenCalledWith('query', {
+      query: 'auth flow',
+      task_context: undefined,
+      goal: undefined,
+      limit: undefined,
+      include_content: false,
+      repo: 'D:\\repo',
+    });
+  });
+
+  it('refuses query from an unindexed cwd instead of falling back to another repo', async () => {
+    findRepoMock.mockResolvedValue(null);
+    const { queryCommand } = await import('../../src/cli/tool.js');
+
+    await queryCommand('auth flow', {});
+
+    expect(callToolMock).not.toHaveBeenCalled();
+    expect(writeSyncMock).toHaveBeenCalledWith(
+      1,
+      expect.stringContaining('Current repository is not indexed'),
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('defaults detect_changes to the indexed repo under cwd instead of any single registry repo', async () => {
+    callToolMock.mockResolvedValue({
+      summary: {
+        changed_files: 1,
+        changed_count: 1,
+        affected_count: 0,
+        risk_level: 'low',
+      },
+    });
+    const { detectChangesCommand } = await import('../../src/cli/tool.js');
+
+    await detectChangesCommand({});
+
+    expect(callToolMock).toHaveBeenCalledWith('detect_changes', {
+      scope: 'unstaged',
+      base_ref: undefined,
+      repo: 'D:\\repo',
+    });
+  });
+
+  it('refuses detect_changes from an unindexed cwd instead of falling back to another repo', async () => {
+    findRepoMock.mockResolvedValue(null);
+    const { detectChangesCommand } = await import('../../src/cli/tool.js');
+
+    await detectChangesCommand({});
+
+    expect(callToolMock).not.toHaveBeenCalled();
+    expect(writeSyncMock).toHaveBeenCalledWith(
+      1,
+      expect.stringContaining('Current repository is not indexed'),
+    );
+    expect(process.exitCode).toBe(1);
   });
 
   it('prints "No changes detected." when changed_count is 0', async () => {

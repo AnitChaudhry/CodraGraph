@@ -25,6 +25,13 @@ That's it. This indexes the codebase, installs agent skills, registers Claude Co
 
 The same CLI commands work in Windows PowerShell, macOS bash/zsh, and Linux shells. Use `npx @codragraph/cli ...` for no-install runs or `codragraph ...` after a global install.
 
+Smart analyze rebuilds when indexed source, Markdown/MDX graph docs, language
+config, schema, compression, or requested embedding settings changed. Generated
+agent context, lockfile-only, and ignored asset changes reuse the existing
+graph and advance metadata. Each pass refreshes `.codragraph/structure/`, a
+compact what/why/how/when/where markdown pack with branch/index state, bounded
+history, and SQLite seed SQL for external agent memory.
+
 To configure MCP for your editor, run `npx @codragraph/cli setup` once — or set it up manually below.
 
 `codragraph setup` auto-detects your editors and writes the correct global MCP config. You only need to run it once.
@@ -55,16 +62,16 @@ If you prefer to configure manually instead of using `codragraph setup`:
 
 ```bash
 # macOS / Linux
-claude mcp add codragraph -- npx -y @codragraph/cli@2.1.2 mcp
+claude mcp add codragraph -- npx -y @codragraph/cli@2.1.5 mcp
 
 # Windows
-claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@2.1.2 mcp
+claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@2.1.5 mcp
 ```
 
 ### Codex (full support — MCP + skills)
 
 ```bash
-codex mcp add codragraph -- npx -y @codragraph/cli@2.1.2 mcp
+codex mcp add codragraph -- npx -y @codragraph/cli@2.1.5 mcp
 ```
 
 ### Cursor / Windsurf
@@ -76,7 +83,7 @@ Add to `~/.cursor/mcp.json` (global — works for all projects):
   "mcpServers": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "@codragraph/cli@2.1.2", "mcp"]
+      "args": ["-y", "@codragraph/cli@2.1.5", "mcp"]
     }
   }
 }
@@ -91,7 +98,7 @@ Add to `~/.config/opencode/config.json`:
   "mcp": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "@codragraph/cli@2.1.2", "mcp"]
+      "args": ["-y", "@codragraph/cli@2.1.5", "mcp"]
     }
   }
 }
@@ -297,9 +304,9 @@ It is fixed in **codragraph v1.6.2+**. Upgrade to the current workspace
 version, or pin the version your team has validated:
 
 ```bash
-npx @codragraph/cli@2.1.2 analyze          # no global install
+npx @codragraph/cli@2.1.5 analyze          # no global install
 # or
-npm install -g @codragraph/cli@2.1.2       # upgrade a global install
+npm install -g @codragraph/cli@2.1.5       # upgrade a global install
 ```
 
 If you still hit npm install issues after upgrading, these generic workarounds
@@ -341,6 +348,23 @@ npx @codragraph/cli analyze
 echo "vendor/" >> .codragraphignore
 echo "dist/" >> .codragraphignore
 ```
+
+If the analyzer reports a worker sub-batch timeout or falls back to sequential
+parsing while files are still being processed, reduce worker batch memory and
+allow a longer idle window:
+
+```bash
+# macOS/Linux bash/zsh
+CODRAGRAPH_WORKER_SUB_BATCH_SIZE=100 CODRAGRAPH_WORKER_IDLE_TIMEOUT_MS=180000 npx @codragraph/cli analyze
+
+# Windows PowerShell
+$env:CODRAGRAPH_WORKER_SUB_BATCH_SIZE = "100"
+$env:CODRAGRAPH_WORKER_IDLE_TIMEOUT_MS = "180000"
+npx @codragraph/cli analyze
+```
+
+The worker timer is an idle guard. Parser progress resets it, so a slow repo
+should keep moving instead of paying the old 30-second wall-clock fallback.
 
 If you want to know **which phase** is dragging the heap up before
 deciding what to mitigate, run `codragraph profile-heap`. It writes a

@@ -18,6 +18,7 @@
 import { writeSync } from 'node:fs';
 import { LocalBackend } from '../mcp/local/local-backend.js';
 import { emitTokenStats } from './compress-stats.js';
+import { findRepo } from '../storage/repo-manager.js';
 
 let _backend: LocalBackend | null = null;
 
@@ -30,6 +31,25 @@ async function getBackend(): Promise<LocalBackend> {
     process.exit(1);
   }
   return _backend;
+}
+
+async function callToolOnce(toolName: string, params: Record<string, unknown>): Promise<any> {
+  const backend = await getBackend();
+  return backend.callTool(toolName, params);
+}
+
+async function resolveCliRepoParam(repoParam?: string): Promise<string | null> {
+  if (repoParam) return repoParam;
+
+  const currentRepo = await findRepo(process.cwd());
+  if (currentRepo) return currentRepo.repoPath;
+
+  output(
+    `Error: Current repository is not indexed: ${process.cwd()}\n` +
+      'Run: npx @codragraph/cli analyze',
+  );
+  process.exitCode = 1;
+  return null;
 }
 
 /**
@@ -72,14 +92,15 @@ export async function queryCommand(
     process.exit(1);
   }
 
-  const backend = await getBackend();
-  const result = await backend.callTool('query', {
+  const repo = await resolveCliRepoParam(options?.repo);
+  if (!repo) return;
+  const result = await callToolOnce('query', {
     query: queryText,
     task_context: options?.context,
     goal: options?.goal,
     limit: options?.limit ? parseInt(options.limit) : undefined,
     include_content: options?.content ?? false,
-    repo: options?.repo,
+    repo,
   });
   output(result);
   emitTokenStats(result);
@@ -99,13 +120,14 @@ export async function contextCommand(
     process.exit(1);
   }
 
-  const backend = await getBackend();
-  const result = await backend.callTool('context', {
+  const repo = await resolveCliRepoParam(options?.repo);
+  if (!repo) return;
+  const result = await callToolOnce('context', {
     name: name || undefined,
     uid: options?.uid,
     file_path: options?.file,
     include_content: options?.content ?? false,
-    repo: options?.repo,
+    repo,
   });
   output(result);
   emitTokenStats(result);
@@ -126,13 +148,14 @@ export async function impactCommand(
   }
 
   try {
-    const backend = await getBackend();
-    const result = await backend.callTool('impact', {
+    const repo = await resolveCliRepoParam(options?.repo);
+    if (!repo) return;
+    const result = await callToolOnce('impact', {
       target,
       direction: options?.direction || 'upstream',
       maxDepth: options?.depth ? parseInt(options.depth, 10) : undefined,
       includeTests: options?.includeTests ?? false,
-      repo: options?.repo,
+      repo,
     });
     output(result);
     emitTokenStats(result);
@@ -161,10 +184,11 @@ export async function cypherCommand(
     process.exit(1);
   }
 
-  const backend = await getBackend();
-  const result = await backend.callTool('cypher', {
+  const repo = await resolveCliRepoParam(options?.repo);
+  if (!repo) return;
+  const result = await callToolOnce('cypher', {
     query,
-    repo: options?.repo,
+    repo,
   });
   output(result);
 }
@@ -173,9 +197,10 @@ export async function featureClustersCommand(options?: {
   repo?: string;
   limit?: string;
 }): Promise<void> {
-  const backend = await getBackend();
-  const result = await backend.callTool('feature_clusters', {
-    repo: options?.repo,
+  const repo = await resolveCliRepoParam(options?.repo);
+  if (!repo) return;
+  const result = await callToolOnce('feature_clusters', {
+    repo,
     limit: options?.limit ? parseInt(options.limit, 10) : undefined,
   });
   output(result);
@@ -188,10 +213,11 @@ export async function clusterQueryCommand(
     limit?: string;
   },
 ): Promise<void> {
-  const backend = await getBackend();
-  const result = await backend.callTool('cluster_query', {
+  const repo = await resolveCliRepoParam(options?.repo);
+  if (!repo) return;
+  const result = await callToolOnce('cluster_query', {
     query,
-    repo: options?.repo,
+    repo,
     limit: options?.limit ? parseInt(options.limit, 10) : undefined,
   });
   output(result);
@@ -209,10 +235,11 @@ export async function featureContextCommand(
     process.exit(1);
   }
 
-  const backend = await getBackend();
-  const result = await backend.callTool('feature_context', {
+  const repo = await resolveCliRepoParam(options?.repo);
+  if (!repo) return;
+  const result = await callToolOnce('feature_context', {
     name,
-    repo: options?.repo,
+    repo,
     limit: options?.limit ? parseInt(options.limit, 10) : undefined,
   });
   output(result);
@@ -231,10 +258,11 @@ export async function clusterContextCommand(
     process.exit(1);
   }
 
-  const backend = await getBackend();
-  const result = await backend.callTool('cluster_context', {
+  const repo = await resolveCliRepoParam(options?.repo);
+  if (!repo) return;
+  const result = await callToolOnce('cluster_context', {
     name,
-    repo: options?.repo,
+    repo,
     limit: options?.limit ? parseInt(options.limit, 10) : undefined,
   });
   output(result);
@@ -253,10 +281,11 @@ export async function contextPackCommand(
     process.exit(1);
   }
 
-  const backend = await getBackend();
-  const result = await backend.callTool('context_pack', {
+  const repo = await resolveCliRepoParam(options?.repo);
+  if (!repo) return;
+  const result = await callToolOnce('context_pack', {
     name,
-    repo: options?.repo,
+    repo,
     limit: options?.limit ? parseInt(options.limit, 10) : undefined,
   });
   output(result);
@@ -276,11 +305,12 @@ export async function clusterImpactCommand(
     process.exit(1);
   }
 
-  const backend = await getBackend();
-  const result = await backend.callTool('cluster_impact', {
+  const repo = await resolveCliRepoParam(options?.repo);
+  if (!repo) return;
+  const result = await callToolOnce('cluster_impact', {
     name,
     direction: options?.direction,
-    repo: options?.repo,
+    repo,
     limit: options?.limit ? parseInt(options.limit, 10) : undefined,
   });
   output(result);
@@ -330,11 +360,14 @@ export async function detectChangesCommand(options?: {
   baseRef?: string;
   repo?: string;
 }): Promise<void> {
-  const backend = await getBackend();
-  const result = await backend.callTool('detect_changes', {
+  const repo = await resolveCliRepoParam(options?.repo);
+  if (!repo) return;
+
+  const result = await callToolOnce('detect_changes', {
     scope: options?.scope || 'unstaged',
     base_ref: options?.baseRef,
-    repo: options?.repo,
+    repo,
   });
   output(formatDetectChangesResult(result));
+  if (result?.error) process.exitCode = 1;
 }

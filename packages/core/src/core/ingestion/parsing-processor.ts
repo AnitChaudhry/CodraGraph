@@ -742,9 +742,17 @@ export const processParsing = async (
       );
     } catch (err) {
       console.warn(
-        'Worker pool parsing failed, falling back to sequential:',
+        'Worker pool parsing failed for this chunk, falling back to sequential:',
         err instanceof Error ? err.message : err,
       );
+      try {
+        await workerPool.terminate();
+      } catch (terminateErr) {
+        console.warn(
+          'Worker pool termination after parsing failure failed:',
+          terminateErr instanceof Error ? terminateErr.message : terminateErr,
+        );
+      }
     }
   }
 

@@ -12,27 +12,8 @@
  */
 
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
-const { spawnSync, spawn } = require('child_process');
-
-/**
- * Decide whether background auto-reindex is opted in. Two equivalent signals:
- *   1. CODRAGRAPH_AUTO_REINDEX=1 in env (good for shells, CI)
- *   2. `{ "autoReindex": true }` in ~/.codragraph/config.json (good for GUI
- *      editor launches on Windows, where shell env doesn't propagate to
- *      hook child processes reliably)
- */
-function isAutoReindexEnabled() {
-  if (process.env.CODRAGRAPH_AUTO_REINDEX === '1') return true;
-  try {
-    const configPath = path.join(os.homedir(), '.codragraph', 'config.json');
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    return config && config.autoReindex === true;
-  } catch {
-    return false;
-  }
-}
+const { spawnSync } = require('child_process');
 
 /**
  * Read JSON input from stdin synchronously.
@@ -52,7 +33,7 @@ function readInput() {
  */
 function findCodraGraphDir(startDir) {
   let dir = startDir || process.cwd();
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 8; i++) {
     const candidate = path.join(dir, '.codragraph');
     if (fs.existsSync(candidate)) return candidate;
     const parent = path.dirname(dir);
@@ -138,21 +119,9 @@ function resolveCliPath() {
   return cliPath;
 }
 
-function isRunningUnderBun() {
-  const userAgent = (process.env.npm_config_user_agent || '').toLowerCase();
-  const execBase = path.basename(process.env.npm_execpath || '').toLowerCase();
-  return userAgent.startsWith('bun/') || execBase === 'bun' || execBase === 'bun.exe';
-}
-
-function getPackageRunnerArgs(args) {
-  const useBun = isRunningUnderBun();
-  if (useBun) return { bin: 'bunx', args: ['@codragraph/cli', ...args] };
-  return { bin: 'npx', args: ['-y', '@codragraph/cli', ...args] };
-}
-
 /**
  * Spawn a codragraph CLI command synchronously.
- * Returns the stderr output (KuzuDB captures stdout at OS level).
+ * Returns the stderr output (native graph bindings may capture stdout).
  */
 function runCodraGraphCli(cliPath, args, cwd, timeout) {
   const isWin = process.platform === 'win32';
@@ -164,20 +133,20 @@ function runCodraGraphCli(cliPath, args, cwd, timeout) {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   }
-  // Package-runner fallback: on Windows, Node 22's spawn refuses to launch
-  // `.cmd` shims directly, so route through `cmd /c`. POSIX direct-spawn is fine.
-  const runner = getPackageRunnerArgs(args);
+  // Hot-path hook fallback: try an already-installed binary only. Never invoke
+  // npx/bunx from a hook because that can fetch/install packages and make the
+  // agent appear hung.
   if (isWin) {
-    return spawnSync('cmd', ['/c', runner.bin, ...runner.args], {
+    return spawnSync('cmd', ['/c', 'codragraph', ...args], {
       encoding: 'utf-8',
-      timeout: timeout + 5000,
+      timeout,
       cwd,
       stdio: ['pipe', 'pipe', 'pipe'],
     });
   }
-  return spawnSync(runner.bin, runner.args, {
+  return spawnSync('codragraph', args, {
     encoding: 'utf-8',
-    timeout: timeout + 5000,
+    timeout,
     cwd,
     stdio: ['pipe', 'pipe', 'pipe'],
   });
@@ -229,11 +198,10 @@ function sendHookResponse(hookEventName, message) {
 /**
  * PostToolUse handler — detect index staleness after git mutations.
  *
- * Instead of spawning a full `codragraph analyze` synchronously (which blocks
- * the agent for up to 120s and risks KuzuDB corruption on timeout), we do a
- * lightweight staleness check: compare `git rev-parse HEAD` against the
- * lastCommit stored in `.codragraph/meta.json`. If they differ, notify the
- * agent so it can decide when to reindex.
+ * Hooks must not own writes to `.codragraph`. They run inside the agent's hot
+ * path, so starting analyze from here can contend with MCP/LadybugDB and make
+ * normal edits feel hung. Keep this to a cheap metadata comparison and let the
+ * user or agent run the CLI explicitly when fresh graph context is required.
  */
 function handlePostToolUse(input) {
   const toolName = input.tool_name || '';
@@ -283,85 +251,10 @@ function handlePostToolUse(input) {
   const analyzeArgs = `analyze${hadEmbeddings ? ' --embeddings' : ''}`;
   const analyzeCmd = `npx @codragraph/cli ${analyzeArgs} (or bunx @codragraph/cli ${analyzeArgs})`;
 
-  // Opt-in background auto-reindex.
-  // Default stays as notification-only because spawning analyze while an MCP
-  // server holds LadybugDB will fail with a database-busy error — the
-  // notification path lets the agent reindex at a quiet moment instead.
-  // Power users who run MCP outside Claude Code's lifecycle can opt in via
-  // CODRAGRAPH_AUTO_REINDEX=1 or `{ "autoReindex": true }` in
-  // ~/.codragraph/config.json.
-  if (isAutoReindexEnabled()) {
-    // The "coalesce" file is a single-process gate: it exists only while a
-    // reindex is in flight. The spawned analyze removes it on exit (success or
-    // failure) via CODRAGRAPH_REINDEX_LOCK_PATH; the 10-min mtime fallback
-    // catches the rare crash that bypasses analyze's exit handler.
-    const coalescePath = path.join(codragraphDir, '.reindex.coalesce');
-    const crashSafetyTtlMs = 10 * 60 * 1000;
-    let inFlight = false;
-    try {
-      const stat = fs.statSync(coalescePath);
-      if (Date.now() - stat.mtimeMs < crashSafetyTtlMs) inFlight = true;
-    } catch {
-      /* no coalesce file — no reindex in flight */
-    }
-
-    if (!inFlight) {
-      try {
-        fs.writeFileSync(coalescePath, String(process.pid));
-      } catch {
-        /* best-effort — gate is for coalescing, not correctness */
-      }
-
-      const cliPath = resolveCliPath();
-      const reindexArgs = hadEmbeddings
-        ? ['analyze', '--embeddings', '--no-setup']
-        : ['analyze', '--no-setup'];
-      const spawnEnv = { ...process.env, CODRAGRAPH_REINDEX_LOCK_PATH: coalescePath };
-      const spawnOpts = {
-        cwd,
-        detached: true,
-        stdio: 'ignore',
-        windowsHide: true,
-        env: spawnEnv,
-      };
-      try {
-        let child;
-        if (cliPath) {
-          child = spawn(process.execPath, [cliPath, ...reindexArgs], spawnOpts);
-        } else if (process.platform === 'win32') {
-          const runner = getPackageRunnerArgs(reindexArgs);
-          child = spawn('cmd', ['/c', runner.bin, ...runner.args], spawnOpts);
-        } else {
-          const runner = getPackageRunnerArgs(reindexArgs);
-          child = spawn(runner.bin, runner.args, spawnOpts);
-        }
-        child.unref();
-      } catch {
-        /* spawn failed — fall through to notification */
-      }
-
-      sendHookResponse(
-        'PostToolUse',
-        `CodraGraph: auto-reindex started in background ` +
-          `(HEAD ${lastCommit ? lastCommit.slice(0, 7) : 'never'} → ${currentHead.slice(0, 7)}). ` +
-          `If an MCP server is currently holding the database, the reindex will fail silently — ` +
-          `run \`${analyzeCmd}\` manually after closing the agent session.`,
-      );
-      return;
-    }
-
-    sendHookResponse(
-      'PostToolUse',
-      `CodraGraph: auto-reindex coalesced — another reindex is in flight (will pick up your latest commit when it finishes).`,
-    );
-    return;
-  }
-
   sendHookResponse(
     'PostToolUse',
     `CodraGraph index is stale (last indexed: ${lastCommit ? lastCommit.slice(0, 7) : 'never'}). ` +
-      `Run \`${analyzeCmd}\` to update the knowledge graph. ` +
-      `Set CODRAGRAPH_AUTO_REINDEX=1 (or autoReindex: true in ~/.codragraph/config.json) for background auto-reindex.`,
+      `Run \`${analyzeCmd}\` when you need fresh graph context. Hooks never start analyze in the background.`,
   );
 }
 

@@ -223,6 +223,113 @@ describe('worker pool integration', () => {
     }
   });
 
+  it('does not time out a slow sub-batch while the worker keeps reporting progress', async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codragraph-worker-progress-'));
+    const workerPath = path.join(tempDir, 'progress-worker.js');
+    fs.writeFileSync(
+      workerPath,
+      `
+      const { parentPort } = require('node:worker_threads');
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      parentPort.on('message', async (msg) => {
+        if (msg && msg.type === 'sub-batch') {
+          for (let i = 1; i <= msg.files.length; i++) {
+            parentPort.postMessage({ type: 'progress', filesProcessed: i });
+            await sleep(300);
+          }
+          parentPort.postMessage({ type: 'sub-batch-done' });
+          return;
+        }
+        if (msg && msg.type === 'flush') {
+          parentPort.postMessage({ type: 'result', data: { fileCount: 3 } });
+        }
+      });
+    `,
+    );
+
+    const workerUrl = pathToFileURL(workerPath) as URL;
+    pool = createWorkerPool(workerUrl, 1, {
+      subBatchIdleTimeoutMs: 500,
+      subBatchSize: 3,
+    });
+
+    try {
+      const results = await pool.dispatch<any, any>([
+        { path: 'a.ts', content: 'const a = 1;' },
+        { path: 'b.ts', content: 'const b = 1;' },
+        { path: 'c.ts', content: 'const c = 1;' },
+      ]);
+      expect(results).toEqual([{ fileCount: 3 }]);
+    } finally {
+      await pool?.terminate();
+      pool = undefined;
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('times out a silent worker sub-batch using the configured idle budget', async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codragraph-worker-silent-'));
+    const workerPath = path.join(tempDir, 'silent-worker.js');
+    fs.writeFileSync(
+      workerPath,
+      `
+      const { parentPort } = require('node:worker_threads');
+      parentPort.on('message', () => {
+        // Intentionally stay silent to simulate a wedged parser.
+      });
+    `,
+    );
+
+    const workerUrl = pathToFileURL(workerPath) as URL;
+    pool = createWorkerPool(workerUrl, 1, {
+      subBatchIdleTimeoutMs: 25,
+      subBatchSize: 1,
+    });
+
+    try {
+      await expect(
+        pool.dispatch<any, any>([{ path: 'stuck.ts', content: 'const stuck = true;' }]),
+      ).rejects.toThrow(/was idle/);
+    } finally {
+      await pool?.terminate();
+      pool = undefined;
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it('times out when a worker finishes sub-batches but never flushes a result', async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codragraph-worker-no-flush-'));
+    const workerPath = path.join(tempDir, 'no-flush-worker.js');
+    fs.writeFileSync(
+      workerPath,
+      `
+      const { parentPort } = require('node:worker_threads');
+      parentPort.on('message', (msg) => {
+        if (msg && msg.type === 'sub-batch') {
+          parentPort.postMessage({ type: 'sub-batch-done' });
+        }
+        // Intentionally ignore flush to simulate a worker stuck finalizing.
+      });
+    `,
+    );
+
+    const workerUrl = pathToFileURL(workerPath) as URL;
+    pool = createWorkerPool(workerUrl, 1, {
+      subBatchIdleTimeoutMs: 25,
+      subBatchSize: 1,
+    });
+
+    try {
+      await expect(
+        pool.dispatch<any, any>([{ path: 'flush.ts', content: 'const done = true;' }]),
+      ).rejects.toThrow(/was idle/);
+    } finally {
+      await pool?.terminate();
+      pool = undefined;
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
   it.skipIf(!hasDistWorker)('createWorkerPool with size 0 creates pool with zero workers', () => {
     const workerUrl = pathToFileURL(DIST_WORKER) as URL;
     const zeroPool = createWorkerPool(workerUrl, 0);

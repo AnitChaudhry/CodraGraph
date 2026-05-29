@@ -6,6 +6,7 @@ import type { Path } from 'path-scurry';
 const DEFAULT_IGNORE_LIST = new Set([
   // Version Control
   '.git',
+  '.codragraph',
   '.svn',
   '.hg',
   '.bzr',

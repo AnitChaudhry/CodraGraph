@@ -28,6 +28,10 @@ Use `npx @codragraph/cli ...` or `bunx @codragraph/cli ...` from any path after 
 
 **Symptom:** MCP or resources warn the index is behind `HEAD`, or results don’t reflect recent commits.
 
+Claude/Codex hooks only report this state. They do not start background
+analysis and do not open LadybugDB for write; run the CLI explicitly when fresh
+graph context matters for the current task.
+
 **Fix (from the target repo root):**
 
 ```bash
@@ -35,9 +39,11 @@ npx @codragraph/cli analyze
 ```
 
 On current builds, `analyze` first checks the previous indexed commit. If the
-new commit only touched files outside indexed code, Markdown/docs, config, and
-file structure, it reuses the existing graph and updates metadata instead of
-paying the full parse/load cost.
+new commit only touched generated agent context, lockfiles, or ignored assets,
+it reuses the existing graph and updates metadata instead of paying the full
+parse/load cost. Source files, Markdown/MDX graph docs, language config, and
+add/delete/rename/copy path changes stay rebuild-relevant so graph file,
+folder, and documentation surfaces do not go stale.
 
 **Force full rebuild** (same commit but suspect corruption or changed ignore rules):
 
@@ -189,6 +195,18 @@ Orchestrator: `.github/workflows/ci.yml`.
 ## Memory / analyze crashes
 
 Analyze re-execs Node with a **large old-space heap** when needed (`analyze.ts`). If you still OOM on huge repos, close other processes, avoid `--embeddings` for a first pass, or analyze a smaller path if supported by your workflow.
+
+If the worker pool reports an idle sub-batch timeout or falls back to
+sequential parsing, lower the worker message size and extend the idle window:
+
+```powershell
+$env:CODRAGRAPH_WORKER_SUB_BATCH_SIZE = "100"
+$env:CODRAGRAPH_WORKER_IDLE_TIMEOUT_MS = "180000"
+npx @codragraph/cli analyze
+```
+
+The timeout is reset by parser progress, so use it as a stuck-worker guard, not
+as a total analyze duration limit.
 
 ---
 

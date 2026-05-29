@@ -9,6 +9,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execFileSync } from 'node:child_process';
 import { type GeneratedSkillInfo } from './skill-gen.js';
 
 // ESM equivalent of __dirname
@@ -24,6 +25,23 @@ interface RepoStats {
   processes?: number;
 }
 
+interface AgentStructureState {
+  projectName: string;
+  repoPath: string;
+  storagePath: string;
+  generatedAt: string;
+  indexedAt?: string;
+  currentBranch?: string;
+  currentGitHead?: string;
+  indexedCommit?: string;
+  remoteUrl?: string;
+  schemaVersion?: number;
+  compress?: string;
+  graphstoreBranch?: string;
+  graphstoreHeadCommit?: string;
+  stats: RepoStats & { embeddings?: number };
+}
+
 export interface AIContextOptions {
   skipAgentsMd?: boolean;
   noStats?: boolean;
@@ -31,6 +49,8 @@ export interface AIContextOptions {
 
 const CODRAGRAPH_START_MARKER = '<!-- codragraph:start -->';
 const CODRAGRAPH_END_MARKER = '<!-- codragraph:end -->';
+const AGENT_STRUCTURE_DIR = 'structure';
+const AGENT_HISTORY_LIMIT = 20;
 
 /**
  * Find the index of a section marker that occupies its own line.
@@ -145,6 +165,7 @@ This project is indexed by CodraGraph as **${projectName}**${noStats ? '' : ` ($
 | \`codragraph://repo/${projectName}/feature/{name}\` | Focused files, line ranges, flows, dependencies |
 | \`codragraph://repo/${projectName}/processes\` | All execution flows |
 | \`codragraph://repo/${projectName}/process/{name}\` | Step-by-step execution trace |
+| \`.codragraph/structure/README.md\` | Local what/why/how/when/where memory, branch state, and SQLite seed |
 
 ${
   groupNames && groupNames.length > 0
@@ -220,6 +241,342 @@ async function upsertCodraGraphSection(
   const newContent = existingContent.trim() + '\n\n' + content + '\n';
   await fs.writeFile(filePath, newContent, 'utf-8');
   return 'appended';
+}
+
+async function readJsonFile(filePath: string): Promise<any | null> {
+  try {
+    return JSON.parse(await fs.readFile(filePath, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+function gitValue(repoPath: string, args: string[]): string {
+  try {
+    return execFileSync('git', args, {
+      cwd: repoPath,
+      encoding: 'utf-8',
+      timeout: 3000,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  } catch {
+    return '';
+  }
+}
+
+function statValue(value: unknown): string {
+  return value === undefined || value === null || value === '' ? 'unknown' : String(value);
+}
+
+function shortCommit(value?: string): string {
+  return value ? value.slice(0, 12) : 'unknown';
+}
+
+function sqlString(value: unknown): string {
+  return String(value ?? '').replace(/'/g, "''");
+}
+
+async function buildAgentStructureState(
+  repoPath: string,
+  storagePath: string,
+  projectName: string,
+  stats: RepoStats,
+): Promise<AgentStructureState> {
+  const meta = await readJsonFile(path.join(storagePath, 'meta.json'));
+  const currentGitHead = gitValue(repoPath, ['rev-parse', 'HEAD']);
+  const currentBranch =
+    gitValue(repoPath, ['branch', '--show-current']) ||
+    gitValue(repoPath, ['rev-parse', '--abbrev-ref', 'HEAD']);
+
+  return {
+    projectName,
+    repoPath,
+    storagePath,
+    generatedAt: new Date().toISOString(),
+    indexedAt: meta?.indexedAt,
+    currentBranch: currentBranch || undefined,
+    currentGitHead: currentGitHead || undefined,
+    indexedCommit: meta?.lastCommit || currentGitHead || undefined,
+    remoteUrl: meta?.remoteUrl,
+    schemaVersion: meta?.schemaVersion,
+    compress: meta?.compress,
+    graphstoreBranch: meta?.currentBranch,
+    graphstoreHeadCommit: meta?.headCommit,
+    stats: {
+      files: stats.files ?? meta?.stats?.files,
+      nodes: stats.nodes ?? meta?.stats?.nodes,
+      edges: stats.edges ?? meta?.stats?.edges,
+      communities: stats.communities ?? meta?.stats?.communities,
+      clusters: stats.clusters ?? meta?.stats?.featureClusters,
+      processes: stats.processes ?? meta?.stats?.processes,
+      embeddings: meta?.stats?.embeddings,
+    },
+  };
+}
+
+function buildStructureDocs(state: AgentStructureState): Record<string, string> {
+  const statsTable = `| Metric | Value |
+|---|---|
+| Files | ${statValue(state.stats.files)} |
+| Symbols | ${statValue(state.stats.nodes)} |
+| Relationships | ${statValue(state.stats.edges)} |
+| Feature clusters | ${statValue(state.stats.clusters)} |
+| Execution flows | ${statValue(state.stats.processes)} |
+| Embeddings | ${statValue(state.stats.embeddings)} |
+| Compression | ${statValue(state.compress)} |
+| Schema version | ${statValue(state.schemaVersion)} |`;
+
+  const branchTable = `| Field | Value |
+|---|---|
+| Current git branch | ${statValue(state.currentBranch)} |
+| Current git HEAD | ${statValue(state.currentGitHead)} |
+| Indexed commit | ${statValue(state.indexedCommit)} |
+| Indexed at | ${statValue(state.indexedAt)} |
+| Graphstore branch | ${statValue(state.graphstoreBranch)} |
+| Graphstore head commit | ${statValue(state.graphstoreHeadCommit)} |
+| Remote | ${statValue(state.remoteUrl)} |`;
+
+  return {
+    'README.md': `# CodraGraph Agent Structure
+
+Generated: ${state.generatedAt}
+
+This folder is the small, pre-seeded context pack for AI agents. It is rebuilt
+by \`codragraph analyze\` so agents can read stable markdown instead of guessing
+from stale terminal output.
+
+Read order:
+
+1. [WHAT.md](WHAT.md) - what this index represents.
+2. [WHY.md](WHY.md) - why the agent should use graph context first.
+3. [HOW.md](HOW.md) - how to query, analyze, and recover safely.
+4. [WHEN.md](WHEN.md) - when to refresh, reuse, or clean the index.
+5. [WHERE.md](WHERE.md) - where local storage, MCP, HTTP, and docs live.
+6. [BRANCHES.md](BRANCHES.md) - branch, commit, and graphstore state.
+7. [SQLITE.md](SQLITE.md) - SQLite-compatible seed data for external agent memory.
+`,
+
+    'WHAT.md': `# What
+
+CodraGraph index name: **${state.projectName}**
+
+This index stores a local code graph for the repository at:
+
+\`${state.repoPath}\`
+
+The graph includes file structure, symbols, relationships, imports, execution
+flows, feature clusters, Markdown graph docs, and optional embeddings. Agents
+should use this pack as the first local orientation layer, then ask MCP/CLI for
+live graph details.
+
+${statsTable}
+`,
+
+    'WHY.md': `# Why
+
+AI agents should not rebuild project understanding from raw grep every time.
+This folder gives them a compact, reusable map of the current indexed state.
+
+Use it to avoid:
+
+- Querying the wrong registered repo.
+- Running multiple analyzers against the same .codragraph store.
+- Treating stale branch or commit context as fresh.
+- Enabling embeddings by default when BM25 and graph search are enough.
+- Deleting index files when a targeted analyze or clean command is safer.
+`,
+
+    'HOW.md': `# How
+
+Safe command flow for agents:
+
+1. Read this folder and \`AGENTS.md\` / \`CLAUDE.md\`.
+2. Run \`codragraph status\` or \`npx @codragraph/cli status\`.
+3. Use MCP \`query\`, \`context\`, \`impact\`, and \`detect_changes\` for graph work.
+4. Run \`codragraph analyze\` only when the index is missing or stale.
+5. Use \`--repo ${state.projectName}\` when running from outside this checkout.
+
+Do not run \`analyze\`, \`detect-changes\`, \`clean\`, or DB-writing commands from
+editor hooks. Hooks should stay bounded and read-only.
+`,
+
+    'WHEN.md': `# When
+
+Refresh with \`codragraph analyze\` when:
+
+- The repo was never indexed.
+- MCP or CLI reports stale graph context.
+- Source files, Markdown graph docs, language config, or path topology changed.
+- Schema, compression, or embedding settings changed.
+
+Reuse the existing graph when only generated agent context, lockfiles, or
+ignored assets changed. Use \`codragraph analyze --force\` when ignore rules
+changed or corruption is suspected. Ask before \`codragraph clean --force\`.
+`,
+
+    'WHERE.md': `# Where
+
+| Item | Location |
+|---|---|
+| Repository | \`${state.repoPath}\` |
+| Local index storage | \`${state.storagePath}\` |
+| Agent structure pack | \`${path.join(state.storagePath, AGENT_STRUCTURE_DIR)}\` |
+| Root agent instructions | \`AGENTS.md\`, \`CLAUDE.md\` |
+| Claude skills | \`.claude/skills/@codragraph/cli/\` |
+| HTTP API | \`http://127.0.0.1:4747/api/info\` after \`codragraph serve\` |
+| MCP tools | \`codragraph mcp\` |
+`,
+
+    'BRANCHES.md': `# Branches And Commits
+
+${branchTable}
+
+The indexed commit is the source-of-truth for whether graph answers are fresh.
+If \`Current git HEAD\` and \`Indexed commit\` differ, agents should say the graph
+is stale and run \`codragraph analyze\` before relying on impact, context, or
+detect-changes output.
+`,
+
+    'INDEX.md': `# Index Snapshot
+
+${statsTable}
+
+Storage notes:
+
+- BM25 and graph traversal work without embeddings.
+- Embeddings are optional and should be preserved with \`--embeddings\` only
+  when semantic/vector search is intentionally required.
+- Compression mode is recorded in \`.codragraph/meta.json\`.
+- This markdown pack is small and should not be embedded or vectorized.
+`,
+
+    'SQLITE.md': `# SQLite Seed
+
+\`agent-memory.sql\` is a SQLite-compatible seed file for external agent memory
+stores. CodraGraph writes it as plain SQL so installs stay light on Node 20 and
+do not pull native SQLite dependencies into the CLI hot path.
+
+Optional import:
+
+\`\`\`sh
+sqlite3 agent-memory.sqlite < agent-memory.sql
+\`\`\`
+
+The canonical live source remains \`.codragraph/meta.json\` plus the graph DB.
+`,
+  };
+}
+
+function buildSqlSeed(state: AgentStructureState): string {
+  const rows: Array<[string, unknown]> = [
+    ['project_name', state.projectName],
+    ['repo_path', state.repoPath],
+    ['storage_path', state.storagePath],
+    ['generated_at', state.generatedAt],
+    ['indexed_at', state.indexedAt],
+    ['current_branch', state.currentBranch],
+    ['current_git_head', state.currentGitHead],
+    ['indexed_commit', state.indexedCommit],
+    ['remote_url', state.remoteUrl],
+    ['schema_version', state.schemaVersion],
+    ['compress', state.compress],
+    ['graphstore_branch', state.graphstoreBranch],
+    ['graphstore_head_commit', state.graphstoreHeadCommit],
+    ['stats_json', JSON.stringify(state.stats)],
+  ];
+
+  const values = rows
+    .map(
+      ([key, value]) =>
+        `('${sqlString(key)}', '${sqlString(value)}', '${sqlString(state.generatedAt)}')`,
+    )
+    .join(',\n');
+
+  return `BEGIN;
+CREATE TABLE IF NOT EXISTS codragraph_agent_context (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+DELETE FROM codragraph_agent_context;
+INSERT INTO codragraph_agent_context (key, value, updated_at) VALUES
+${values};
+COMMIT;
+`;
+}
+
+async function buildHistoryContent(
+  historyPath: string,
+  state: AgentStructureState,
+): Promise<string> {
+  const entryId = (state.indexedCommit || 'no-git').replace(/[^a-zA-Z0-9._-]/g, '_');
+  const entry = `<!-- codragraph:history-entry:${entryId} -->
+## ${shortCommit(state.indexedCommit)} - ${state.generatedAt}
+
+- Branch: ${statValue(state.currentBranch)}
+- Indexed commit: ${statValue(state.indexedCommit)}
+- Git HEAD: ${statValue(state.currentGitHead)}
+- Graphstore: ${statValue(state.graphstoreBranch)} / ${statValue(state.graphstoreHeadCommit)}
+- Stats: ${statValue(state.stats.nodes)} symbols, ${statValue(state.stats.edges)} relationships, ${statValue(state.stats.processes)} flows
+<!-- /codragraph:history-entry -->`;
+
+  let existing = '';
+  try {
+    existing = await fs.readFile(historyPath, 'utf-8');
+  } catch {
+    /* first run */
+  }
+
+  const blocks: string[] = [];
+  const regex =
+    /<!-- codragraph:history-entry:([^ ]+) -->[\s\S]*?<!-- \/codragraph:history-entry -->/g;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(existing)) !== null) {
+    if (match[1] !== entryId) blocks.push(match[0]);
+  }
+
+  return `# Analyze History
+
+Most recent CodraGraph analyze or smart-reuse events. Bounded to the latest
+${AGENT_HISTORY_LIMIT} entries so this file remains small.
+
+${[entry, ...blocks].slice(0, AGENT_HISTORY_LIMIT).join('\n\n')}
+`;
+}
+
+async function generateAgentStructurePack(
+  repoPath: string,
+  storagePath: string,
+  projectName: string,
+  stats: RepoStats,
+): Promise<string[]> {
+  const structureDir = path.join(storagePath, AGENT_STRUCTURE_DIR);
+  await fs.mkdir(structureDir, { recursive: true });
+
+  const state = await buildAgentStructureState(repoPath, storagePath, projectName, stats);
+  const docs = buildStructureDocs(state);
+
+  const written: string[] = [];
+  for (const [fileName, content] of Object.entries(docs)) {
+    await fs.writeFile(path.join(structureDir, fileName), content.trim() + '\n', 'utf-8');
+    written.push(fileName);
+  }
+
+  await fs.writeFile(
+    path.join(structureDir, 'state.json'),
+    JSON.stringify(state, null, 2) + '\n',
+    'utf-8',
+  );
+  written.push('state.json');
+
+  await fs.writeFile(path.join(structureDir, 'agent-memory.sql'), buildSqlSeed(state), 'utf-8');
+  written.push('agent-memory.sql');
+
+  const historyPath = path.join(structureDir, 'HISTORY.md');
+  await fs.writeFile(historyPath, await buildHistoryContent(historyPath, state), 'utf-8');
+  written.push('HISTORY.md');
+
+  return written;
 }
 
 /**
@@ -338,6 +695,18 @@ export async function generateAIContextFiles(
   } else {
     createdFiles.push('AGENTS.md (skipped via --skip-agents-md)');
     createdFiles.push('CLAUDE.md (skipped via --skip-agents-md)');
+  }
+
+  try {
+    const structureFiles = await generateAgentStructurePack(
+      repoPath,
+      _storagePath,
+      projectName,
+      stats,
+    );
+    createdFiles.push(`.codragraph/structure/ (${structureFiles.length} files)`);
+  } catch (err) {
+    console.warn('Warning: Could not generate .codragraph/structure agent pack:', err);
   }
 
   // Install skills to .claude/skills/codragraph/
