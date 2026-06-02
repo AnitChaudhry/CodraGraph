@@ -207,12 +207,17 @@ describe('BM25 search', () => {
       expect(
         mockExecuteQuery.mock.calls.filter((c) => String(c[1]).includes('CREATE_FTS_INDEX')).length,
       ).toBe(0);
+      expect(
+        mockExecuteQuery.mock.calls.filter((c) => String(c[1]).includes('QUERY_FTS_INDEX')).length,
+      ).toBe(0);
       expect(results[0]).toEqual(
         expect.objectContaining({
           filePath: 'src/handler.ts',
           nodeIds: ['func:handler'],
+          ftsUsed: false,
         }),
       );
+      expect(mockExecuteQuery.mock.calls.some((c) => String(c[1]).includes(' WHERE '))).toBe(true);
     });
   });
 });

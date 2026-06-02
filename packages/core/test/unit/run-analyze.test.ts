@@ -53,10 +53,81 @@ describe('run-analyze module', () => {
     ]);
   });
 
+  it('builds a guarded incremental file patch plan for small source/doc diffs', () => {
+    expect(mod.isPatchableIncrementalPath('src/core/run-analyze.ts')).toBe(true);
+    expect(mod.isPatchableIncrementalPath('docs/usage.mdx')).toBe(true);
+    expect(mod.isPatchableIncrementalPath('package.json')).toBe(false);
+    expect(mod.isPatchableIncrementalPath('branding/logo.png')).toBe(false);
+
+    expect(
+      mod.buildIncrementalFilePatchPlan([
+        { status: 'M', path: 'src/core/run-analyze.ts' },
+        { status: 'A', path: 'docs/new-flow.md' },
+        { status: 'D', path: 'src/removed.ts' },
+        { status: 'C100', previousPath: 'src/template.ts', path: 'src/template-copy.ts' },
+      ]),
+    ).toMatchObject({
+      eligible: true,
+      replacePaths: [
+        'docs/new-flow.md',
+        'src/core/run-analyze.ts',
+        'src/removed.ts',
+        'src/template-copy.ts',
+      ],
+      currentPaths: ['docs/new-flow.md', 'src/core/run-analyze.ts', 'src/template-copy.ts'],
+      fileCountDelta: 1,
+    });
+  });
+
+  it('plans broader incremental patches for global, moved, or large diffs', () => {
+    expect(
+      mod.buildIncrementalFilePatchPlan([{ status: 'M', path: 'package.json' }]),
+    ).toMatchObject({
+      eligible: true,
+      replaceAllFileScoped: true,
+    });
+
+    expect(
+      mod.buildIncrementalFilePatchPlan([
+        { status: 'R100', previousPath: 'src/old.ts', path: 'src/new.ts' },
+      ]),
+    ).toMatchObject({
+      eligible: true,
+      replacePaths: ['src/new.ts', 'src/old.ts'],
+      currentPaths: ['src/new.ts'],
+      fileCountDelta: 0,
+      pathAliases: { 'src/old.ts': 'src/new.ts' },
+    });
+
+    expect(
+      mod.buildIncrementalFilePatchPlan(
+        [
+          { status: 'M', path: 'src/a.ts' },
+          { status: 'M', path: 'src/b.ts' },
+        ],
+        { limit: 1 },
+      ),
+    ).toMatchObject({
+      eligible: true,
+      replacePaths: ['src/a.ts', 'src/b.ts'],
+      currentPaths: ['src/a.ts', 'src/b.ts'],
+    });
+
+    expect(
+      mod.buildIncrementalFilePatchPlan([{ status: 'A', path: 'notes/architecture.txt' }]),
+    ).toMatchObject({
+      eligible: true,
+      replacePaths: ['notes/architecture.txt'],
+      currentPaths: ['notes/architecture.txt'],
+      fileCountDelta: 1,
+      replaceAllFileScoped: false,
+    });
+  });
+
   it('forces rebuild when analyze options request missing index layers', () => {
     expect(
       mod.getAnalyzeConfigRebuildReason(
-        { compress: 'none', stats: { embeddings: 0 } },
+        { compress: 'none', searchIndexes: { fts: true }, stats: { embeddings: 0 } },
         {
           embeddings: true,
         },
@@ -65,7 +136,7 @@ describe('run-analyze module', () => {
 
     expect(
       mod.getAnalyzeConfigRebuildReason(
-        { compress: 'none', stats: { embeddings: 12 } },
+        { compress: 'none', searchIndexes: { fts: true }, stats: { embeddings: 12 } },
         {
           compress: 'brotli',
         },
@@ -74,12 +145,23 @@ describe('run-analyze module', () => {
 
     expect(
       mod.getAnalyzeConfigRebuildReason(
-        { compress: 'brotli', stats: { embeddings: 12 } },
+        { compress: 'brotli', searchIndexes: { fts: true }, stats: { embeddings: 12 } },
         {
           compress: 'brotli',
           embeddings: true,
         },
       ),
     ).toBeNull();
+  });
+
+  it('forces rebuild when an existing index is missing warmed search indexes', () => {
+    expect(
+      mod.getAnalyzeConfigRebuildReason(
+        { compress: 'none', stats: { embeddings: 0 } },
+        {
+          compress: 'none',
+        },
+      ),
+    ).toContain('search indexes');
   });
 });

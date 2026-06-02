@@ -6,6 +6,7 @@ import { finished } from 'stream/promises';
 import path from 'path';
 import cgdb from '@ladybugdb/core';
 import { KnowledgeGraph } from '../graph/types.js';
+import { createKnowledgeGraph } from '../graph/graph.js';
 import {
   NODE_TABLES,
   REL_TABLE_NAME,
@@ -497,6 +498,566 @@ export const loadGraphToCgdb = async (
   } catch {}
 
   return { success: true, insertedRels, skippedRels, warnings };
+};
+
+export interface FileGraphPatchResult {
+  replacedFiles: number;
+  deletedNodeIds: number;
+  insertedRels: number;
+  restoredRels: number;
+  prunedFolders: number;
+}
+
+interface PreservedRelationship {
+  sourceId: string;
+  targetId: string;
+  type: string;
+  confidence: number;
+  reason: string;
+  step: number;
+  sourceName: string;
+  sourceFilePath: string;
+  targetName: string;
+  targetFilePath: string;
+}
+
+interface PatchNodeLookup {
+  ids: Set<string>;
+  signatureToId: Map<string, string>;
+}
+
+export interface FileGraphPatchOptions {
+  compress?: ContentEncoding;
+  /** Map old relative paths to their new relative paths for rename remapping. */
+  pathAliases?: ReadonlyMap<string, string> | Record<string, string>;
+}
+
+export interface FileGraphReplacementResult {
+  deletedNodes: number;
+  insertedRels: number;
+}
+
+export interface GlobalGraphLayerReplaceResult {
+  deletedGlobalNodes: number;
+  insertedRels: number;
+}
+
+export interface LoadKnowledgeGraphFromCgdbOptions {
+  includeGlobal?: boolean;
+}
+
+const FILE_SCOPED_NODE_TABLES: readonly NodeTableName[] = NODE_TABLES.filter(
+  (table): table is NodeTableName =>
+    table !== 'Community' && table !== 'Process' && table !== 'FeatureCluster',
+);
+
+const GLOBAL_NODE_TABLES = new Set<NodeTableName>(['Community', 'Process', 'FeatureCluster']);
+
+const PRESERVABLE_OUTGOING_REL_TYPES = new Set([
+  'MEMBER_OF',
+  'STEP_IN_PROCESS',
+  'ENTRY_POINT_OF',
+  'FEATURE_MEMBER_OF',
+]);
+
+const rowString = (row: Record<string, any>, named: string, positional: number): string =>
+  String(row[named] ?? row[positional] ?? '');
+
+const rowNumber = (
+  row: Record<string, any>,
+  named: string,
+  positional: number,
+  fallback: number,
+): number => {
+  const value = Number(row[named] ?? row[positional] ?? fallback);
+  return Number.isFinite(value) ? value : fallback;
+};
+
+const nodeLabelForId = (nodeId: string): string => {
+  if (nodeId.startsWith('comm_')) return 'Community';
+  if (nodeId.startsWith('proc_')) return 'Process';
+  return nodeId.split(':')[0] || 'CodeElement';
+};
+
+const fileScopedNodeSignature = (
+  label: string,
+  name: string | undefined,
+  filePath: string | undefined,
+): string | null => {
+  if (!name || !filePath) return null;
+  return `${label}\0${name}\0${filePath}`;
+};
+
+const normalizePathAliases = (
+  aliases?: ReadonlyMap<string, string> | Record<string, string>,
+): Map<string, string> => {
+  if (!aliases) return new Map();
+  if (aliases instanceof Map) {
+    return new Map(
+      [...aliases].map(([from, to]) => [from.replace(/\\/g, '/'), to.replace(/\\/g, '/')]),
+    );
+  }
+  return new Map(
+    Object.entries(aliases).map(([from, to]) => [
+      from.replace(/\\/g, '/'),
+      String(to).replace(/\\/g, '/'),
+    ]),
+  );
+};
+
+const remapFilePath = (filePath: string, aliases: ReadonlyMap<string, string>): string => {
+  const normalized = filePath.replace(/\\/g, '/');
+  return aliases.get(normalized) ?? normalized;
+};
+
+const collectNodeIdsForFiles = async (filePaths: readonly string[]): Promise<Set<string>> => {
+  const nodeIds = new Set<string>();
+  if (filePaths.length === 0) return nodeIds;
+
+  for (const table of FILE_SCOPED_NODE_TABLES) {
+    for (const filePath of filePaths) {
+      try {
+        const rows = await executePrepared(
+          `MATCH (n:${escapeTableName(table)}) WHERE n.filePath = $filePath RETURN n.id AS id`,
+          { filePath },
+        );
+        for (const row of rows) {
+          const id = rowString(row, 'id', 0);
+          if (id) nodeIds.add(id);
+        }
+      } catch {
+        /* table may be absent in old indexes */
+      }
+    }
+  }
+
+  return nodeIds;
+};
+
+const buildPatchNodeLookup = (
+  graph: KnowledgeGraph,
+  filePaths: ReadonlySet<string>,
+): PatchNodeLookup => {
+  const ids = new Set<string>();
+  const signatureBuckets = new Map<string, Set<string>>();
+  for (const node of graph.iterNodes()) {
+    const filePath = node.properties?.filePath;
+    if (typeof filePath === 'string' && filePaths.has(filePath)) {
+      ids.add(node.id);
+      const signature = fileScopedNodeSignature(
+        node.label,
+        typeof node.properties?.name === 'string' ? node.properties.name : undefined,
+        filePath,
+      );
+      if (signature) {
+        let bucket = signatureBuckets.get(signature);
+        if (bucket === undefined) {
+          bucket = new Set();
+          signatureBuckets.set(signature, bucket);
+        }
+        bucket.add(node.id);
+      }
+    }
+  }
+  const signatureToId = new Map<string, string>();
+  for (const [signature, nodeIds] of signatureBuckets) {
+    if (nodeIds.size === 1) {
+      signatureToId.set(signature, [...nodeIds][0]);
+    }
+  }
+  return { ids, signatureToId };
+};
+
+const prunePatchGraphRelationships = (graph: KnowledgeGraph, patchNodeIds: ReadonlySet<string>) => {
+  for (const rel of [...graph.iterRelationships()]) {
+    if (!patchNodeIds.has(rel.sourceId) && !patchNodeIds.has(rel.targetId)) {
+      graph.removeRelationship(rel.id);
+    }
+  }
+};
+
+const collectPreservedRelationships = async (
+  oldNodeIds: ReadonlySet<string>,
+): Promise<PreservedRelationship[]> => {
+  const preserved: PreservedRelationship[] = [];
+  for (const nodeId of oldNodeIds) {
+    try {
+      const incoming = await executePrepared(
+        `MATCH (a)-[r:${REL_TABLE_NAME}]->(b) WHERE b.id = $nodeId RETURN a.id AS sourceId, b.id AS targetId, r.type AS type, r.confidence AS confidence, r.reason AS reason, r.step AS step, a.name AS sourceName, a.filePath AS sourceFilePath, b.name AS targetName, b.filePath AS targetFilePath`,
+        { nodeId },
+      );
+      for (const row of incoming) {
+        const sourceId = rowString(row, 'sourceId', 0);
+        const targetId = rowString(row, 'targetId', 1);
+        if (!sourceId || !targetId || oldNodeIds.has(sourceId)) continue;
+        preserved.push({
+          sourceId,
+          targetId,
+          type: rowString(row, 'type', 2),
+          confidence: rowNumber(row, 'confidence', 3, 1),
+          reason: rowString(row, 'reason', 4),
+          step: rowNumber(row, 'step', 5, 0),
+          sourceName: rowString(row, 'sourceName', 6),
+          sourceFilePath: rowString(row, 'sourceFilePath', 7),
+          targetName: rowString(row, 'targetName', 8),
+          targetFilePath: rowString(row, 'targetFilePath', 9),
+        });
+      }
+    } catch {
+      /* best-effort preservation */
+    }
+
+    try {
+      const outgoing = await executePrepared(
+        `MATCH (a)-[r:${REL_TABLE_NAME}]->(b) WHERE a.id = $nodeId RETURN a.id AS sourceId, b.id AS targetId, r.type AS type, r.confidence AS confidence, r.reason AS reason, r.step AS step, a.name AS sourceName, a.filePath AS sourceFilePath, b.name AS targetName, b.filePath AS targetFilePath`,
+        { nodeId },
+      );
+      for (const row of outgoing) {
+        const sourceId = rowString(row, 'sourceId', 0);
+        const targetId = rowString(row, 'targetId', 1);
+        const type = rowString(row, 'type', 2);
+        if (
+          !sourceId ||
+          !targetId ||
+          oldNodeIds.has(targetId) ||
+          !PRESERVABLE_OUTGOING_REL_TYPES.has(type)
+        ) {
+          continue;
+        }
+        preserved.push({
+          sourceId,
+          targetId,
+          type,
+          confidence: rowNumber(row, 'confidence', 3, 1),
+          reason: rowString(row, 'reason', 4),
+          step: rowNumber(row, 'step', 5, 0),
+          sourceName: rowString(row, 'sourceName', 6),
+          sourceFilePath: rowString(row, 'sourceFilePath', 7),
+          targetName: rowString(row, 'targetName', 8),
+          targetFilePath: rowString(row, 'targetFilePath', 9),
+        });
+      }
+    } catch {
+      /* best-effort preservation */
+    }
+  }
+  return preserved;
+};
+
+const deleteEmbeddingsForNodeIds = async (nodeIds: ReadonlySet<string>): Promise<void> => {
+  await executeWithReusedStatement(
+    `MATCH (e:${EMBEDDING_TABLE_NAME} {nodeId: $nodeId}) DELETE e`,
+    [...nodeIds].map((nodeId) => ({ nodeId })),
+  );
+};
+
+const deleteFileScopedNodes = async (filePaths: readonly string[]): Promise<void> => {
+  for (const table of FILE_SCOPED_NODE_TABLES) {
+    for (const filePath of filePaths) {
+      try {
+        await executePrepared(
+          `MATCH (n:${escapeTableName(table)}) WHERE n.filePath = $filePath DETACH DELETE n`,
+          { filePath },
+        );
+      } catch (err) {
+        if (!isMissingColumnOrTableError(err instanceof Error ? err.message : String(err))) {
+          throw err;
+        }
+        /* table may be absent in old indexes */
+      }
+    }
+  }
+};
+
+const restorePreservedRelationships = async (
+  relationships: readonly PreservedRelationship[],
+  patchLookup: PatchNodeLookup,
+  pathAliases: ReadonlyMap<string, string>,
+): Promise<number> => {
+  let restored = 0;
+  const seen = new Set<string>();
+  for (const rel of relationships) {
+    const sourceSignature = fileScopedNodeSignature(
+      nodeLabelForId(rel.sourceId),
+      rel.sourceName,
+      remapFilePath(rel.sourceFilePath, pathAliases),
+    );
+    const targetSignature = fileScopedNodeSignature(
+      nodeLabelForId(rel.targetId),
+      rel.targetName,
+      remapFilePath(rel.targetFilePath, pathAliases),
+    );
+    const resolvedSourceId =
+      (patchLookup.ids.has(rel.sourceId) ? rel.sourceId : undefined) ??
+      (sourceSignature ? patchLookup.signatureToId.get(sourceSignature) : undefined) ??
+      rel.sourceId;
+    const resolvedTargetId =
+      (patchLookup.ids.has(rel.targetId) ? rel.targetId : undefined) ??
+      (targetSignature ? patchLookup.signatureToId.get(targetSignature) : undefined) ??
+      rel.targetId;
+    const patchSideSurvives =
+      patchLookup.ids.has(resolvedSourceId) || patchLookup.ids.has(resolvedTargetId);
+    if (!patchSideSurvives) continue;
+    const key = `${resolvedSourceId}\0${rel.type}\0${resolvedTargetId}\0${rel.step}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const sourceLabel = escapeTableName(nodeLabelForId(resolvedSourceId));
+    const targetLabel = escapeTableName(nodeLabelForId(resolvedTargetId));
+    try {
+      const existingRows = await executePrepared(
+        `MATCH (a:${sourceLabel})-[r:${REL_TABLE_NAME}]->(b:${targetLabel}) WHERE a.id = $sourceId AND b.id = $targetId AND r.type = $type AND r.step = $step RETURN count(r) AS cnt`,
+        { ...rel, sourceId: resolvedSourceId, targetId: resolvedTargetId },
+      );
+      const existing = rowNumber(existingRows?.[0] ?? {}, 'cnt', 0, 0);
+      if (existing > 0) continue;
+      await executePrepared(
+        `MATCH (a:${sourceLabel} {id: $sourceId}), (b:${targetLabel} {id: $targetId}) CREATE (a)-[:${REL_TABLE_NAME} {type: $type, confidence: $confidence, reason: $reason, step: $step}]->(b)`,
+        { ...rel, sourceId: resolvedSourceId, targetId: resolvedTargetId },
+      );
+      restored++;
+    } catch {
+      /* source or target disappeared; skip */
+    }
+  }
+  return restored;
+};
+
+export const applyFileGraphPatchToCgdb = async (
+  graph: KnowledgeGraph,
+  repoPath: string,
+  storagePath: string,
+  filePaths: readonly string[],
+  onProgress?: CgdbProgressCallback,
+  options?: FileGraphPatchOptions,
+): Promise<FileGraphPatchResult> => {
+  if (!conn) {
+    throw new Error('LadybugDB not initialized. Call initCgdb first.');
+  }
+
+  const normalizedFiles = [...new Set(filePaths.map((p) => p.replace(/\\/g, '/')))];
+  const pathAliases = normalizePathAliases(options?.pathAliases);
+  const patchFileSet = new Set(normalizedFiles);
+  const oldNodeIds = await collectNodeIdsForFiles(normalizedFiles);
+  const preservedRels = await collectPreservedRelationships(oldNodeIds);
+
+  await loadFTSExtension();
+  await deleteEmbeddingsForNodeIds(oldNodeIds);
+  await deleteFileScopedNodes(normalizedFiles);
+
+  const patchLookup = buildPatchNodeLookup(graph, patchFileSet);
+  prunePatchGraphRelationships(graph, patchLookup.ids);
+
+  const loadResult =
+    graph.nodeCount > 0
+      ? await loadGraphToCgdb(graph, repoPath, storagePath, onProgress, options)
+      : { insertedRels: 0 };
+  const restoredRels = await restorePreservedRelationships(preservedRels, patchLookup, pathAliases);
+  const prunedFolders = await pruneEmptyFoldersFromCgdb();
+
+  return {
+    replacedFiles: normalizedFiles.length,
+    deletedNodeIds: oldNodeIds.size,
+    insertedRels: loadResult.insertedRels,
+    restoredRels,
+    prunedFolders,
+  };
+};
+
+const deleteEmbeddingsForAllNodes = async (): Promise<void> => {
+  try {
+    await executeQuery(`MATCH (e:${EMBEDDING_TABLE_NAME}) DELETE e`);
+  } catch {
+    /* table may be absent in old indexes */
+  }
+};
+
+const deleteAllFileScopedNodes = async (): Promise<number> => {
+  let deleted = 0;
+  for (const table of FILE_SCOPED_NODE_TABLES) {
+    try {
+      const rows = await executeQuery(`MATCH (n:${escapeTableName(table)}) RETURN count(n) AS cnt`);
+      deleted += Number(rows?.[0]?.cnt ?? rows?.[0]?.[0] ?? 0);
+    } catch (err) {
+      if (!isMissingColumnOrTableError(err instanceof Error ? err.message : String(err))) {
+        throw err;
+      }
+      /* table may be absent in old indexes */
+    }
+    try {
+      await executeQuery(`MATCH (n:${escapeTableName(table)}) DETACH DELETE n`);
+    } catch (err) {
+      if (!isMissingColumnOrTableError(err instanceof Error ? err.message : String(err))) {
+        throw err;
+      }
+      /* table may be absent in old indexes */
+    }
+  }
+  return deleted;
+};
+
+export const replaceFileScopedGraphInCgdb = async (
+  graph: KnowledgeGraph,
+  repoPath: string,
+  storagePath: string,
+  onProgress?: CgdbProgressCallback,
+  options?: { compress?: ContentEncoding },
+): Promise<FileGraphReplacementResult> => {
+  if (!conn) {
+    throw new Error('LadybugDB not initialized. Call initCgdb first.');
+  }
+
+  await loadFTSExtension();
+  await deleteEmbeddingsForAllNodes();
+  const deletedNodes = await deleteAllFileScopedNodes();
+  const loadResult =
+    graph.nodeCount > 0
+      ? await loadGraphToCgdb(graph, repoPath, storagePath, onProgress, options)
+      : { insertedRels: 0 };
+
+  return { deletedNodes, insertedRels: loadResult.insertedRels };
+};
+
+export const replaceGlobalGraphLayersInCgdb = async (
+  graph: KnowledgeGraph,
+  repoPath: string,
+  storagePath: string,
+  onProgress?: CgdbProgressCallback,
+  options?: { compress?: ContentEncoding },
+): Promise<GlobalGraphLayerReplaceResult> => {
+  if (!conn) {
+    throw new Error('LadybugDB not initialized. Call initCgdb first.');
+  }
+
+  await loadFTSExtension();
+  let deletedGlobalNodes = 0;
+  for (const table of GLOBAL_NODE_TABLES) {
+    try {
+      const rows = await executeQuery(`MATCH (n:${escapeTableName(table)}) RETURN count(n) AS cnt`);
+      deletedGlobalNodes += Number(rows?.[0]?.cnt ?? rows?.[0]?.[0] ?? 0);
+    } catch {
+      /* table may be absent in old indexes */
+    }
+    try {
+      await executeQuery(`MATCH (n:${escapeTableName(table)}) DETACH DELETE n`);
+    } catch {
+      /* table may be absent in old indexes */
+    }
+  }
+
+  const loadResult =
+    graph.nodeCount > 0
+      ? await loadGraphToCgdb(graph, repoPath, storagePath, onProgress, options)
+      : { insertedRels: 0 };
+  return { deletedGlobalNodes, insertedRels: loadResult.insertedRels };
+};
+
+const unwrapNodeResult = (raw: unknown): Record<string, any> | null => {
+  if (!raw || typeof raw !== 'object') return null;
+  const row = raw as Record<string, any>;
+  const candidate = row.n ?? row[0];
+  return candidate && typeof candidate === 'object' && !Array.isArray(candidate)
+    ? (candidate as Record<string, any>)
+    : null;
+};
+
+const nodePropertiesFromCgdbRow = (row: Record<string, any>): Record<string, any> => {
+  const properties: Record<string, any> = {
+    name: String(row.name ?? ''),
+    filePath: String(row.filePath ?? ''),
+  };
+  for (const [key, value] of Object.entries(row)) {
+    if (key === 'id' || key === '_id' || key === '_label') continue;
+    properties[key] = value;
+  }
+  return properties;
+};
+
+export const loadKnowledgeGraphFromCgdb = async (
+  options: LoadKnowledgeGraphFromCgdbOptions = {},
+): Promise<KnowledgeGraph> => {
+  if (!conn) {
+    throw new Error('LadybugDB not initialized. Call initCgdb first.');
+  }
+
+  const includeGlobal = options.includeGlobal ?? false;
+  const graph = createKnowledgeGraph();
+  for (const table of NODE_TABLES) {
+    if (!includeGlobal && GLOBAL_NODE_TABLES.has(table)) continue;
+    try {
+      const rows = await executeQuery(`MATCH (n:${escapeTableName(table)}) RETURN n`);
+      for (const raw of rows) {
+        const node = unwrapNodeResult(raw);
+        const id = node ? String(node.id ?? '') : '';
+        if (!node || !id) continue;
+        graph.addNode({
+          id,
+          label: table,
+          properties: nodePropertiesFromCgdbRow(node) as any,
+        });
+      }
+    } catch {
+      /* table may be absent in old indexes */
+    }
+  }
+
+  try {
+    const rows = await executeQuery(
+      `MATCH (a)-[r:${REL_TABLE_NAME}]->(b) RETURN a.id AS sourceId, b.id AS targetId, r.type AS type, r.confidence AS confidence, r.reason AS reason, r.step AS step`,
+    );
+    let relIndex = 0;
+    for (const row of rows) {
+      const sourceId = rowString(row, 'sourceId', 0);
+      const targetId = rowString(row, 'targetId', 1);
+      if (!sourceId || !targetId) continue;
+      if (!includeGlobal) {
+        const sourceLabel = nodeLabelForId(sourceId) as NodeTableName;
+        const targetLabel = nodeLabelForId(targetId) as NodeTableName;
+        if (GLOBAL_NODE_TABLES.has(sourceLabel) || GLOBAL_NODE_TABLES.has(targetLabel)) continue;
+      }
+      const type = rowString(row, 'type', 2);
+      graph.addRelationship({
+        id: `cgdb:${relIndex++}:${sourceId}->${type}->${targetId}`,
+        sourceId,
+        targetId,
+        type: type as any,
+        confidence: rowNumber(row, 'confidence', 3, 1),
+        reason: rowString(row, 'reason', 4),
+        step: rowNumber(row, 'step', 5, 0),
+      });
+    }
+  } catch {
+    /* relationships may be absent in old indexes */
+  }
+
+  return graph;
+};
+
+const pruneEmptyFoldersFromCgdb = async (): Promise<number> => {
+  let folderRows: Record<string, any>[] = [];
+  let fileRows: Record<string, any>[] = [];
+  try {
+    folderRows = await executeQuery('MATCH (f:Folder) RETURN f.id AS id, f.filePath AS filePath');
+    fileRows = await executeQuery('MATCH (f:File) RETURN f.filePath AS filePath');
+  } catch {
+    return 0;
+  }
+
+  const filePaths = fileRows.map((row) => rowString(row, 'filePath', 0)).filter(Boolean);
+  let pruned = 0;
+  for (const row of folderRows) {
+    const id = rowString(row, 'id', 0);
+    const folderPath = rowString(row, 'filePath', 1);
+    if (!id || !folderPath) continue;
+    const hasDescendantFile = filePaths.some((filePath) => filePath.startsWith(`${folderPath}/`));
+    if (hasDescendantFile) continue;
+    try {
+      await executePrepared('MATCH (f:Folder {id: $id}) DETACH DELETE f', { id });
+      pruned++;
+    } catch {
+      /* best-effort cleanup */
+    }
+  }
+  return pruned;
 };
 
 // LadybugDB default ESCAPE is '\' (backslash), but our CSV uses RFC 4180 escaping ("" for literal quotes).
@@ -1362,12 +1923,10 @@ export const createFTSIndex = async (
 };
 
 /**
- * Lazy-create an FTS index, caching the fact in-process.
+ * Create an FTS index if needed, caching the fact in-process.
  *
- * Used by `queryFTS` so that `analyze` doesn't pay the ~440 ms × 5 fixed
- * LadybugDB cost up-front (it dominates analyze on small repos). Instead,
- * the cost is moved to the first `query`/`context` call in a session,
- * where it's amortised across many lookups.
+ * Used by analyze to warm persisted keyword indexes while the DB is writable,
+ * and by direct core search as a defensive fallback for older indexes.
  *
  * Safe to call repeatedly — the in-process Set guarantees only the first
  * call hits LadybugDB. `closeCgdb` clears the cache so re-init starts fresh.
@@ -1452,6 +2011,7 @@ export const dropFTSIndex = async (tableName: string, indexName: string): Promis
     throw new Error('LadybugDB not initialized. Call initCgdb first.');
   }
 
+  await loadFTSExtension();
   try {
     await conn.query(`CALL DROP_FTS_INDEX('${tableName}', '${indexName}')`);
   } catch {

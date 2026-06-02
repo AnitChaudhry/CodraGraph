@@ -242,7 +242,7 @@ describe('setupOpenCode â€” JSONC preservation', () => {
 
     expect(config.mcp.codragraph).toEqual({
       type: 'local',
-      command: ['npx', '-y', '@codragraph/cli@2.1.5', 'mcp'],
+      command: ['npx', '-y', '@codragraph/cli@2.1.6', 'mcp'],
     });
   });
 
@@ -266,7 +266,7 @@ describe('setupOpenCode â€” JSONC preservation', () => {
 
     expect(config.mcp.codragraph).toEqual({
       type: 'local',
-      command: ['bunx', '@codragraph/cli@2.1.5', 'mcp'],
+      command: ['bunx', '@codragraph/cli@2.1.6', 'mcp'],
     });
   });
 

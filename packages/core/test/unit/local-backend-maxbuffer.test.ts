@@ -45,4 +45,14 @@ describe('local-backend: execFileSync maxBuffer regression', () => {
       `execFileSync calls missing explicit maxBuffer (ENOBUFS risk):\n${offenders.join('\n')}`,
     ).toEqual([]);
   });
+
+  it('detect_changes maps hunks through file definition edges without labels(n)', () => {
+    const start = source.indexOf('private async detectChanges');
+    const end = source.indexOf('  /**\n   * Rename tool', start);
+    const body = source.slice(start, end);
+
+    expect(body).toContain('MATCH (f:File)-[r:CodeRelation]->(n)');
+    expect(body).toContain("r.type IN ['DEFINES', 'CONTAINS']");
+    expect(body).not.toContain('labels(n)[0]');
+  });
 });

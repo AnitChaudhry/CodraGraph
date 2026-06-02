@@ -46,7 +46,12 @@ program
   .command('analyze [path]')
   .description('Index a repository (full analysis)')
   .option('-f, --force', 'Force full re-index even if up to date')
-  .option('--embeddings', 'Enable embedding generation for semantic search (off by default)')
+  .option('--profile <mode>', 'Adaptive runtime profile: auto, lean, balanced, power', 'auto')
+  .option('--embedding-mode <mode>', 'Embedding policy: auto, off, on', 'auto')
+  .option(
+    '--embeddings',
+    'Enable embedding generation for semantic search (same as --embedding-mode on)',
+  )
   .option('--skills', 'Generate repo-specific skill files from detected communities')
   .option(
     '--skill-targets <list>',
@@ -76,8 +81,8 @@ program
   )
   .option(
     '--compress <encoding>',
-    'Compress per-row content (RFC 0001 Phase 2). One of: none (default), brotli, zstd. zstd requires Node ≥ 22.15.',
-    'none',
+    'Compress per-row content. One of: auto (default), none, brotli, zstd. zstd requires Node >= 22.15.',
+    'auto',
   )
   .addHelpText(
     'after',
@@ -204,14 +209,18 @@ program
   .option('-r, --repo <name>', 'Target repository')
   .option('-u, --uid <uid>', 'Direct symbol UID (zero-ambiguity lookup)')
   .option('-f, --file <path>', 'File path to disambiguate common names')
+  .option('-k, --kind <kind>', 'Symbol kind to disambiguate common names')
   .option('--content', 'Include full symbol source code')
   .action(createOneShotLazyAction(() => import('./tool.js'), 'contextCommand'));
 
 program
-  .command('impact <target>')
+  .command('impact [target]')
   .description('Blast radius analysis: what breaks if you change a symbol')
   .option('-d, --direction <dir>', 'upstream (dependants) or downstream (dependencies)', 'upstream')
   .option('-r, --repo <name>', 'Target repository')
+  .option('-u, --uid <uid>', 'Direct target symbol UID (zero-ambiguity lookup)')
+  .option('-f, --file <path>', 'File path to disambiguate common names')
+  .option('-k, --kind <kind>', 'Symbol kind to disambiguate common names')
   .option('--depth <n>', 'Max relationship depth (default: 3)')
   .option('--include-tests', 'Include test files in results')
   .action(createOneShotLazyAction(() => import('./tool.js'), 'impactCommand'));

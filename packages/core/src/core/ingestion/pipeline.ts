@@ -51,6 +51,16 @@ export interface PipelineOptions {
   /** Indexed source commit written onto FeatureCluster metadata. */
   lastIndexedCommit?: string;
   /**
+   * Optional focused indexing set for incremental file analysis. The walker
+   * still scans the repo so import resolution sees every path, but graph
+   * writes and content parsing are limited to these relative paths.
+   */
+  focusPaths?: readonly string[];
+  /** Adaptive analyze worker pool size. */
+  workerPoolSize?: number;
+  /** Adaptive analyze max files per worker message. */
+  workerSubBatchSize?: number;
+  /**
    * @internal Test-only override for worker-pool gating thresholds.
    * When unset, production defaults apply (15 files OR 512 KB total bytes).
    * Setting either field lowers the corresponding threshold so small test

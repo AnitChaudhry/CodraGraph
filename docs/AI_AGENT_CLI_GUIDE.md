@@ -48,6 +48,8 @@ Related docs:
 | Need to know what repos MCP can see | `npx @codragraph/cli list` or MCP `list_repos` | Pass `repo` on later tools when more than one repo is listed. |
 | First index or stale index | `npx @codragraph/cli analyze` | Run from the target repo root unless passing an explicit path. |
 | Same commit, suspect stale generated data | `npx @codragraph/cli analyze --force` | Does not require deleting `.codragraph/`. |
+| New commit touches source, docs, renames, large diffs, or topology-only files | `npx @codragraph/cli analyze` | Smart analyze patches changed file-scoped graph rows and recomputes global communities/processes/FeatureClusters. |
+| New commit touches package/config/ignore inputs | `npx @codragraph/cli analyze` | Smart analyze refreshes all file-scoped rows, then recomputes global context. |
 | New commit touches only generated agent files, lockfiles, or ignored assets | `npx @codragraph/cli analyze` | Smart analyze reuses the existing graph and advances metadata when indexed inputs did not change. |
 | Existing index has vectors and the user wants to keep them | `npx @codragraph/cli analyze --embeddings` | Check `.codragraph/meta.json` for `stats.embeddings`. |
 | Large repo, first pass | `npx @codragraph/cli analyze --compress brotli` | Use `--compress zstd` only on Node 22.15 or newer. Avoid `--embeddings`. |
@@ -66,13 +68,15 @@ they must fail with "Current repository is not indexed" instead of falling
 back to some other repo in the global registry. Pass `--repo <name>` or
 `--repo @<group>` when intentionally querying a different repo.
 
-`analyze` is incremental at the command level: if the previous index is on the
-current schema and the new commit changed only generated agent context,
-lockfiles, or ignored assets, it prints a smart-reuse message instead of
-rebuilding LadybugDB. Source files, Markdown/MDX graph docs, language config,
-and add/delete/rename/copy path changes stay rebuild-relevant so graph file,
-folder, and documentation surfaces do not go stale. Use `--force` when ignore
-rules changed or you need to rebuild generated graph data despite an unchanged
+`analyze` is incremental at the graph level: if the previous index is on the
+current schema, normal source edits, renames, large diffs, and topology-only
+files patch the changed file-scoped rows instead of loading a new database from
+scratch. Package/config/ignore inputs refresh all file-scoped rows because
+they can affect import or indexing semantics. After either mutation path,
+global communities, execution flows, and FeatureCluster packs are recomputed.
+If the new commit changed only generated agent context, lockfiles, or ignored
+assets, smart analyze reuses the existing graph and advances metadata. Use
+`--force` when you need to rebuild generated graph data despite an unchanged
 commit.
 
 Every analyze or smart-reuse pass also refreshes `.codragraph/structure/`.
@@ -107,6 +111,8 @@ source, use the root scripts:
 
 ```powershell
 npm run codragraph:source -- detect-changes --scope staged
+npm run codragraph:source -- detect-changes --scope unstaged
+npm run codragraph:source -- detect-changes --scope all
 npm run codragraph:detect-staged
 ```
 
@@ -122,6 +128,7 @@ call `tsx` directly from the root, use the explicit path:
 
 ```powershell
 npx tsx packages/core/src/cli/index.ts detect-changes --scope staged
+npx tsx packages/core/src/cli/index.ts detect-changes --scope all
 ```
 
 ## MCP Over HTTP

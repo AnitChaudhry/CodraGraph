@@ -218,7 +218,9 @@ export async function runChunkedParseAndResolve(
           workerUrl = pathToFileURL(distWorker);
         }
       }
-      workerPool = createWorkerPool(workerUrl);
+      workerPool = createWorkerPool(workerUrl, options?.workerPoolSize, {
+        subBatchSize: options?.workerSubBatchSize,
+      });
     } catch (err) {
       console.warn(
         'Worker pool creation failed, using sequential fallback:',

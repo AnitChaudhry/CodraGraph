@@ -2538,10 +2538,12 @@ export class LocalBackend {
       });
 
       const symbolQuery = `
-        MATCH (n) WHERE n.filePath ENDS WITH $filePath
+        MATCH (f:File)-[r:CodeRelation]->(n)
+        WHERE r.type IN ['DEFINES', 'CONTAINS']
+          AND f.filePath ENDS WITH $filePath
           AND n.startLine IS NOT NULL AND n.endLine IS NOT NULL
           AND (${overlapConditions})
-        RETURN n.id AS id, n.name AS name, labels(n)[0] AS type,
+        RETURN n.id AS id, n.name AS name, '' AS type,
                n.filePath AS filePath, n.startLine AS startLine, n.endLine AS endLine
       `;
 
@@ -2551,7 +2553,9 @@ export class LocalBackend {
           changedSymbols.push({
             id: sym.id || sym[0],
             name: sym.name || sym[1],
-            type: sym.type || sym[2],
+            type:
+              safeNodeLabelForCypher(sym.type, sym.id || sym[0]) ??
+              firstNonEmptyString(sym.type, sym.__cgLabel, sym[2]),
             filePath: sym.filePath || sym[3],
             change_type: 'touched',
           });

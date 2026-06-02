@@ -100,6 +100,35 @@ export interface RepoMeta {
    */
   compress?: 'none' | 'brotli' | 'zstd';
   /**
+   * Query-time index capabilities written by analyze after optional search
+   * indexes are successfully created. Read-only MCP/CLI query paths use this
+   * to avoid expensive probes for indexes that older analyses never wrote.
+   */
+  searchIndexes?: {
+    fts?: boolean;
+  };
+  /**
+   * Runtime policy chosen by `analyze --profile auto|lean|balanced|power`.
+   * This is diagnostic metadata only; readers must not require it because
+   * older indexes do not have a policy record.
+   */
+  adaptiveProfile?: {
+    requested?: 'auto' | 'lean' | 'balanced' | 'power';
+    resolved?: 'lean' | 'balanced' | 'power';
+    platform?: NodeJS.Platform;
+    arch?: NodeJS.Architecture;
+    cpuCount?: number;
+    totalMemoryBytes?: number;
+    heapLimitBytes?: number;
+    compression?: 'none' | 'brotli' | 'zstd';
+    embeddingMode?: 'auto' | 'off' | 'on';
+    embeddingNodeLimit?: number;
+    embeddingDecision?: 'enabled' | 'skipped';
+    embeddingReason?: string;
+    workerPoolSize?: number;
+    workerSubBatchSize?: number;
+  };
+  /**
    * Canonical `origin` remote URL captured at index time. Used to
    * fingerprint the same logical repo across multiple on-disk clones
    * (worktrees, agent workspaces, "clean clone for indexing"). When

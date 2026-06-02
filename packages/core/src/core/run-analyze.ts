@@ -24,6 +24,12 @@ import {
   executeWithReusedStatement,
   closeCgdb,
   loadCachedEmbeddings,
+  ensureFTSIndex,
+  applyFileGraphPatchToCgdb,
+  replaceFileScopedGraphInCgdb,
+  replaceGlobalGraphLayersInCgdb,
+  loadKnowledgeGraphFromCgdb,
+  fetchExistingEmbeddingHashes,
 } from './cgdb/cgdb-adapter.js';
 import {
   getStoragePaths,
@@ -43,6 +49,28 @@ import type { ContentEncoding } from '@codragraph/graphstore';
 import { generateAIContextFiles } from '../cli/ai-context.js';
 import { EMBEDDING_TABLE_NAME } from './cgdb/schema.js';
 import { STALE_HASH_SENTINEL } from './cgdb/schema.js';
+import { FTS_TABLES, ftsPropertiesFor } from './search/bm25-index.js';
+import {
+  processCommunities,
+  type CommunityDetectionResult,
+} from './ingestion/community-processor.js';
+import { processProcesses, type ProcessDetectionResult } from './ingestion/process-processor.js';
+import {
+  processFeatureClusters,
+  type FeatureClusterDetectionResult,
+} from './ingestion/feature-cluster-processor.js';
+import { createKnowledgeGraph } from './graph/graph.js';
+import { generateId } from '../lib/utils.js';
+import {
+  decideEmbeddingRun,
+  formatAdaptiveAnalyzePlan,
+  resolveAdaptiveAnalyzePlan,
+  type AdaptiveAnalyzePlan,
+  type AnalyzeProfileOption,
+  type CompressionOption,
+  type EmbeddingDecision,
+  type EmbeddingMode,
+} from './adaptive-profile.js';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -62,6 +90,8 @@ export interface AnalyzeOptions {
    */
   force?: boolean;
   embeddings?: boolean;
+  profile?: AnalyzeProfileOption;
+  embeddingMode?: EmbeddingMode;
   skipGit?: boolean;
   /** Skip AGENTS.md and CLAUDE.md codragraph block updates. */
   skipAgentsMd?: boolean;
@@ -93,7 +123,7 @@ export interface AnalyzeOptions {
    * that wrote the rows). Readers on older Node will get a clear
    * forward-compat error rather than silently bad content.
    */
-  compress?: ContentEncoding;
+  compress?: CompressionOption;
 }
 
 export interface AnalyzeResult {
@@ -116,9 +146,6 @@ export interface AnalyzeResult {
   /** The raw pipeline result — only populated when needed by callers (e.g. skill generation). */
   pipelineResult?: any;
 }
-
-/** Threshold: auto-skip embeddings for repos with more nodes than this */
-const EMBEDDING_NODE_LIMIT = 50_000;
 
 const GENERATED_AGENT_CONTEXT_PATHS = new Set(['agents.md', 'claude.md']);
 const GENERATED_AGENT_CONTEXT_PREFIXES = [
@@ -151,6 +178,14 @@ const GRAPH_CONFIG_BASENAMES = new Set([
 ]);
 const GRAPH_CONFIG_PATTERNS = [/^tsconfig\..+\.json$/i, /^jsconfig\..+\.json$/i];
 const MARKDOWN_EXTENSIONS = new Set(['.md', '.mdx']);
+const GLOBAL_LAYER_NODE_LABELS = new Set(['Community', 'Process', 'FeatureCluster']);
+const GLOBAL_LAYER_REL_TYPES = new Set([
+  'MEMBER_OF',
+  'STEP_IN_PROCESS',
+  'ENTRY_POINT_OF',
+  'FEATURE_MEMBER_OF',
+  'FEATURE_DEPENDS_ON',
+]);
 
 export interface AnalyzeChangedPath {
   /** Git name-status token, e.g. M, A, D, R100. */
@@ -281,13 +316,159 @@ export const getGraphRelevantChangedPaths = (
   changes: readonly AnalyzeChangedPath[],
 ): AnalyzeChangedPath[] => changes.filter(changedPathAffectsGraph);
 
+export interface IncrementalFilePatchPlan {
+  eligible: boolean;
+  reason: string;
+  replacePaths: string[];
+  currentPaths: string[];
+  fileCountDelta: number;
+  /**
+   * True when a change can affect resolver/global structure broadly
+   * (config/ignore/package). The incremental path still avoids deleting the
+   * whole DB, but it replaces every file-scoped node from a fresh full scan.
+   */
+  replaceAllFileScoped: boolean;
+  /** Old path -> new path aliases used to reconnect external edges across renames. */
+  pathAliases: Record<string, string>;
+}
+
+interface GlobalLayerRecomputeResult {
+  communityResult: CommunityDetectionResult;
+  processResult: ProcessDetectionResult;
+  featureClusterResult: FeatureClusterDetectionResult;
+  deletedGlobalNodes: number;
+  insertedGlobalRels: number;
+}
+
+export const isPatchableIncrementalPath = (filePath: string): boolean => {
+  const normalized = normalizeGitPath(filePath);
+  if (isGeneratedAgentContextPath(normalized) || shouldIgnorePath(normalized)) return false;
+  if (getLanguageFromFilename(normalized) !== null) return true;
+  return MARKDOWN_EXTENSIONS.has(path.posix.extname(normalized.toLowerCase()));
+};
+
+const isTopologyPatchablePath = (filePath: string): boolean => {
+  const normalized = normalizeGitPath(filePath);
+  return !isGeneratedAgentContextPath(normalized) && !shouldIgnorePath(normalized);
+};
+
+const isGlobalGraphInputPath = (filePath: string): boolean => {
+  const normalized = normalizeGitPath(filePath);
+  const basename = path.posix.basename(normalized);
+  const lowerBasename = basename.toLowerCase();
+  return (
+    IGNORE_CONTROL_FILES.has(lowerBasename) ||
+    GRAPH_CONFIG_BASENAMES.has(lowerBasename) ||
+    GRAPH_CONFIG_PATTERNS.some((pattern) => pattern.test(basename))
+  );
+};
+
+export const buildIncrementalFilePatchPlan = (
+  changes: readonly AnalyzeChangedPath[],
+  _options: { limit?: number } = {},
+): IncrementalFilePatchPlan => {
+  if (changes.length === 0) {
+    return {
+      eligible: false,
+      reason: 'no indexed graph input changes',
+      replacePaths: [],
+      currentPaths: [],
+      fileCountDelta: 0,
+      replaceAllFileScoped: false,
+      pathAliases: {},
+    };
+  }
+
+  const replacePaths = new Set<string>();
+  const currentPaths = new Set<string>();
+  const pathAliases: Record<string, string> = {};
+  let fileCountDelta = 0;
+  let replaceAllFileScoped = false;
+  const reasons = new Set<string>();
+
+  for (const change of changes) {
+    const statusCode = change.status[0]?.toUpperCase();
+    const paths =
+      statusCode === 'C'
+        ? [change.path]
+        : [change.path, change.previousPath].filter((p): p is string => Boolean(p));
+
+    if (paths.some(isGlobalGraphInputPath)) {
+      replaceAllFileScoped = true;
+      reasons.add('global config/input changed');
+      continue;
+    }
+
+    const contentPatchable = paths.every(isPatchableIncrementalPath);
+    const topologyPatchable = paths.every(isTopologyPatchablePath);
+    if (!contentPatchable && !topologyPatchable) {
+      return {
+        eligible: false,
+        reason: `change ${change.status} ${formatChangeForLog(change)} touches a global or unsupported graph input`,
+        replacePaths: [],
+        currentPaths: [],
+        fileCountDelta: 0,
+        replaceAllFileScoped: false,
+        pathAliases: {},
+      };
+    }
+
+    if (statusCode === 'D') {
+      replacePaths.add(change.path);
+      fileCountDelta -= 1;
+      continue;
+    }
+    if (statusCode === 'R') {
+      if (change.previousPath) {
+        replacePaths.add(change.previousPath);
+        pathAliases[change.previousPath] = change.path;
+      }
+      replacePaths.add(change.path);
+      currentPaths.add(change.path);
+      reasons.add('rename remapped');
+      continue;
+    }
+    if (statusCode === 'M' || statusCode === 'A' || statusCode === 'T' || statusCode === 'C') {
+      replacePaths.add(change.path);
+      currentPaths.add(change.path);
+      if (statusCode === 'A' || statusCode === 'C') {
+        fileCountDelta += 1;
+      }
+      if (!contentPatchable) {
+        reasons.add('topology-only file change');
+      }
+      continue;
+    }
+    replaceAllFileScoped = true;
+    reasons.add(`unsupported git status ${change.status}`);
+  }
+
+  const strategy = replaceAllFileScoped
+    ? 'all file-scoped graph rows will be refreshed'
+    : `${replacePaths.size} file path(s) will be patched`;
+  if (changes.length > 20) reasons.add(`${changes.length} graph input changes`);
+  return {
+    eligible: true,
+    reason: [...reasons, strategy].filter(Boolean).join('; '),
+    replacePaths: [...replacePaths].sort(),
+    currentPaths: [...currentPaths].sort(),
+    fileCountDelta,
+    replaceAllFileScoped,
+    pathAliases,
+  };
+};
+
 export const getAnalyzeConfigRebuildReason = (
-  existingMeta: Pick<RepoMeta, 'compress' | 'stats'>,
-  options: Pick<AnalyzeOptions, 'compress' | 'embeddings'>,
+  existingMeta: Pick<RepoMeta, 'compress' | 'searchIndexes' | 'stats'>,
+  options: { compress?: ContentEncoding; embeddings?: boolean },
 ): string | null => {
   const existingCompress = existingMeta.compress ?? 'none';
   if (options.compress && options.compress !== existingCompress) {
     return `requested compression changed from ${existingCompress} to ${options.compress}`;
+  }
+
+  if (existingMeta.searchIndexes?.fts !== true) {
+    return 'search indexes are missing';
   }
 
   if (options.embeddings && (existingMeta.stats?.embeddings ?? 0) === 0) {
@@ -322,12 +503,570 @@ const metaStatsForAIContext = (stats: RepoMeta['stats'] = {}) => ({
   processes: stats.processes,
 });
 
+const buildAdaptiveProfileMeta = (
+  adaptivePlan: AdaptiveAnalyzePlan,
+  embeddingDecision: EmbeddingDecision,
+): NonNullable<RepoMeta['adaptiveProfile']> => ({
+  requested: adaptivePlan.requestedProfile,
+  resolved: adaptivePlan.profile,
+  platform: adaptivePlan.machine.platform,
+  arch: adaptivePlan.machine.arch,
+  cpuCount: adaptivePlan.machine.availableParallelism,
+  totalMemoryBytes: adaptivePlan.machine.totalMemoryBytes,
+  heapLimitBytes: adaptivePlan.machine.heapLimitBytes,
+  compression: adaptivePlan.compress,
+  embeddingMode: adaptivePlan.embeddingMode,
+  embeddingNodeLimit: adaptivePlan.embeddingNodeLimit,
+  embeddingDecision: embeddingDecision.enabled ? 'enabled' : 'skipped',
+  embeddingReason: embeddingDecision.reason,
+  workerPoolSize: adaptivePlan.workerPoolSize,
+  workerSubBatchSize: adaptivePlan.workerSubBatchSize,
+});
+
+const countEmbeddings = async (): Promise<number> => {
+  try {
+    const embResult = await executeQuery(
+      `MATCH (e:${EMBEDDING_TABLE_NAME}) RETURN count(e) AS cnt`,
+    );
+    return Number(embResult?.[0]?.cnt ?? embResult?.[0]?.[0] ?? 0);
+  } catch {
+    return 0;
+  }
+};
+
 const pathExists = async (targetPath: string): Promise<boolean> => {
   try {
     await fs.stat(targetPath);
     return true;
   } catch {
     return false;
+  }
+};
+
+const addCommunityLayerToGraph = (
+  graph: ReturnType<typeof createKnowledgeGraph>,
+  communityResult: CommunityDetectionResult,
+) => {
+  communityResult.communities.forEach((comm) => {
+    graph.addNode({
+      id: comm.id,
+      label: 'Community',
+      properties: {
+        name: comm.label,
+        filePath: '',
+        heuristicLabel: comm.heuristicLabel,
+        cohesion: comm.cohesion,
+        symbolCount: comm.symbolCount,
+      },
+    });
+  });
+
+  communityResult.memberships.forEach((membership) => {
+    graph.addRelationship({
+      id: `${membership.nodeId}_member_of_${membership.communityId}`,
+      type: 'MEMBER_OF',
+      sourceId: membership.nodeId,
+      targetId: membership.communityId,
+      confidence: 1.0,
+      reason: 'leiden-algorithm',
+    });
+  });
+};
+
+const addProcessLayerToGraph = (
+  graph: ReturnType<typeof createKnowledgeGraph>,
+  processResult: ProcessDetectionResult,
+) => {
+  processResult.processes.forEach((proc) => {
+    graph.addNode({
+      id: proc.id,
+      label: 'Process',
+      properties: {
+        name: proc.label,
+        filePath: '',
+        heuristicLabel: proc.heuristicLabel,
+        processType: proc.processType,
+        stepCount: proc.stepCount,
+        communities: proc.communities,
+        entryPointId: proc.entryPointId,
+        terminalId: proc.terminalId,
+      },
+    });
+  });
+
+  processResult.steps.forEach((step) => {
+    graph.addRelationship({
+      id: `${step.nodeId}_step_${step.step}_${step.processId}`,
+      type: 'STEP_IN_PROCESS',
+      sourceId: step.nodeId,
+      targetId: step.processId,
+      confidence: 1.0,
+      reason: 'trace-detection',
+      step: step.step,
+    });
+  });
+};
+
+const addRouteToolProcessLinks = (
+  graph: ReturnType<typeof createKnowledgeGraph>,
+  processResult: ProcessDetectionResult,
+) => {
+  const routesByFile = new Map<string, string[]>();
+  const toolsByFile = new Map<string, string[]>();
+  for (const node of graph.iterNodes()) {
+    const filePath =
+      typeof node.properties?.filePath === 'string' ? node.properties.filePath : undefined;
+    const name = typeof node.properties?.name === 'string' ? node.properties.name : undefined;
+    if (!filePath || !name) continue;
+    if (node.label === 'Route') {
+      let routes = routesByFile.get(filePath);
+      if (!routes) {
+        routes = [];
+        routesByFile.set(filePath, routes);
+      }
+      routes.push(name);
+    } else if (node.label === 'Tool') {
+      let tools = toolsByFile.get(filePath);
+      if (!tools) {
+        tools = [];
+        toolsByFile.set(filePath, tools);
+      }
+      tools.push(name);
+    }
+  }
+
+  if (routesByFile.size === 0 && toolsByFile.size === 0) return;
+  for (const proc of processResult.processes) {
+    if (!proc.entryPointId) continue;
+    const entryNode = graph.getNode(proc.entryPointId);
+    const entryFile =
+      typeof entryNode?.properties?.filePath === 'string' ? entryNode.properties.filePath : '';
+    if (!entryFile) continue;
+
+    for (const routeURL of routesByFile.get(entryFile) ?? []) {
+      const routeNodeId = generateId('Route', routeURL);
+      graph.addRelationship({
+        id: generateId('ENTRY_POINT_OF', `${routeNodeId}->${proc.id}`),
+        sourceId: routeNodeId,
+        targetId: proc.id,
+        type: 'ENTRY_POINT_OF',
+        confidence: 0.85,
+        reason: 'route-handler-entry-point',
+      });
+    }
+    for (const toolName of toolsByFile.get(entryFile) ?? []) {
+      const toolNodeId = generateId('Tool', toolName);
+      graph.addRelationship({
+        id: generateId('ENTRY_POINT_OF', `${toolNodeId}->${proc.id}`),
+        sourceId: toolNodeId,
+        targetId: proc.id,
+        type: 'ENTRY_POINT_OF',
+        confidence: 0.85,
+        reason: 'tool-handler-entry-point',
+      });
+    }
+  }
+};
+
+const addFeatureClusterLayerToGraph = (
+  graph: ReturnType<typeof createKnowledgeGraph>,
+  featureClusterResult: FeatureClusterDetectionResult,
+) => {
+  featureClusterResult.clusters.forEach((cluster) => {
+    graph.addNode({
+      id: cluster.id,
+      label: 'FeatureCluster',
+      properties: {
+        name: cluster.name,
+        filePath: '',
+        slug: cluster.slug,
+        featureKind: cluster.featureKind,
+        summary: cluster.summary,
+        description: cluster.description,
+        repo: cluster.repo,
+        service: cluster.service,
+        signals: cluster.signals,
+        memberCount: cluster.memberCount,
+        entryPointIds: cluster.entryPointIds,
+        routes: cluster.routes,
+        tools: cluster.tools,
+        testCoverageHints: cluster.testCoverageHints,
+        lastIndexedCommit: cluster.lastIndexedCommit,
+        confidence: cluster.confidence,
+        source: 'heuristic',
+      },
+    });
+  });
+
+  featureClusterResult.memberships.forEach((membership) => {
+    graph.addRelationship({
+      id: generateId('FEATURE_MEMBER_OF', `${membership.nodeId}->${membership.clusterId}`),
+      sourceId: membership.nodeId,
+      targetId: membership.clusterId,
+      type: 'FEATURE_MEMBER_OF',
+      confidence: membership.confidence,
+      reason: membership.signals.join('|'),
+    });
+  });
+
+  featureClusterResult.dependencies.forEach((dependency) => {
+    graph.addRelationship({
+      id: generateId(
+        'FEATURE_DEPENDS_ON',
+        `${dependency.sourceClusterId}->${dependency.targetClusterId}`,
+      ),
+      sourceId: dependency.sourceClusterId,
+      targetId: dependency.targetClusterId,
+      type: 'FEATURE_DEPENDS_ON',
+      confidence: dependency.confidence,
+      reason: `member-dependency|edges:${dependency.edgeCount}|types:${dependency.relationshipTypes.join(',')}`,
+    });
+  });
+};
+
+const extractGlobalLayerGraph = (graph: ReturnType<typeof createKnowledgeGraph>) => {
+  const globalGraph = createKnowledgeGraph();
+  const globalNodeIds = new Set<string>();
+  for (const node of graph.iterNodes()) {
+    if (GLOBAL_LAYER_NODE_LABELS.has(node.label)) {
+      globalNodeIds.add(node.id);
+      globalGraph.addNode(node);
+    }
+  }
+  for (const rel of graph.iterRelationships()) {
+    if (
+      GLOBAL_LAYER_REL_TYPES.has(rel.type) ||
+      globalNodeIds.has(rel.sourceId) ||
+      globalNodeIds.has(rel.targetId)
+    ) {
+      globalGraph.addRelationship(rel);
+    }
+  }
+  return globalGraph;
+};
+
+const scaleAnalyzerProgress = (start: number, span: number, progress: number): number => {
+  const normalized = Math.max(0, Math.min(100, progress)) / 100;
+  return Math.round(start + normalized * span);
+};
+
+const recomputeGlobalGraphLayers = async (input: {
+  repoPath: string;
+  storagePath: string;
+  currentCommit: string;
+  repoNameForFeatureClusters: string;
+  compress: ContentEncoding;
+  progress: AnalyzeCallbacks['onProgress'];
+}): Promise<GlobalLayerRecomputeResult> => {
+  const { repoPath, storagePath, currentCommit, repoNameForFeatureClusters, compress, progress } =
+    input;
+
+  progress('communities', 82, 'Loading patched graph for global recompute...');
+  const graph = await loadKnowledgeGraphFromCgdb({ includeGlobal: false });
+
+  const communityResult = await processCommunities(graph, (message, phaseProgress) => {
+    progress('communities', scaleAnalyzerProgress(83, 2, phaseProgress), message);
+  });
+  addCommunityLayerToGraph(graph, communityResult);
+
+  let symbolCount = 0;
+  graph.forEachNode((n) => {
+    if (n.label !== 'File') symbolCount++;
+  });
+  const dynamicMaxProcesses = Math.max(20, Math.min(300, Math.round(symbolCount / 10)));
+  const processResult = await processProcesses(
+    graph,
+    communityResult.memberships,
+    (message, phaseProgress) => {
+      progress('processes', scaleAnalyzerProgress(85, 2, phaseProgress), message);
+    },
+    { maxProcesses: dynamicMaxProcesses, minSteps: 3 },
+  );
+  addProcessLayerToGraph(graph, processResult);
+  addRouteToolProcessLinks(graph, processResult);
+
+  const featureClusterResult = await processFeatureClusters(
+    graph,
+    (message, phaseProgress) => {
+      progress('feature_clusters', scaleAnalyzerProgress(87, 1, phaseProgress), message);
+    },
+    {
+      repo: repoNameForFeatureClusters,
+      lastIndexedCommit: currentCommit || undefined,
+    },
+  );
+  addFeatureClusterLayerToGraph(graph, featureClusterResult);
+
+  progress('cgdb', 88, 'Replacing global graph layers...');
+  const globalGraph = extractGlobalLayerGraph(graph);
+  const replaceResult = await replaceGlobalGraphLayersInCgdb(
+    globalGraph,
+    repoPath,
+    storagePath,
+    undefined,
+    { compress },
+  );
+
+  return {
+    communityResult,
+    processResult,
+    featureClusterResult,
+    deletedGlobalNodes: replaceResult.deletedGlobalNodes,
+    insertedGlobalRels: replaceResult.insertedRels,
+  };
+};
+
+const runIncrementalFilePatchAnalysis = async (input: {
+  repoPath: string;
+  storagePath: string;
+  cgdbPath: string;
+  currentCommit: string;
+  existingMeta: RepoMeta;
+  adaptivePlan: AdaptiveAnalyzePlan;
+  patchPlan: IncrementalFilePatchPlan;
+  options: AnalyzeOptions;
+  progress: AnalyzeCallbacks['onProgress'];
+  log: (message: string) => void;
+}): Promise<AnalyzeResult> => {
+  const {
+    repoPath,
+    storagePath,
+    cgdbPath,
+    currentCommit,
+    existingMeta,
+    adaptivePlan,
+    patchPlan,
+    options,
+    progress,
+    log,
+  } = input;
+  const repoNameForFeatureClusters =
+    options.registryName ?? getInferredRepoName(repoPath) ?? path.basename(repoPath);
+
+  progress(
+    'extracting',
+    5,
+    patchPlan.replaceAllFileScoped
+      ? 'Incremental full graph scan for global input change'
+      : `Incremental scan: ${patchPlan.currentPaths.length} current file(s)`,
+  );
+  const pipelineResult = await runPipelineFromRepo(
+    repoPath,
+    (p) => {
+      const phaseLabel = PHASE_LABELS[p.phase] || p.phase;
+      const scaled = Math.min(59, 5 + Math.round((p.percent / 100) * 54));
+      progress(p.phase, scaled, phaseLabel);
+    },
+    {
+      skipGraphPhases: true,
+      featureClusterRepo: repoNameForFeatureClusters,
+      lastIndexedCommit: currentCommit || undefined,
+      workerPoolSize: adaptivePlan.workerPoolSize,
+      workerSubBatchSize: adaptivePlan.workerSubBatchSize,
+      focusPaths: patchPlan.replaceAllFileScoped ? undefined : patchPlan.currentPaths,
+    },
+  );
+
+  progress(
+    'cgdb',
+    60,
+    patchPlan.replaceAllFileScoped
+      ? 'Replacing file-scoped graph rows...'
+      : `Patching ${patchPlan.replacePaths.length} file path(s)...`,
+  );
+  await initCgdb(cgdbPath);
+  try {
+    let cgdbMsgCount = 0;
+    const fileGraphProgress = (msg: string) => {
+      cgdbMsgCount++;
+      const pct = Math.min(82, 60 + Math.round((cgdbMsgCount / (cgdbMsgCount + 8)) * 22));
+      progress('cgdb', pct, msg);
+    };
+    if (patchPlan.replaceAllFileScoped) {
+      const replacementResult = await replaceFileScopedGraphInCgdb(
+        pipelineResult.graph,
+        repoPath,
+        storagePath,
+        fileGraphProgress,
+        { compress: adaptivePlan.compress },
+      );
+      log(
+        `Smart analyze: refreshed all file-scoped graph rows, deleted ${replacementResult.deletedNodes} node(s), ` +
+          `inserted ${replacementResult.insertedRels} edge(s).`,
+      );
+    } else {
+      const patchResult = await applyFileGraphPatchToCgdb(
+        pipelineResult.graph,
+        repoPath,
+        storagePath,
+        patchPlan.replacePaths,
+        fileGraphProgress,
+        { compress: adaptivePlan.compress, pathAliases: patchPlan.pathAliases },
+      );
+      log(
+        `Smart analyze: incrementally patched ${patchResult.replacedFiles} path(s), ` +
+          `deleted ${patchResult.deletedNodeIds} stale node(s), inserted ${patchResult.insertedRels} edge(s), ` +
+          `restored ${patchResult.restoredRels} preserved edge(s), pruned ${patchResult.prunedFolders} folder(s).`,
+      );
+    }
+
+    const globalResult = await recomputeGlobalGraphLayers({
+      repoPath,
+      storagePath,
+      currentCommit,
+      repoNameForFeatureClusters,
+      compress: adaptivePlan.compress,
+      progress,
+    });
+    log(
+      `Smart analyze: recomputed global layers (${globalResult.communityResult.stats.totalCommunities} communities, ` +
+        `${globalResult.processResult.stats.totalProcesses} processes, ` +
+        `${globalResult.featureClusterResult.stats.totalClusters} feature clusters).`,
+    );
+
+    progress('fts', 89, 'Refreshing search indexes...');
+    const ftsProperties = [...ftsPropertiesFor(adaptivePlan.compress)];
+    for (const { table, indexName } of FTS_TABLES) {
+      await ensureFTSIndex(table, indexName, ftsProperties);
+    }
+
+    const stats = await getCgdbStats();
+    const embeddingDecision = decideEmbeddingRun(adaptivePlan, {
+      nodes: stats.nodes,
+      embeddings: existingMeta.stats?.embeddings ?? 0,
+    });
+    log(
+      embeddingDecision.enabled
+        ? `Embeddings enabled: ${embeddingDecision.reason}.`
+        : `Embeddings skipped: ${embeddingDecision.reason}.`,
+    );
+
+    if (embeddingDecision.enabled) {
+      const { isHttpMode } = await import('./embeddings/http-client.js');
+      const httpMode = isHttpMode();
+      progress(
+        'embeddings',
+        90,
+        httpMode ? 'Connecting to embedding endpoint...' : 'Loading embedding model...',
+      );
+      const { runEmbeddingPipeline } = await import('./embeddings/embedding-pipeline.js');
+      const existingEmbeddings = await fetchExistingEmbeddingHashes(executeQuery);
+      const { readServerMapping } = await import('./embeddings/server-mapping.js');
+      const projectName = path.basename(repoPath);
+      const serverName = await readServerMapping(projectName);
+      await runEmbeddingPipeline(
+        executeQuery,
+        executeWithReusedStatement,
+        (p) => {
+          const scaled = 90 + Math.round((p.percent / 100) * 7);
+          const label =
+            p.phase === 'loading-model'
+              ? httpMode
+                ? 'Connecting to embedding endpoint...'
+                : 'Loading embedding model...'
+              : `Embedding ${p.nodesProcessed || 0}/${p.totalNodes || '?'}`;
+          progress('embeddings', scaled, label);
+        },
+        {},
+        undefined,
+        { repoName: projectName, serverName },
+        existingEmbeddings,
+      );
+    }
+
+    progress('done', 97, 'Recording graph snapshot...');
+    let graphstoreCurrentBranch: string | undefined;
+    let graphstoreHeadCommit: string | undefined;
+    try {
+      const snapshotResult = await recordAnalysisSnapshot({
+        storagePath,
+        indexedRepoCommit: currentCommit || undefined,
+        onSkipTable: (tableName, err) => {
+          log(
+            `graphstore: skipped table "${tableName}": ${err instanceof Error ? err.message : String(err)}`,
+          );
+        },
+      });
+      if (snapshotResult) {
+        graphstoreCurrentBranch = snapshotResult.branch;
+        graphstoreHeadCommit = snapshotResult.commitId;
+        log(
+          `graphstore: snapshot ${snapshotResult.snapshotId.slice(0, 19)}...  ` +
+            `commit ${snapshotResult.commitId.slice(0, 19)}...  ` +
+            `branch ${snapshotResult.branch}`,
+        );
+      }
+    } catch (err) {
+      log(
+        `graphstore: snapshot failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
+    progress('done', 98, 'Saving metadata...');
+    const embeddingCount = await countEmbeddings();
+    const previousFileCount = existingMeta.stats?.files ?? 0;
+    const fileCount = Math.max(0, previousFileCount + patchPlan.fileCountDelta);
+    const meta: RepoMeta = {
+      repoPath,
+      lastCommit: currentCommit,
+      indexedAt: new Date().toISOString(),
+      schemaVersion: INDEX_SCHEMA_VERSION,
+      compress: adaptivePlan.compress,
+      searchIndexes: { fts: true },
+      adaptiveProfile: buildAdaptiveProfileMeta(adaptivePlan, embeddingDecision),
+      remoteUrl: hasGitDir(repoPath) ? getRemoteUrl(repoPath) : undefined,
+      currentBranch: graphstoreCurrentBranch,
+      headCommit: graphstoreHeadCommit,
+      stats: {
+        files: patchPlan.replaceAllFileScoped ? pipelineResult.totalFileCount : fileCount,
+        nodes: stats.nodes,
+        edges: stats.edges,
+        communities: globalResult.communityResult.stats.totalCommunities,
+        featureClusters: globalResult.featureClusterResult.stats.totalClusters,
+        processes: globalResult.processResult.stats.totalProcesses,
+        embeddings: embeddingCount,
+      },
+    };
+    await saveMeta(storagePath, meta);
+
+    const projectName = await registerRepo(repoPath, meta, {
+      name: options.registryName,
+      allowDuplicateName: options.allowDuplicateName,
+    });
+
+    if (hasGitDir(repoPath)) {
+      await addToGitignore(repoPath);
+    }
+
+    try {
+      await generateAIContextFiles(
+        repoPath,
+        storagePath,
+        projectName,
+        metaStatsForAIContext(meta.stats),
+        undefined,
+        { skipAgentsMd: options.skipAgentsMd, noStats: options.noStats },
+      );
+    } catch {
+      // Best-effort only.
+    }
+
+    await closeCgdb();
+    progress('done', 100, 'Done');
+
+    return {
+      repoName: projectName,
+      repoPath,
+      stats: meta.stats ?? {},
+      pipelineResult,
+    };
+  } catch (err) {
+    try {
+      await closeCgdb();
+    } catch {
+      /* swallow */
+    }
+    throw err;
   }
 };
 
@@ -428,6 +1167,15 @@ export async function runFullAnalysis(
   const repoHasGit = hasGitDir(repoPath);
   const currentCommit = repoHasGit ? getCurrentCommit(repoPath) : '';
   const existingMeta = await loadMeta(storagePath);
+  const adaptivePlan = resolveAdaptiveAnalyzePlan({
+    profile: options.profile,
+    embeddingMode: options.embeddingMode,
+    embeddings: options.embeddings,
+    compress: options.compress,
+    existingMeta,
+  });
+  const existingEmbeddingDecision = decideEmbeddingRun(adaptivePlan, existingMeta?.stats);
+  log(formatAdaptiveAnalyzePlan(adaptivePlan));
 
   // ── Early-return: already up to date ──────────────────────────────
   // Schema-version mismatch forces a full re-analyze regardless of commit
@@ -446,7 +1194,10 @@ export async function runFullAnalysis(
   const configRebuildReason =
     storageRebuildReason ??
     (existingMeta && schemaUpToDate && !options.force
-      ? getAnalyzeConfigRebuildReason(existingMeta, options)
+      ? getAnalyzeConfigRebuildReason(existingMeta, {
+          compress: adaptivePlan.compress,
+          embeddings: existingEmbeddingDecision.enabled,
+        })
       : null);
   if (
     existingMeta &&
@@ -543,6 +1294,36 @@ export async function runFullAnalysis(
           (preview ? ` (${preview}${suffix})` : '') +
           '.',
       );
+
+      const patchPlan = buildIncrementalFilePatchPlan(graphRelevantChanges);
+      if (patchPlan.eligible) {
+        log(`Smart analyze: ${patchPlan.reason}.`);
+        try {
+          return await runIncrementalFilePatchAnalysis({
+            repoPath,
+            storagePath,
+            cgdbPath,
+            currentCommit,
+            existingMeta,
+            adaptivePlan,
+            patchPlan,
+            options,
+            progress,
+            log,
+          });
+        } catch (err) {
+          log(
+            `Smart analyze: incremental patch failed (${err instanceof Error ? err.message : String(err)}); rebuilding.`,
+          );
+          try {
+            await closeCgdb();
+          } catch {
+            /* swallow */
+          }
+        }
+      } else {
+        log(`Smart analyze: incremental patch unavailable: ${patchPlan.reason}; rebuilding.`);
+      }
     } else {
       log('Smart analyze: could not inspect git diff; rebuilding.');
     }
@@ -559,7 +1340,7 @@ export async function runFullAnalysis(
   let cachedEmbeddingNodeIds = new Set<string>();
   let cachedEmbeddings: CachedEmbedding[] = [];
 
-  if (options.embeddings && existingMeta && !options.force) {
+  if (existingEmbeddingDecision.enabled && existingMeta && !options.force) {
     try {
       progress('embeddings', 0, 'Caching embeddings...');
       await initCgdb(cgdbPath);
@@ -589,6 +1370,8 @@ export async function runFullAnalysis(
     {
       featureClusterRepo: repoNameForFeatureClusters,
       lastIndexedCommit: currentCommit || undefined,
+      workerPoolSize: adaptivePlan.workerPoolSize,
+      workerSubBatchSize: adaptivePlan.workerSubBatchSize,
     },
   );
 
@@ -625,7 +1408,7 @@ export async function runFullAnalysis(
       // through encodeContent before hitting the CSV. Default 'none' is
       // a true passthrough, so the on-disk layout is byte-identical to
       // pre-Phase-2 indexes when no compression flag is passed.
-      { compress: options.compress },
+      { compress: adaptivePlan.compress },
     );
 
     // ── Phase 2.5: Versioned-graph snapshot (best-effort) ────────────
@@ -661,12 +1444,15 @@ export async function runFullAnalysis(
     }
 
     // ── Phase 3: FTS (85–90%) ─────────────────────────────────────────
-    // FTS indexes are created lazily on first `query`/`context` call instead
-    // of eagerly here. On small repos / CI runners the LadybugDB
-    // CREATE_FTS_INDEX cost is ~440 ms × 5 (≈2 s) regardless of table size,
-    // which dominated `analyze` runtime and pushed Windows CI past its
-    // 30 s test budget. Lazy creation is implemented in
-    // `core/search/bm25-index.ts` via `ensureFTSIndex`.
+    // Build persisted keyword indexes while the analyzer still owns a writable
+    // LadybugDB handle. MCP/local query paths intentionally open read-only so
+    // they can coexist with editors and servers; if FTS is not warmed here,
+    // the first agent `query` degrades to a bounded table scan.
+    progress('fts', 85, 'Creating search indexes...');
+    const ftsProperties = [...ftsPropertiesFor(adaptivePlan.compress)];
+    for (const { table, indexName } of FTS_TABLES) {
+      await ensureFTSIndex(table, indexName, ftsProperties);
+    }
 
     // ── Phase 3.5: Re-insert cached embeddings ────────────────────────
     if (cachedEmbeddings.length > 0) {
@@ -698,13 +1484,16 @@ export async function runFullAnalysis(
 
     // ── Phase 4: Embeddings (90–98%) ──────────────────────────────────
     const stats = await getCgdbStats();
-    let embeddingSkipped = true;
-
-    if (options.embeddings) {
-      if (stats.nodes <= EMBEDDING_NODE_LIMIT) {
-        embeddingSkipped = false;
-      }
-    }
+    const embeddingDecision = decideEmbeddingRun(adaptivePlan, {
+      nodes: stats.nodes,
+      embeddings: existingMeta?.stats?.embeddings ?? cachedEmbeddings.length,
+    });
+    const embeddingSkipped = !embeddingDecision.enabled;
+    log(
+      embeddingDecision.enabled
+        ? `Embeddings enabled: ${embeddingDecision.reason}.`
+        : `Embeddings skipped: ${embeddingDecision.reason}.`,
+    );
 
     if (!embeddingSkipped) {
       const { isHttpMode } = await import('./embeddings/http-client.js');
@@ -751,22 +1540,15 @@ export async function runFullAnalysis(
     progress('done', 98, 'Saving metadata...');
 
     // Count embeddings in the index (cached + newly generated)
-    let embeddingCount = 0;
-    try {
-      const embResult = await executeQuery(
-        `MATCH (e:${EMBEDDING_TABLE_NAME}) RETURN count(e) AS cnt`,
-      );
-      embeddingCount = embResult?.[0]?.cnt ?? 0;
-    } catch {
-      /* table may not exist if embeddings never ran */
-    }
-
-    const meta = {
+    let embeddingCount = await countEmbeddings();
+    const meta: RepoMeta = {
       repoPath,
       lastCommit: currentCommit,
       indexedAt: new Date().toISOString(),
       schemaVersion: INDEX_SCHEMA_VERSION,
-      compress: options.compress ?? 'none',
+      compress: adaptivePlan.compress,
+      searchIndexes: { fts: true },
+      adaptiveProfile: buildAdaptiveProfileMeta(adaptivePlan, embeddingDecision),
       // Captured here (not at registration) so it travels with the
       // on-disk meta.json — sibling-clone fingerprinting works for
       // out-of-tree consumers (group-status, future tooling) without

@@ -22,6 +22,14 @@ import {
 } from '../storage/repo-manager.js';
 import { getGitRoot, hasGitDir } from '../storage/git.js';
 import { runFullAnalysis } from '../core/run-analyze.js';
+import {
+  parseAnalyzeProfile,
+  parseCompressionOption,
+  parseEmbeddingMode,
+  type AnalyzeProfileOption,
+  type CompressionOption,
+  type EmbeddingMode,
+} from '../core/adaptive-profile.js';
 import { getMaxFileSizeBannerMessage } from '../core/ingestion/utils/max-file-size.js';
 import fs from 'fs/promises';
 import { formatBytes, LARGE_INDEX_WARNING_BYTES, summarizeIndexStorage } from './status.js';
@@ -35,10 +43,17 @@ const HEAP_FLAG = `--max-old-space-size=${HEAP_MB}`;
 const STACK_KB = 4096;
 const STACK_FLAG = `--stack-size=${STACK_KB}`;
 
+function hasNodeFlag(flagName: string, nodeOpts: string, execArgv: readonly string[]): boolean {
+  return (
+    nodeOpts.includes(flagName) ||
+    execArgv.some((arg) => arg === flagName || arg.startsWith(`${flagName}=`))
+  );
+}
+
 /** Re-exec the process with an 8GB heap and larger stack if we're currently below that. */
 function ensureHeap(): boolean {
   const nodeOpts = process.env.NODE_OPTIONS || '';
-  if (nodeOpts.includes('--max-old-space-size')) return false;
+  if (hasNodeFlag('--max-old-space-size', nodeOpts, process.execArgv)) return false;
 
   const v8Heap = v8.getHeapStatistics().heap_size_limit;
   if (v8Heap >= HEAP_MB * 1024 * 1024 * 0.9) return false;
@@ -46,10 +61,14 @@ function ensureHeap(): boolean {
   // --stack-size is a V8 flag not allowed in NODE_OPTIONS on Node 24+,
   // so pass it only as a direct CLI argument, not via the environment.
   const cliFlags = [HEAP_FLAG];
-  if (!nodeOpts.includes('--stack-size')) cliFlags.push(STACK_FLAG);
+  if (!hasNodeFlag('--stack-size', nodeOpts, process.execArgv)) cliFlags.push(STACK_FLAG);
 
   try {
-    execFileSync(process.execPath, [...cliFlags, ...process.argv.slice(1)], {
+    // Preserve loader/debug flags from the outer process. This is required
+    // for source-mode invocations such as `tsx src/cli/index.ts analyze`;
+    // otherwise the child runs plain node against .ts files and cannot
+    // resolve the emitted .js import specifiers.
+    execFileSync(process.execPath, [...process.execArgv, ...cliFlags, ...process.argv.slice(1)], {
       stdio: 'inherit',
       env: { ...process.env, NODE_OPTIONS: `${nodeOpts} ${HEAP_FLAG}`.trim() },
     });
@@ -62,6 +81,10 @@ function ensureHeap(): boolean {
 export interface AnalyzeOptions {
   force?: boolean;
   embeddings?: boolean;
+  /** Adaptive runtime profile. `auto` detects CPU/RAM/heap and chooses lean/balanced/power. */
+  profile?: AnalyzeProfileOption;
+  /** Embedding policy. `--embeddings` is kept as a shortcut for `on`. */
+  embeddingMode?: EmbeddingMode;
   skills?: boolean;
   verbose?: boolean;
   /** Skip AGENTS.md and CLAUDE.md codragraph block updates. */
@@ -106,13 +129,13 @@ export interface AnalyzeOptions {
    */
   skillTargets?: string;
   /**
-   * RFC 0001 Phase 2 — opt-in per-row content compression. Accepts
-   * `'none'` (default), `'brotli'` (Node ≥ 18), or `'zstd'` (Node ≥
-   * 22.15). Compressed indexes are still queryable via the standard
+   * RFC 0001 Phase 2 - per-row content compression. Accepts `'auto'`
+   * (default), `'none'`, `'brotli'` (Node >= 18), or `'zstd'`
+   * (Node >= 22.15). Compressed indexes are still queryable via the standard
    * read path; decode happens at every external-consumer boundary
    * (MCP, HTTP API, embeddings, CLI tools).
    */
-  compress?: 'none' | 'brotli' | 'zstd';
+  compress?: CompressionOption;
 }
 
 export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOptions) => {
@@ -122,18 +145,30 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
     process.env.CODRAGRAPH_VERBOSE = '1';
   }
 
-  // RFC 0001 Phase 2 — validate --compress before doing any work. Catching
+  try {
+    parseAnalyzeProfile(options?.profile);
+    parseEmbeddingMode(options?.embeddingMode);
+  } catch (err) {
+    console.error(`  ${(err as Error).message}`);
+    process.exitCode = 2;
+    return;
+  }
+
+  // RFC 0001 Phase 2 - validate --compress before doing any work. Catching
   // a typo or an unsupported encoding here is much friendlier than failing
   // mid-analyze with an opaque CSV-write error. Node-version gating for
   // zstd lives in @codragraph/graphstore via isEncodingSupported, but we
   // import the check here so the CLI can offer the brotli fallback hint.
-  if (options?.compress && options.compress !== 'none') {
-    if (options.compress !== 'brotli' && options.compress !== 'zstd') {
-      console.error(`  --compress must be one of: none, brotli, zstd (got: ${options.compress})`);
-      process.exitCode = 2;
-      return;
-    }
-    if (options.compress === 'zstd') {
+  const requestedCompress = options?.compress ?? 'auto';
+  try {
+    parseCompressionOption(requestedCompress);
+  } catch (err) {
+    console.error(`  ${(err as Error).message}`);
+    process.exitCode = 2;
+    return;
+  }
+  if (requestedCompress !== 'auto' && requestedCompress !== 'none') {
+    if (requestedCompress === 'zstd') {
       const { isEncodingSupported } = await import('@codragraph/graphstore');
       if (!isEncodingSupported('zstd')) {
         console.error(
@@ -152,7 +187,7 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
     // base64 garbage. Surface the trade-off so users know what they're
     // opting into.
     console.warn(
-      `  Note: --compress ${options.compress} reduces .codragraph/cgdb size.\n` +
+      `  Note: --compress ${requestedCompress} reduces .codragraph/cgdb size.\n` +
         `  BM25 search will index symbol names only (function bodies are not tokenised\n` +
         `  when compressed); embeddings, graph queries, and \`context\` / \`impact\` are\n` +
         `  unaffected. Run with --compress none if you rely on full-text search inside\n` +
@@ -336,8 +371,10 @@ export const analyzeCommand = async (inputPath?: string, options?: AnalyzeOption
         // cost of a full pipeline re-index. See #829 review round 2.
         allowDuplicateName: options?.allowDuplicateName,
         // RFC 0001 Phase 2 — pass through the per-row encoding choice.
-        // Default 'none' / undefined keeps the pre-Phase-2 wire layout.
+        // Default 'auto' lets the adaptive profile choose the storage tier.
         compress: options?.compress,
+        profile: options?.profile,
+        embeddingMode: options?.embeddingMode,
       },
       {
         onProgress: (_phase, percent, message) => {

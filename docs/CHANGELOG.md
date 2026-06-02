@@ -4,6 +4,25 @@ All notable changes to CodraGraph will be documented in this file.
 
 ## [Unreleased]
 
+## [2.1.6] - 2026-06-02
+
+### Changed
+
+- `codragraph analyze` now performs true file-scoped graph mutation for
+  day-to-day changes: source edits, renames, large diffs, and topology-only
+  files patch affected graph rows, then recompute communities, processes, and
+  FeatureCluster packs.
+- Package/config/ignore input changes now refresh all file-scoped graph rows
+  without forcing the old cold database rebuild path.
+- Workspace packages, web app, and integrations bumped to `2.1.6`.
+
+### Fixed
+
+- `detect-changes --scope unstaged` and `detect-changes --scope all` no longer
+  exit silently on LadybugDB native label/projection edge cases.
+- File patching now loads the FTS extension before deleting indexed node rows,
+  avoiding stale rows and duplicate-key crashes in existing indexes.
+
 ## [2.1.5] - 2026-05-29
 
 ### Added

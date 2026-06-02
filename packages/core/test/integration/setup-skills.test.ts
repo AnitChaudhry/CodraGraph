@@ -96,7 +96,7 @@ describe('setupCommand skills integration', () => {
 
     const codexConfig = await fs.readFile(path.join(tempHome, '.codex', 'config.toml'), 'utf-8');
     expect(codexConfig).toContain('[mcp_servers.codragraph]');
-    expect(codexConfig).toContain('@codragraph/cli@2.1.5');
+    expect(codexConfig).toContain('@codragraph/cli@2.1.6');
 
     const codexSkill = await fs.readFile(
       path.join(tempHome, '.agents', 'skills', 'codragraph-cli', 'SKILL.md'),

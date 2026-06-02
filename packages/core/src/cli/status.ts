@@ -101,7 +101,7 @@ export const summarizeIndexStorage = async (
 
 export const formatIndexStatusLines = (
   summary: IndexStorageSummary | null,
-  meta: Pick<RepoMeta, 'stats' | 'compress'>,
+  meta: Pick<RepoMeta, 'stats' | 'compress' | 'adaptiveProfile'>,
   options: { largeIndexWarningBytes?: number } = {},
 ): string[] => {
   const lines: string[] = [];
@@ -132,6 +132,15 @@ export const formatIndexStatusLines = (
     `Embeddings: ${typeof embeddings === 'number' ? embeddings.toLocaleString('en-US') : 'unknown'}`,
   );
   lines.push(`Compression: ${meta.compress ?? 'none'}`);
+  if (meta.adaptiveProfile?.resolved) {
+    const profile = meta.adaptiveProfile;
+    const workerText =
+      typeof profile.workerPoolSize === 'number' ? `, workers ${profile.workerPoolSize}` : '';
+    const embeddingText = profile.embeddingDecision
+      ? `, embeddings ${profile.embeddingDecision}`
+      : '';
+    lines.push(`Adaptive profile: ${profile.resolved}${workerText}${embeddingText}`);
+  }
 
   return lines;
 };

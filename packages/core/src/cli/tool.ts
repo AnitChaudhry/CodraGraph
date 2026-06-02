@@ -52,6 +52,12 @@ async function resolveCliRepoParam(repoParam?: string): Promise<string | null> {
   return null;
 }
 
+function unwrapCommanderOptions<T>(value: unknown): T | undefined {
+  if (!value || typeof value !== 'object') return value as T | undefined;
+  const maybeCommand = value as { opts?: () => T };
+  return typeof maybeCommand.opts === 'function' ? maybeCommand.opts() : (value as T);
+}
+
 /**
  * Write tool output to stdout using low-level fd write.
  *
@@ -107,15 +113,22 @@ export async function queryCommand(
 }
 
 export async function contextCommand(
-  name: string,
+  name: string | undefined | { opts?: () => Record<string, unknown> },
   options?: {
     repo?: string;
     file?: string;
     uid?: string;
+    kind?: string;
     content?: boolean;
   },
 ): Promise<void> {
-  if (!name?.trim() && !options?.uid) {
+  let symbolName = typeof name === 'string' ? name : undefined;
+  if (typeof name !== 'string' && name && !options) {
+    options = unwrapCommanderOptions<typeof options>(name);
+    symbolName = undefined;
+  }
+
+  if (!symbolName?.trim() && !options?.uid) {
     console.error('Usage: codragraph context <symbol_name> [--uid <uid>] [--file <path>]');
     process.exit(1);
   }
@@ -123,9 +136,10 @@ export async function contextCommand(
   const repo = await resolveCliRepoParam(options?.repo);
   if (!repo) return;
   const result = await callToolOnce('context', {
-    name: name || undefined,
+    name: symbolName || undefined,
     uid: options?.uid,
     file_path: options?.file,
+    kind: options?.kind,
     include_content: options?.content ?? false,
     repo,
   });
@@ -134,16 +148,27 @@ export async function contextCommand(
 }
 
 export async function impactCommand(
-  target: string,
+  target: string | undefined | { opts?: () => Record<string, unknown> },
   options?: {
     direction?: string;
     repo?: string;
+    uid?: string;
+    file?: string;
+    kind?: string;
     depth?: string;
     includeTests?: boolean;
   },
 ): Promise<void> {
-  if (!target?.trim()) {
-    console.error('Usage: codragraph impact <symbol_name> [--direction upstream|downstream]');
+  let targetName = typeof target === 'string' ? target : undefined;
+  if (typeof target !== 'string' && target && !options) {
+    options = unwrapCommanderOptions<typeof options>(target);
+    targetName = undefined;
+  }
+
+  if (!targetName?.trim() && !options?.uid) {
+    console.error(
+      'Usage: codragraph impact <symbol_name> [--uid <uid>] [--direction upstream|downstream]',
+    );
     process.exit(1);
   }
 
@@ -151,7 +176,10 @@ export async function impactCommand(
     const repo = await resolveCliRepoParam(options?.repo);
     if (!repo) return;
     const result = await callToolOnce('impact', {
-      target,
+      target: targetName || undefined,
+      target_uid: options?.uid,
+      file_path: options?.file,
+      kind: options?.kind,
       direction: options?.direction || 'upstream',
       maxDepth: options?.depth ? parseInt(options.depth, 10) : undefined,
       includeTests: options?.includeTests ?? false,
@@ -165,7 +193,7 @@ export async function impactCommand(
     output({
       error:
         (err instanceof Error ? err.message : String(err)) || 'Impact analysis failed unexpectedly',
-      target: { name: target },
+      target: { name: targetName || options?.uid },
       direction: options?.direction || 'upstream',
       suggestion: 'Try reducing --depth or using codragraph context <symbol> as a fallback',
     });
@@ -360,6 +388,7 @@ export async function detectChangesCommand(options?: {
   baseRef?: string;
   repo?: string;
 }): Promise<void> {
+  options = unwrapCommanderOptions<typeof options>(options);
   const repo = await resolveCliRepoParam(options?.repo);
   if (!repo) return;
 

@@ -31,12 +31,21 @@ describe('status storage helpers', () => {
         fileCount: 3,
         unreadableEntries: 0,
       },
-      { stats: { embeddings: 1234 }, compress: 'zstd' },
+      {
+        stats: { embeddings: 1234 },
+        compress: 'zstd',
+        adaptiveProfile: {
+          resolved: 'power',
+          workerPoolSize: 6,
+          embeddingDecision: 'enabled',
+        },
+      },
     );
 
     expect(lines).toContain('Index size: 500.0 MB (3 files under .codragraph)');
     expect(lines).toContain('Embeddings: 1,234');
     expect(lines).toContain('Compression: zstd');
+    expect(lines).toContain('Adaptive profile: power, workers 6, embeddings enabled');
     expect(lines.join('\n')).toContain('Storage warning: .codragraph is 500.0 MB');
     expect(lines.join('\n')).toContain('--compress brotli');
     expect(lines.join('\n')).toContain('zstd on Node >=22.15');

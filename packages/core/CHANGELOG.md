@@ -4,6 +4,18 @@ All notable changes to CodraGraph will be documented in this file.
 
 ## [Unreleased]
 
+## [2.1.6] - 2026-06-02
+
+- Smart analyze now patches changed file-scoped graph rows for source edits,
+  renames, large diffs, and topology-only files, then recomputes communities,
+  execution flows, and FeatureCluster packs.
+- Package/config/ignore input changes now refresh all file-scoped rows without
+  forcing the old cold database rebuild path.
+- `detect-changes --scope unstaged` and `detect-changes --scope all` no longer
+  exit silently on LadybugDB native label/projection edge cases.
+- File patching now loads the FTS extension before deleting indexed node rows,
+  avoiding stale rows and duplicate-key crashes in existing indexes.
+
 ## [2.1.5] - 2026-05-29
 
 - Smart analyze keeps source files, Markdown/MDX graph docs, language config,

@@ -44,19 +44,37 @@ export const structurePhase: PipelinePhase<StructureOutput> = {
       stats: { filesProcessed: 0, totalFiles, nodesCreated: ctx.graph.nodeCount },
     });
 
-    processStructure(ctx.graph, allPaths);
+    const focusSet = ctx.options?.focusPaths
+      ? new Set(ctx.options.focusPaths.map((p) => p.replace(/\\/g, '/')))
+      : null;
+    const graphPaths = focusSet ? allPaths.filter((p) => focusSet.has(p)) : allPaths;
+
+    processStructure(ctx.graph, graphPaths);
 
     ctx.onProgress({
       phase: 'structure',
       percent: 20,
       message: 'Project structure analyzed',
-      stats: { filesProcessed: totalFiles, totalFiles, nodesCreated: ctx.graph.nodeCount },
+      stats: {
+        filesProcessed: graphPaths.length,
+        totalFiles: focusSet ? graphPaths.length : totalFiles,
+        nodesCreated: ctx.graph.nodeCount,
+      },
     });
 
     // Build the set once here so cobol, markdown, and cross-file propagation
     // can all reuse it instead of re-materializing `new Set(allPaths)` each.
     const allPathSet: ReadonlySet<string> = new Set(allPaths);
 
-    return { scannedFiles, allPaths, allPathSet, totalFiles };
+    const focusedScannedFiles = focusSet
+      ? scannedFiles.filter((f) => focusSet.has(f.path))
+      : scannedFiles;
+
+    return {
+      scannedFiles: focusedScannedFiles,
+      allPaths,
+      allPathSet,
+      totalFiles: focusSet ? focusedScannedFiles.length : totalFiles,
+    };
   },
 };

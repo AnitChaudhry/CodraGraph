@@ -138,3 +138,93 @@ withTestCgdbDB(
     },
   },
 );
+
+withTestCgdbDB(
+  'core-adapter-patch',
+  (_handle) => {
+    describe('core adapter file patching', () => {
+      it('applyFileGraphPatchToCgdb replaces renamed file-scoped nodes and restores incoming edges', async () => {
+        const {
+          applyFileGraphPatchToCgdb,
+          ensureFTSIndex,
+          executeQuery,
+          getCgdbStats,
+          loadKnowledgeGraphFromCgdb,
+        } = await import('../../src/core/cgdb/cgdb-adapter.js');
+        const { buildTestGraph } = await import('../helpers/test-graph.js');
+
+        await ensureFTSIndex('File', 'file_fts', ['name', 'content']);
+        await ensureFTSIndex('Function', 'function_fts', ['name', 'content']);
+
+        const patchGraph = buildTestGraph(
+          [
+            {
+              id: 'File:src/helpers.ts',
+              label: 'File',
+              name: 'helpers.ts',
+              filePath: 'src/helpers.ts',
+              extra: { content: 'renamed helpers file' },
+            },
+            {
+              id: 'Function:src/helpers.ts:helper:2',
+              label: 'Function',
+              name: 'helper',
+              filePath: 'src/helpers.ts',
+              startLine: 2,
+              endLine: 7,
+              isExported: true,
+              extra: { content: 'export function helper() { return 2; }' },
+            },
+          ],
+          [
+            {
+              sourceId: 'File:src/helpers.ts',
+              targetId: 'Function:src/helpers.ts:helper:2',
+              type: 'CONTAINS',
+            },
+          ],
+        );
+
+        const result = await applyFileGraphPatchToCgdb(
+          patchGraph,
+          '/test/repo',
+          path.join(_handle.tmpHandle.dbPath, 'storage-patch'),
+          ['src/utils.ts', 'src/helpers.ts'],
+          undefined,
+          { pathAliases: { 'src/utils.ts': 'src/helpers.ts' } },
+        );
+
+        expect(result.deletedNodeIds).toBe(2);
+        expect(result.restoredRels).toBe(1);
+
+        const helperRows = await executeQuery(
+          "MATCH (n:Function) WHERE n.id = 'Function:src/helpers.ts:helper:2' RETURN n.name AS name, n.endLine AS endLine",
+        );
+        expect(helperRows).toEqual([{ name: 'helper', endLine: 7 }]);
+
+        const incomingRows = await executeQuery(
+          "MATCH (a:Function)-[r:CodeRelation]->(b:Function) WHERE a.id = 'Function:src/index.ts:main:1' AND b.id = 'Function:src/helpers.ts:helper:2' AND r.type = 'CALLS' RETURN r.type AS type",
+        );
+        expect(incomingRows).toEqual([{ type: 'CALLS' }]);
+
+        const graph = await loadKnowledgeGraphFromCgdb({ includeGlobal: false });
+        expect(graph.getNode('Function:src/utils.ts:helper:1')).toBeUndefined();
+        expect(graph.getNode('Function:src/helpers.ts:helper:2')).toBeDefined();
+
+        await expect(getCgdbStats()).resolves.toEqual({ nodes: 6, edges: 4 });
+      });
+    });
+  },
+  {
+    afterSetup: async (handle) => {
+      const { loadGraphToCgdb } = await import('../../src/core/cgdb/cgdb-adapter.js');
+      const { createMinimalTestGraph } = await import('../helpers/test-graph.js');
+
+      const graph = createMinimalTestGraph();
+      const storagePath = path.join(handle.tmpHandle.dbPath, 'storage-patch');
+      await fs.mkdir(storagePath, { recursive: true });
+
+      await loadGraphToCgdb(graph, '/test/repo', storagePath);
+    },
+  },
+);

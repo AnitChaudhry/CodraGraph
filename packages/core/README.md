@@ -25,12 +25,15 @@ That's it. This indexes the codebase, installs agent skills, registers Claude Co
 
 The same CLI commands work in Windows PowerShell, macOS bash/zsh, and Linux shells. Use `npx @codragraph/cli ...` for no-install runs or `codragraph ...` after a global install.
 
-Smart analyze rebuilds when indexed source, Markdown/MDX graph docs, language
-config, schema, compression, or requested embedding settings changed. Generated
-agent context, lockfile-only, and ignored asset changes reuse the existing
-graph and advance metadata. Each pass refreshes `.codragraph/structure/`, a
-compact what/why/how/when/where markdown pack with branch/index state, bounded
-history, and SQLite seed SQL for external agent memory.
+Smart analyze now patches the existing graph for normal day-to-day changes:
+source edits, renames, large diffs, and topology-only files replace only the
+affected file-scoped rows, then recompute communities, execution flows, and
+FeatureCluster packs. Package/config or ignore-rule inputs refresh all
+file-scoped rows without falling back to a full cold rebuild. Generated agent
+context, lockfile-only, and ignored asset changes reuse the existing graph and
+advance metadata. Each pass refreshes `.codragraph/structure/`, a compact
+what/why/how/when/where markdown pack with branch/index state, bounded history,
+and SQLite seed SQL for external agent memory.
 
 To configure MCP for your editor, run `npx @codragraph/cli setup` once — or set it up manually below.
 
@@ -62,16 +65,16 @@ If you prefer to configure manually instead of using `codragraph setup`:
 
 ```bash
 # macOS / Linux
-claude mcp add codragraph -- npx -y @codragraph/cli@2.1.5 mcp
+claude mcp add codragraph -- npx -y @codragraph/cli@2.1.6 mcp
 
 # Windows
-claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@2.1.5 mcp
+claude mcp add codragraph -- cmd /c npx -y @codragraph/cli@2.1.6 mcp
 ```
 
 ### Codex (full support — MCP + skills)
 
 ```bash
-codex mcp add codragraph -- npx -y @codragraph/cli@2.1.5 mcp
+codex mcp add codragraph -- npx -y @codragraph/cli@2.1.6 mcp
 ```
 
 ### Cursor / Windsurf
@@ -83,7 +86,7 @@ Add to `~/.cursor/mcp.json` (global — works for all projects):
   "mcpServers": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "@codragraph/cli@2.1.5", "mcp"]
+      "args": ["-y", "@codragraph/cli@2.1.6", "mcp"]
     }
   }
 }
@@ -98,7 +101,7 @@ Add to `~/.config/opencode/config.json`:
   "mcp": {
     "codragraph": {
       "command": "npx",
-      "args": ["-y", "@codragraph/cli@2.1.5", "mcp"]
+      "args": ["-y", "@codragraph/cli@2.1.6", "mcp"]
     }
   }
 }
@@ -184,6 +187,8 @@ codragraph serve --web hosted      # API only; connect from hosted web UI
 codragraph index                   # Register an existing .codragraph/ folder into the global registry
 codragraph list                    # List all indexed repositories
 codragraph status                  # Show index status for current repo
+codragraph detect-changes --scope unstaged  # Map working-tree diff to symbols/processes
+codragraph detect-changes --scope all       # Include staged + unstaged changes
 codragraph clean                   # Delete index for current repo
 codragraph clean --all --force     # Delete all indexes
 codragraph wiki [path]             # Generate LLM-powered docs from knowledge graph
@@ -304,9 +309,9 @@ It is fixed in **codragraph v1.6.2+**. Upgrade to the current workspace
 version, or pin the version your team has validated:
 
 ```bash
-npx @codragraph/cli@2.1.5 analyze          # no global install
+npx @codragraph/cli@2.1.6 analyze          # no global install
 # or
-npm install -g @codragraph/cli@2.1.5       # upgrade a global install
+npm install -g @codragraph/cli@2.1.6       # upgrade a global install
 ```
 
 If you still hit npm install issues after upgrading, these generic workarounds

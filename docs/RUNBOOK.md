@@ -38,12 +38,14 @@ graph context matters for the current task.
 npx @codragraph/cli analyze
 ```
 
-On current builds, `analyze` first checks the previous indexed commit. If the
+On current builds, `analyze` first checks the previous indexed commit. Source
+edits, renames, large diffs, and topology-only files patch the affected
+file-scoped graph rows, then recompute communities, execution flows, and
+FeatureCluster packs. Package/config or ignore-rule inputs refresh all
+file-scoped rows because they can change import or indexing semantics. If the
 new commit only touched generated agent context, lockfiles, or ignored assets,
-it reuses the existing graph and updates metadata instead of paying the full
-parse/load cost. Source files, Markdown/MDX graph docs, language config, and
-add/delete/rename/copy path changes stay rebuild-relevant so graph file,
-folder, and documentation surfaces do not go stale.
+it reuses the existing graph and updates metadata instead of paying the parse
+and graph-load cost.
 
 **Force full rebuild** (same commit but suspect corruption or changed ignore rules):
 

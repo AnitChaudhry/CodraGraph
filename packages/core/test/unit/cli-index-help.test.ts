@@ -15,6 +15,17 @@ function runHelp(command: string) {
 }
 
 describe('CLI help surface', () => {
+  it('analyze help exposes adaptive profile and embedding policy flags', () => {
+    const result = runHelp('analyze');
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('--profile <mode>');
+    expect(result.stdout).toContain('--embedding-mode <mode>');
+    expect(result.stdout).toContain('--embeddings');
+    expect(result.stdout).toContain('auto (default)');
+    expect(result.stdout).toContain('none, brotli, zstd');
+  });
+
   it('query help keeps advanced search options without importing analyze deps', () => {
     const result = runHelp('query');
 
@@ -32,15 +43,20 @@ describe('CLI help surface', () => {
     expect(result.stdout).toContain('context [options] [name]');
     expect(result.stdout).toContain('--uid <uid>');
     expect(result.stdout).toContain('--file <path>');
+    expect(result.stdout).toContain('--kind <kind>');
   });
 
   it('impact help keeps repo and include-tests flags', () => {
     const result = runHelp('impact');
 
     expect(result.status).toBe(0);
+    expect(result.stdout).toContain('impact [options] [target]');
     expect(result.stdout).toContain('--depth <n>');
     expect(result.stdout).toContain('--include-tests');
     expect(result.stdout).toContain('--repo <name>');
+    expect(result.stdout).toContain('--uid <uid>');
+    expect(result.stdout).toContain('--file <path>');
+    expect(result.stdout).toContain('--kind <kind>');
   });
 
   it('detect-changes help exposes compare scope and base-ref flags', () => {
