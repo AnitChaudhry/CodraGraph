@@ -175,7 +175,9 @@ jobs:
               echo "${pkg}@${version} already exists on npm; skipping."
             else
               echo "::group::publish ${pkg}@${version}"
-              npm publish --workspace "${pkg}" --access public --provenance
+              # No --provenance: the source repo is private, and npm rejects
+              # provenance bundles from private repositories (E422).
+              npm publish --workspace "${pkg}" --access public
               echo "::endgroup::"
             fi
           done
