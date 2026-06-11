@@ -696,7 +696,7 @@ function isBenignLabelScanError(error: Error): boolean {
   return (
     message.includes('cannot find property') ||
     message.includes('does not have property') ||
-    message.includes('property') && message.includes('not found')
+    (message.includes('property') && message.includes('not found'))
   );
 }
 
