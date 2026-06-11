@@ -1540,7 +1540,7 @@ export async function runFullAnalysis(
     progress('done', 98, 'Saving metadata...');
 
     // Count embeddings in the index (cached + newly generated)
-    let embeddingCount = await countEmbeddings();
+    const embeddingCount = await countEmbeddings();
     const meta: RepoMeta = {
       repoPath,
       lastCommit: currentCommit,
