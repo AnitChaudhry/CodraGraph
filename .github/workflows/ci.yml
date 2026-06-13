@@ -24,7 +24,7 @@ jobs:
           cache: npm
       - name: install (cross-platform, npm/cli#4828 workaround)
         shell: bash
-        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm ci --legacy-peer-deps --no-audit --no-fund --include=optional
+        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm install --legacy-peer-deps --no-audit --no-fund --include=optional
       - run: npm run format:check
       - run: npm run lint
 
@@ -40,7 +40,7 @@ jobs:
           cache: npm
       - name: install (cross-platform, npm/cli#4828 workaround)
         shell: bash
-        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm ci --legacy-peer-deps --no-audit --no-fund --include=optional
+        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm install --legacy-peer-deps --no-audit --no-fund --include=optional
       - name: build + typecheck all packages
         # Packages MUST run in dependency order — downstream packages
         # need upstream `dist/` populated for type resolution to succeed.
@@ -85,7 +85,7 @@ jobs:
           cache: npm
       - name: install (cross-platform, npm/cli#4828 workaround)
         shell: bash
-        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm ci --legacy-peer-deps --no-audit --no-fund --include=optional
+        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm install --legacy-peer-deps --no-audit --no-fund --include=optional
       - name: graphstore tests
         run: npm test --workspace @codragraph/graphstore
       - name: harness tests
@@ -149,7 +149,7 @@ jobs:
           cache: npm
       - name: install (cross-platform, npm/cli#4828 workaround)
         shell: bash
-        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm ci --legacy-peer-deps --no-audit --no-fund --include=optional
+        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm install --legacy-peer-deps --no-audit --no-fund --include=optional
       - name: Build publishable packages
         # Same dep-order rationale as the typecheck job:
         # shared → graphstore → cli → harness → compress → sdk → org
