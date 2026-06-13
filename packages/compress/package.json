@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/compress",
-  "version": "2.2.0-rc.1",
+  "version": "2.2.0-rc.2",
   "description": "Lossless semantic compression for LLM contexts — strip grammar, keep facts, save tokens.",
   "author": {
     "name": "Thinqmesh Technologies",
@@ -45,8 +45,8 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "@codragraph/harness": "^2.2.0-rc.1",
-    "@codragraph/shared": "^2.2.0-rc.1"
+    "@codragraph/harness": "^2.2.0-rc.2",
+    "@codragraph/shared": "^2.2.0-rc.2"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

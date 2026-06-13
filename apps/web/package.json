@@ -1,7 +1,7 @@
 {
   "name": "codragraph-web",
   "private": true,
-  "version": "2.2.0-rc.1",
+  "version": "2.2.0-rc.2",
   "description": "CodraGraph browser UI — graph explorer and AI chat for the CodraGraph knowledge graph",
   "author": {
     "name": "Thinqmesh Technologies",
