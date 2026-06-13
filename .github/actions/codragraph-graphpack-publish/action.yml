@@ -1,0 +1,71 @@
+name: CodraGraph Graphpack Publish
+description: Analyze a repo, publish a thin graphpack lock/manifest, and upload graphstore chunks as GitHub artifacts.
+
+inputs:
+  target:
+    description: 'Graphpack target: main or pr.'
+    required: false
+    default: main
+  repo:
+    description: Repository identity written into .codragraph/index.lock.json.
+    required: false
+    default: ''
+  artifact-name:
+    description: GitHub artifact name for graphstore chunks and graphpack metadata.
+    required: false
+    default: codragraph-graphpack
+  artifact-url:
+    description: Optional remote artifact URL recorded in the lock.
+    required: false
+    default: ''
+  analyze-command:
+    description: Command used to refresh the CodraGraph index before publishing.
+    required: false
+    default: npx @codragraph/cli analyze --skip-agents-md --no-setup --compress brotli
+  node-version:
+    description: Node.js version used by the action.
+    required: false
+    default: '20'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Analyze repository
+      shell: bash
+      run: ${{ inputs.analyze-command }}
+
+    - name: Extract semantic relationships
+      shell: bash
+      run: npx @codragraph/cli semantic analyze --no-write --json > .codragraph/semantic-relationships.json
+
+    - name: Publish graphpack lock and manifest
+      shell: bash
+      env:
+        INPUT_ARTIFACT_URL: ${{ inputs.artifact-url }}
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_TARGET: ${{ inputs.target }}
+      run: |
+        REPO_NAME="${INPUT_REPO:-${GITHUB_REPOSITORY:-unknown}}"
+        ARGS=(graphpack publish --target "$INPUT_TARGET" --repo "$REPO_NAME" --artifact-dir ".codragraph/graphpacks/$INPUT_TARGET")
+        if [ -n "$INPUT_ARTIFACT_URL" ]; then
+          ARGS+=(--artifact-url "$INPUT_ARTIFACT_URL")
+        fi
+        npx @codragraph/cli "${ARGS[@]}"
+
+    - name: Upload graphpack artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}-${{ inputs.target }}-${{ github.sha }}
+        if-no-files-found: error
+        retention-days: 14
+        path: |
+          .codragraph/index.lock.json
+          .codragraph/meta.json
+          .codragraph/graphstore/**
+          .codragraph/graphpacks/${{ inputs.target }}/**
+          .codragraph/semantic-relationships.json

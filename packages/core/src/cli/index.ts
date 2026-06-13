@@ -144,6 +144,15 @@ program
   .action(createLazyAction(() => import('./status.js'), 'statusCommand'));
 
 program
+  .command('bootstrap')
+  .description('Bootstrap a local graph from .codragraph/index.lock.json when available')
+  .option('--lock <path>', 'Path to graphpack lock file')
+  .option('--artifact-dir <path>', 'Local graphpack artifact directory to pull from')
+  .option('--no-materialize', 'Validate/pull graphpack chunks without rebuilding the local cgdb')
+  .option('--json', 'Emit machine-readable JSON')
+  .action(createLazyAction(() => import('./graphpack.js'), 'bootstrapCommand'));
+
+program
   .command('clean')
   .description('Delete CodraGraph index for current repo')
   .option('-f, --force', 'Skip confirmation prompt')
@@ -264,6 +273,7 @@ program
   .description('Generate the compact agent context pack for a feature cluster')
   .option('-r, --repo <name>', 'Target repository')
   .option('-l, --limit <n>', 'Max members to return (default: 100)')
+  .option('--compress <level>', 'Compression level: balanced, lean, or max')
   .action(createOneShotLazyAction(() => import('./tool.js'), 'contextPackCommand'));
 
 program
@@ -293,6 +303,77 @@ program
   .action(createLazyAction(() => import('./eval-server.js'), 'evalServerCommand'));
 
 registerGroupCommands(program);
+
+const graphpackCmd = program
+  .command('graphpack')
+  .description('Publish, pull, and inspect team graphpack artifacts');
+
+graphpackCmd
+  .command('publish')
+  .description('Publish a graphpack lock/manifest for main or PR artifact workflows')
+  .option('--target <target>', 'Graphpack target: main or pr', 'main')
+  .option('--repo <name>', 'Repository identity stored in the lock')
+  .option('--artifact-dir <path>', 'Local artifact staging directory')
+  .option('--artifact-url <url>', 'Remote artifact URL recorded in the lock')
+  .option('--base-snapshot <id>', 'PR overlay base snapshot id')
+  .option('--head-snapshot <id>', 'PR overlay head snapshot id')
+  .option('--pr <ref>', 'Pull request number or URL for overlay graphpacks')
+  .option('--json', 'Emit machine-readable JSON')
+  .action(createLazyAction(() => import('./graphpack.js'), 'graphpackPublishCommand'));
+
+graphpackCmd
+  .command('pull')
+  .description('Pull graphpack chunks and prepare local materialization')
+  .option('--lock <path>', 'Path to graphpack lock file')
+  .option('--artifact-dir <path>', 'Local graphpack artifact directory to pull from')
+  .option('--no-materialize', 'Pull/validate without rebuilding the local cgdb')
+  .option('--json', 'Emit machine-readable JSON')
+  .action(createLazyAction(() => import('./graphpack.js'), 'graphpackPullCommand'));
+
+graphpackCmd
+  .command('status', { isDefault: true })
+  .description('Show graphpack lock, chunk, and local materialization status')
+  .option('--lock <path>', 'Path to graphpack lock file')
+  .option('--strict', 'Recompute graphstore CAS digest instead of trusting local presence')
+  .option('--json', 'Emit machine-readable JSON')
+  .action(createLazyAction(() => import('./graphpack.js'), 'graphpackStatusCommand'));
+
+const semanticCmd = program
+  .command('semantic')
+  .description('Analyze developer-intent semantic relationships above raw graph edges');
+
+semanticCmd
+  .command('analyze', { isDefault: true })
+  .description('Extract semantic relationship families with confidence and evidence')
+  .option('--llm', 'Allow optional LLM-inferred semantic edges when provider support is configured')
+  .option('--limit <n>', 'Maximum semantic relationships to return', '1000')
+  .option('--no-write', 'Do not write .codragraph/semantic-relationships.json')
+  .option('--json', 'Emit machine-readable JSON')
+  .action(createLazyAction(() => import('./graphpack.js'), 'semanticAnalyzeCommand'));
+
+const recipesCmd = program
+  .command('recipes')
+  .description('Lookup graph-snapshot keyed harness recipes');
+recipesCmd
+  .command('lookup')
+  .description('Find reusable harness recipes for a task family and graph snapshot')
+  .requiredOption('--task-family <name>', 'Task family identifier')
+  .option('--snapshot-id <id>', 'Graph snapshot id. Defaults to graphpack lock snapshot.')
+  .option('--required-subgraph-signature <sig>', 'Subgraph signature needed by the task')
+  .option('--recipe-store <path>', 'Recipe store root')
+  .option('--limit <n>', 'Max entries per match kind', '10')
+  .option('--json', 'Emit machine-readable JSON')
+  .action(createLazyAction(() => import('./graphpack.js'), 'recipesLookupCommand'));
+
+const teamCmd = program.command('team').description('Team graph server commands');
+teamCmd
+  .command('serve')
+  .description('Start hosted/team MCP-compatible HTTP mode for a graphpack')
+  .option('--graphpack <id>', 'Graphpack id to serve')
+  .option('-p, --port <port>', 'Port number', '4747')
+  .option('--host <host>', 'Bind address')
+  .option('--web <mode>', 'Dashboard mode: hosted, local, or off', 'hosted')
+  .action(createLazyAction(() => import('./graphpack.js'), 'teamServeCommand'));
 
 // ─── Config: unified API-key model (~/.codragraph/config.json) ─────
 

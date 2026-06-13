@@ -85,10 +85,10 @@ describe('getResourceDefinitions', () => {
 
 describe('getResourceTemplates', () => {
   it('returns the full set of dynamic templates', () => {
-    // Bumped from 13 -> 15 after feature-cluster resources landed.
+    // Bumped from 15 -> 18 after graphpack + semantic resources landed.
     // Update if more templates are added.
     const templates = getResourceTemplates();
-    expect(templates).toHaveLength(15);
+    expect(templates).toHaveLength(18);
   });
 
   it('includes per-repo + graphstore + recipes + group templates', () => {
@@ -105,6 +105,9 @@ describe('getResourceTemplates', () => {
     expect(uris).toContain('codragraph://repo/{name}/graphstore/log');
     expect(uris).toContain('codragraph://repo/{name}/graphstore/branches');
     expect(uris).toContain('codragraph://repo/{name}/graphstore/head');
+    expect(uris).toContain('codragraph://repo/{name}/graphpack/status');
+    expect(uris).toContain('codragraph://repo/{name}/graphpack/lock');
+    expect(uris).toContain('codragraph://repo/{name}/semantic-relationships');
     expect(uris).toContain('codragraph://repo/{name}/recipes');
     expect(uris).toContain('codragraph://repo/{name}/recipes/{family}');
     expect(uris).toContain('codragraph://group/{name}/contracts');

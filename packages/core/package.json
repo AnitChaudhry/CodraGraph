@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/cli",
-  "version": "2.1.6",
+  "version": "2.2.0-rc.0",
   "description": "Graph-powered code intelligence for AI agents. Index any codebase, query via MCP or CLI.",
   "author": {
     "name": "Thinqmesh Technologies",
@@ -56,7 +56,7 @@
     "prepack": "node scripts/build.js"
   },
   "dependencies": {
-    "@codragraph/graphstore": "^2.1.0",
+    "@codragraph/graphstore": "^2.2.0-rc.0",
     "@huggingface/transformers": "^4.1.0",
     "@ladybugdb/core": "^0.16.0",
     "@modelcontextprotocol/sdk": "^1.0.0",

@@ -27,6 +27,14 @@ export interface Recipe {
    */
   readonly snapshotId: string;
 
+  /**
+   * Stable signature of the subgraph the harness actually needed for the
+   * task. Exact reuse keys on (snapshotId, taskFamily, requiredSubgraphSignature)
+   * when this is present; older recipes without it remain discoverable for
+   * broad task-family reuse.
+   */
+  readonly requiredSubgraphSignature?: string;
+
   /** ISO 8601 timestamp at which the recipe was persisted. */
   readonly searchedAt: string;
 
@@ -101,6 +109,8 @@ export type RecipeMatch =
 export interface RecipeStaleness {
   /** ISO timestamp of the current snapshot, when known. */
   readonly currentSnapshotId: string;
+  readonly requiredSubgraphSignature?: string;
+  readonly signatureMatched?: boolean;
   /**
    * Whether a structural diff was actually computed. When false, the
    * caller did not provide a graphstore CAS and we can only say

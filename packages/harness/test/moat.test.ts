@@ -77,6 +77,25 @@ describe('FsRecipeStore', () => {
     expect(exact[0]?.taskFamily).toBe('codebase-qa');
   });
 
+  it('findExact can include requiredSubgraphSignature in the cache key', async () => {
+    const store = new FsRecipeStore({ root: tmpRoot });
+    await store.put(sampleInput({ requiredSubgraphSignature: 'subgraph:auth:v1' }));
+    await store.put(
+      sampleInput({
+        requiredSubgraphSignature: 'subgraph:billing:v1',
+        searchedAt: '2026-04-30T00:00:00Z',
+      }),
+    );
+
+    const exact = await store.findExact(
+      'sha256:' + 'a'.repeat(64),
+      'codebase-qa',
+      'subgraph:auth:v1',
+    );
+    expect(exact.length).toBe(1);
+    expect(exact[0]?.requiredSubgraphSignature).toBe('subgraph:auth:v1');
+  });
+
   it('findByFamily returns recipes across snapshots', async () => {
     const store = new FsRecipeStore({ root: tmpRoot });
     await store.put(sampleInput());
@@ -173,6 +192,47 @@ describe('findReusableRecipes', () => {
     expect(result.candidates[0]?.recipe.paretoCoords.accuracy).toBe(0.95);
     expect(result.candidates[0]?.staleness.diffComputed).toBe(false);
     expect(result.candidates[0]?.staleness.riskLevel).toBe('unknown');
+  });
+
+  it('scopes exact and candidate recipe reuse by required subgraph signature', async () => {
+    const store = new FsRecipeStore({ root: tmpRoot });
+    const exactSnap = 'sha256:' + '1'.repeat(64);
+    const otherSnap = 'sha256:' + '2'.repeat(64);
+    await store.put(
+      sampleInput({
+        snapshotId: exactSnap,
+        requiredSubgraphSignature: 'subgraph:settings:v1',
+      }),
+    );
+    await store.put(
+      sampleInput({
+        snapshotId: otherSnap,
+        searchedAt: '2026-05-01T00:00:00Z',
+        requiredSubgraphSignature: 'subgraph:settings:v1',
+        paretoCoords: { accuracy: 0.95, tokens: 2000, latencyMs: 500 },
+        scores: { accuracy: 0.95, tokens: 2000, latencyMs: 500, taskCount: 30 },
+      }),
+    );
+    await store.put(
+      sampleInput({
+        snapshotId: otherSnap,
+        searchedAt: '2026-05-02T00:00:00Z',
+        requiredSubgraphSignature: 'subgraph:billing:v1',
+        paretoCoords: { accuracy: 0.99, tokens: 1000, latencyMs: 400 },
+        scores: { accuracy: 0.99, tokens: 1000, latencyMs: 400, taskCount: 30 },
+      }),
+    );
+
+    const result = await findReusableRecipes({
+      store,
+      snapshotId: exactSnap,
+      taskFamily: 'codebase-qa',
+      requiredSubgraphSignature: 'subgraph:settings:v1',
+    });
+
+    expect(result.exact.length).toBe(1);
+    expect(result.candidates.length).toBe(1);
+    expect(result.candidates[0]?.recipe.requiredSubgraphSignature).toBe('subgraph:settings:v1');
   });
 
   it('classifies staleness when a differ is provided', async () => {

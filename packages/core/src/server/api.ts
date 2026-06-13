@@ -888,6 +888,113 @@ export const createServer = async (
   // stays optional at runtime — same pattern as harness_run /
   // harness_swarm_run in local-backend.ts.
 
+  app.get('/api/graphpack/status', async (req, res) => {
+    try {
+      const entry = await resolveRepo(requestedRepo(req));
+      if (!entry) {
+        res.status(404).json({ error: 'Repository not found' });
+        return;
+      }
+      const { getGraphpackStatus } = await import('../core/graphpack/index.js');
+      const result = await getGraphpackStatus({
+        repoPath: entry.path,
+        storagePath: entry.storagePath,
+        strict: req.query.strict === 'true',
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'graphpack status failed' });
+    }
+  });
+
+  app.get('/api/graphpack/lock', async (req, res) => {
+    try {
+      const entry = await resolveRepo(requestedRepo(req));
+      if (!entry) {
+        res.status(404).json({ error: 'Repository not found' });
+        return;
+      }
+      const { defaultLockPath, readGraphpackLock } = await import('../core/graphpack/index.js');
+      const lock = await readGraphpackLock(defaultLockPath(entry.path));
+      if (!lock) {
+        res.status(404).json({ error: 'No .codragraph/index.lock.json found' });
+        return;
+      }
+      res.json(lock);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'graphpack lock failed' });
+    }
+  });
+
+  app.post('/api/graphpack/publish', async (req, res) => {
+    try {
+      const entry = await resolveRepo(requestedRepo(req));
+      if (!entry) {
+        res.status(404).json({ error: 'Repository not found' });
+        return;
+      }
+      const { publishGraphpack } = await import('../core/graphpack/index.js');
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const result = await publishGraphpack({
+        repoPath: entry.path,
+        storagePath: entry.storagePath,
+        repoName: typeof body.repo === 'string' ? body.repo : entry.name,
+        analyzerVersion: typeof body.analyzerVersion === 'string' ? body.analyzerVersion : 'http',
+        target: body.target === 'pr' ? 'pr' : 'main',
+        artifactDir: typeof body.artifactDir === 'string' ? body.artifactDir : undefined,
+        artifactUrl: typeof body.artifactUrl === 'string' ? body.artifactUrl : undefined,
+        baseSnapshotId: typeof body.baseSnapshotId === 'string' ? body.baseSnapshotId : undefined,
+        headSnapshotId: typeof body.headSnapshotId === 'string' ? body.headSnapshotId : undefined,
+        pullRequest: typeof body.pullRequest === 'string' ? body.pullRequest : undefined,
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'graphpack publish failed' });
+    }
+  });
+
+  app.post('/api/graphpack/pull', async (req, res) => {
+    try {
+      const entry = await resolveRepo(requestedRepo(req));
+      if (!entry) {
+        res.status(404).json({ error: 'Repository not found' });
+        return;
+      }
+      const { pullGraphpack } = await import('../core/graphpack/index.js');
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const result = await pullGraphpack({
+        repoPath: entry.path,
+        storagePath: entry.storagePath,
+        artifactDir: typeof body.artifactDir === 'string' ? body.artifactDir : undefined,
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'graphpack pull failed' });
+    }
+  });
+
+  app.get('/api/semantic/relationships', async (req, res) => {
+    try {
+      const entry = await resolveRepo(requestedRepo(req));
+      if (!entry) {
+        res.status(404).json({ error: 'Repository not found' });
+        return;
+      }
+      const { analyzeSemanticRelationships } = await import('../core/semantic/relationships.js');
+      const limit =
+        typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit, 10) : undefined;
+      const result = await analyzeSemanticRelationships({
+        storagePath: entry.storagePath,
+        limit: Number.isFinite(limit) ? limit : 1000,
+        llm: req.query.llm === 'true',
+        write: false,
+      });
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'semantic relationships failed' });
+    }
+  });
+
   const importRecipeHandler = async (
     handlerName: 'handleHarnessRecipesList' | 'handleHarnessRecipesLookup',
   ) => {
@@ -920,6 +1027,10 @@ export const createServer = async (
         recipe_store: path.join(entry.storagePath, 'recipes'),
         task_family: typeof req.query.task_family === 'string' ? req.query.task_family : undefined,
         snapshot_id: typeof req.query.snapshot_id === 'string' ? req.query.snapshot_id : undefined,
+        required_subgraph_signature:
+          typeof req.query.required_subgraph_signature === 'string'
+            ? req.query.required_subgraph_signature
+            : undefined,
         limit: Number.isFinite(limitParam) ? limitParam : undefined,
       });
       res.json(result);
@@ -948,6 +1059,10 @@ export const createServer = async (
         recipe_store: path.join(entry.storagePath, 'recipes'),
         task_family: taskFamily,
         snapshot_id: snapshotId,
+        required_subgraph_signature:
+          typeof req.query.required_subgraph_signature === 'string'
+            ? req.query.required_subgraph_signature
+            : undefined,
         limit:
           typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit, 10) : undefined,
       });

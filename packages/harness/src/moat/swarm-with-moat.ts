@@ -27,6 +27,7 @@ export interface SwarmSearchWithMoatOptions extends SwarmSearchOptions {
   readonly snapshotId: string;
   /** User-supplied task family identifier. */
   readonly taskFamily: string;
+  readonly requiredSubgraphSignature?: string;
 
   /**
    * When true and at least one exact-match recipe exists, return the
@@ -79,6 +80,7 @@ export const swarmSearchWithMoat = async (
     store: opts.recipeStore,
     snapshotId: opts.snapshotId,
     taskFamily: opts.taskFamily,
+    requiredSubgraphSignature: opts.requiredSubgraphSignature,
     differ: opts.differ,
   });
 
@@ -106,6 +108,7 @@ export const swarmSearchWithMoat = async (
     recipeStore: opts.recipeStore,
     snapshotId: opts.snapshotId,
     taskFamily: opts.taskFamily,
+    requiredSubgraphSignature: opts.requiredSubgraphSignature,
     persistTopK: opts.persistTopK ?? 5,
     searchSource: 'swarm',
   });
@@ -129,6 +132,7 @@ interface PersistFrontierOptions {
   readonly recipeStore: RecipeStore;
   readonly snapshotId: string;
   readonly taskFamily: string;
+  readonly requiredSubgraphSignature?: string;
   readonly persistTopK: number;
   readonly searchSource: RecipeSearchSource;
 }
@@ -155,6 +159,7 @@ const persistFrontierAsRecipes = async (opts: PersistFrontierOptions): Promise<R
       storeRoot: opts.storeRoot,
       snapshotId: opts.snapshotId,
       taskFamily: opts.taskFamily,
+      requiredSubgraphSignature: opts.requiredSubgraphSignature,
       searchSource: opts.searchSource,
       result: opts.result,
     });
@@ -174,6 +179,7 @@ interface PointToRecipeOptions {
   readonly storeRoot: string;
   readonly snapshotId: string;
   readonly taskFamily: string;
+  readonly requiredSubgraphSignature?: string;
   readonly searchSource: RecipeSearchSource;
   readonly result: SwarmSearchResult;
 }
@@ -211,6 +217,9 @@ const pointToRecipe = async (opts: PointToRecipeOptions): Promise<Omit<Recipe, '
   return {
     taskFamily: opts.taskFamily,
     snapshotId: opts.snapshotId,
+    ...(opts.requiredSubgraphSignature !== undefined
+      ? { requiredSubgraphSignature: opts.requiredSubgraphSignature }
+      : {}),
     searchedAt: new Date().toISOString(),
     searchSource: opts.searchSource,
     harness: {

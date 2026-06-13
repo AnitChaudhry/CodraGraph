@@ -23,6 +23,12 @@ import { CapabilityCard } from './CapabilityCard';
 import { fetchGraphstoreLog, type GraphstoreCommit } from '@/services/graphstore-client';
 // (the GraphstoreCommit type is also referenced by the Top-recipes panel below)
 import { fetchRecipesList, type RecipeSummary } from '@/services/recipes-client';
+import {
+  fetchGraphpackStatus,
+  fetchSemanticRelationships,
+  type GraphpackStatus,
+  type SemanticRelationshipReport,
+} from '@/services/graphpack-client';
 import type { DashboardSection } from '@/hooks/useDashboardSection';
 import type { BackendRepo } from '@/services/backend-client';
 import { useGraphstoreContext } from '@/hooks/useGraphstoreContext';
@@ -62,6 +68,14 @@ export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX
     status: 'idle',
     data: null,
   });
+  const [graphpackState, setGraphpackState] = useState<RemoteState<GraphpackStatus>>({
+    status: 'idle',
+    data: null,
+  });
+  const [semanticState, setSemanticState] = useState<RemoteState<SemanticRelationshipReport>>({
+    status: 'idle',
+    data: null,
+  });
 
   useEffect(() => {
     if (!currentRepo) return;
@@ -86,6 +100,24 @@ export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX
           data: null,
           reason: res.reason,
         });
+      }
+    });
+    setGraphpackState({ status: 'loading', data: null });
+    fetchGraphpackStatus(currentRepo).then((res) => {
+      if (cancelled) return;
+      if (res.available) {
+        setGraphpackState({ status: 'available', data: res.data });
+      } else {
+        setGraphpackState({ status: 'unavailable', data: null, reason: res.reason });
+      }
+    });
+    setSemanticState({ status: 'loading', data: null });
+    fetchSemanticRelationships(currentRepo, 200).then((res) => {
+      if (cancelled) return;
+      if (res.available) {
+        setSemanticState({ status: 'available', data: res.data });
+      } else {
+        setSemanticState({ status: 'unavailable', data: null, reason: res.reason });
       }
     });
     return () => {
@@ -215,6 +247,11 @@ export const OverviewSection = ({ onNavigate }: OverviewSectionProps): React.JSX
         </div>
 
         <Separator />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <TeamGraphPanel state={graphpackState} />
+          <SemanticRelationshipsPanel state={semanticState} />
+        </div>
 
         {/* Recent activity row */}
         <div className="grid gap-4 lg:grid-cols-2">
@@ -389,6 +426,137 @@ const RecipesList = ({
   );
 };
 
+const TeamGraphPanel = ({ state }: { state: RemoteState<GraphpackStatus> }): React.JSX.Element => {
+  if (state.status === 'loading' || state.status === 'idle') {
+    return <Skeleton className="h-40 w-full" />;
+  }
+  if (state.status === 'unavailable') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Team graph</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EmptyHint
+            title="Graphpack endpoint not wired"
+            body="The server has not exposed `/api/graphpack/status` yet."
+            reason={state.reason}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+  const data = state.data;
+  const health = data?.compatibility.ok && data.chunks.missing.length === 0;
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Team graph</CardTitle>
+          <Badge variant={health ? 'success' : 'secondary'}>{data?.source ?? 'missing'}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <Metric label="Lock" value={data?.lockPresent ? 'present' : 'missing'} />
+          <Metric
+            label="Chunks"
+            value={`${data?.chunks.verified ?? 0}/${data?.chunks.expected ?? 0}`}
+          />
+          <Metric
+            label="Graphpack"
+            value={data?.lock?.graphpack.id ? shortGraphId(data.lock.graphpack.id) : '-'}
+          />
+          <Metric
+            label="Snapshot"
+            value={
+              data?.lock?.graphpack.graphstoreSnapshot
+                ? shortGraphId(data.lock.graphpack.graphstoreSnapshot)
+                : '-'
+            }
+          />
+        </div>
+        {!health && (
+          <p className="text-xs text-text-secondary">
+            {data?.compatibility.reasons[0] ??
+              data?.chunks.missing[0] ??
+              'Graphpack needs bootstrap or local analyze.'}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const SemanticRelationshipsPanel = ({
+  state,
+}: {
+  state: RemoteState<SemanticRelationshipReport>;
+}): React.JSX.Element => {
+  if (state.status === 'loading' || state.status === 'idle') {
+    return <Skeleton className="h-40 w-full" />;
+  }
+  if (state.status === 'unavailable') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Semantic edges</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EmptyHint
+            title="Semantic endpoint not wired"
+            body="The server has not exposed `/api/semantic/relationships` yet."
+            reason={state.reason}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+  const topFamilies = Object.entries(state.data?.summary ?? {})
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Semantic edges</CardTitle>
+          <Badge variant="outline">{state.data?.extractorVersion ?? 'semantic'}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <Metric label="Edges" value={String(state.data?.relationships.length ?? 0)} />
+          <Metric
+            label="Snapshot"
+            value={state.data?.snapshotId ? shortGraphId(state.data.snapshotId) : '-'}
+          />
+        </div>
+        {topFamilies.length === 0 ? (
+          <p className="text-xs text-text-secondary">
+            No semantic relationships detected for the current snapshot yet.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {topFamilies.map(([family, count]) => (
+              <Badge key={family} variant="secondary">
+                {family} {count}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const Metric = ({ label, value }: { label: string; value: string }): React.JSX.Element => (
+  <div className="rounded-md border border-border-subtle bg-deep px-3 py-2">
+    <div className="text-[11px] font-medium tracking-normal text-text-muted uppercase">{label}</div>
+    <div className="truncate font-mono text-xs text-text-primary">{value}</div>
+  </div>
+);
+
 const EmptyHint = ({
   title,
   body,
@@ -421,3 +589,5 @@ const formatRelative = (iso: string): string => {
   if (mo < 12) return `${mo}mo ago`;
   return `${Math.round(mo / 12)}y ago`;
 };
+
+const shortGraphId = (id: string): string => id.replace(/^sha256:/, '').slice(0, 12);

@@ -15,6 +15,7 @@ export interface RecipeSummary {
   id: string;
   taskFamily: string;
   snapshotId: string;
+  requiredSubgraphSignature?: string;
   searchedAt: string;
   accuracy: number;
   tokens: number;
@@ -30,6 +31,8 @@ export interface RecipesListResult {
 export interface RecipeStaleness {
   diffComputed: boolean;
   riskLevel: 'low' | 'medium' | 'high' | 'unknown';
+  requiredSubgraphSignature?: string;
+  signatureMatched?: boolean;
   summary?: {
     addedNodes: number;
     removedNodes: number;
@@ -70,12 +73,20 @@ const tryFetchJson = async <T>(url: string): Promise<RecipesCallResult<T>> => {
 
 export const fetchRecipesList = async (
   repo?: string,
-  opts: { taskFamily?: string; snapshotId?: string; limit?: number } = {},
+  opts: {
+    taskFamily?: string;
+    snapshotId?: string;
+    requiredSubgraphSignature?: string;
+    limit?: number;
+  } = {},
 ): Promise<RecipesCallResult<RecipesListResult>> => {
   const params = new URLSearchParams();
   if (repo) params.set('repo', repo);
   if (opts.taskFamily) params.set('task_family', opts.taskFamily);
   if (opts.snapshotId) params.set('snapshot_id', opts.snapshotId);
+  if (opts.requiredSubgraphSignature) {
+    params.set('required_subgraph_signature', opts.requiredSubgraphSignature);
+  }
   if (opts.limit) params.set('limit', String(opts.limit));
   const url = `${getBackendUrl()}/api/recipes${params.toString() ? `?${params.toString()}` : ''}`;
   return tryFetchJson<RecipesListResult>(url);
@@ -85,12 +96,16 @@ export const fetchRecipesLookup = async (
   taskFamily: string,
   snapshotId: string,
   repo?: string,
+  requiredSubgraphSignature?: string,
 ): Promise<RecipesCallResult<RecipesLookupResult>> => {
   const params = new URLSearchParams({
     task_family: taskFamily,
     snapshot_id: snapshotId,
   });
   if (repo) params.set('repo', repo);
+  if (requiredSubgraphSignature) {
+    params.set('required_subgraph_signature', requiredSubgraphSignature);
+  }
   return tryFetchJson<RecipesLookupResult>(
     `${getBackendUrl()}/api/recipes/lookup?${params.toString()}`,
   );

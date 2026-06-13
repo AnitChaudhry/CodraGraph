@@ -49,6 +49,20 @@ describe('rbac/check — DEFAULT_POLICY', () => {
     expect(checkPermission(DEFAULT_POLICY, 'member', 'audit.read')).toBe(false);
   });
 
+  it('covers team graphpack, semantic, recipe reuse, and team MCP permissions', () => {
+    expect(checkPermission(DEFAULT_POLICY, 'viewer', 'graphpack.read')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'viewer', 'graphpack.pull')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'member', 'graphpack.publish')).toBe(false);
+    expect(checkPermission(DEFAULT_POLICY, 'admin', 'graphpack.publish')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'viewer', 'semantic.read')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'member', 'semantic.extract')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'viewer', 'recipe.reuse')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'member', 'recipe.publish')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'viewer', 'team_mcp.access')).toBe(true);
+    expect(checkPermission(DEFAULT_POLICY, 'viewer', 'team_mcp.serve')).toBe(false);
+    expect(checkPermission(DEFAULT_POLICY, 'member', 'team_mcp.serve')).toBe(true);
+  });
+
   it('only owner can transfer or delete the org', () => {
     expect(checkPermission(DEFAULT_POLICY, 'owner', 'org.delete')).toBe(true);
     expect(checkPermission(DEFAULT_POLICY, 'admin', 'org.delete')).toBe(false);

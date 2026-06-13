@@ -681,6 +681,99 @@ WHEN TO USE: After changing group.yaml or re-indexing member repos.`,
     },
   },
   {
+    name: 'graphpack_status',
+    description: `Show the team graphpack state for a repo.
+
+WHEN TO USE: before answering team-shared-context questions. Reports whether the answer should be considered canonical main graph, PR overlay, local graph, or missing/fallback.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+        strict: {
+          type: 'boolean',
+          description: 'Recompute graphstore CAS digest instead of trusting local presence.',
+          default: false,
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'graphpack_publish',
+    description: `Create a thin .codragraph/index.lock.json plus graphpack manifest for GitHub-native artifact publishing.
+
+WHEN TO USE: CI on main or PR branches after analyze. Commits the lock only; heavy graphstore chunks remain artifact storage.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+        target: {
+          type: 'string',
+          enum: ['main', 'pr'],
+          description: 'Graphpack target.',
+          default: 'main',
+        },
+        artifact_dir: { type: 'string', description: 'Local artifact staging directory.' },
+        artifact_url: { type: 'string', description: 'Remote artifact URL to record in the lock.' },
+        base_snapshot_id: { type: 'string', description: 'PR overlay base snapshot id.' },
+        head_snapshot_id: { type: 'string', description: 'PR overlay head snapshot id.' },
+        pull_request: { type: 'string', description: 'Pull request number or URL.' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'graphpack_pull',
+    description: `Validate/pull a graphpack from a lock and report whether local materialization can proceed.
+
+WHEN TO USE: developer bootstrap after clone/checkout. If unavailable or incompatible, the result includes a safe local analyze fallback reason.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+        artifact_dir: { type: 'string', description: 'Local graphpack artifact directory.' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'semantic_relationships',
+    description: `Return developer-intent semantic relationships above raw graph edges.
+
+Families include COMPOSES, ADAPTS, DELEGATES_TO, WRAPS, CONFIGURES, FACTORY_CREATES, ORCHESTRATES, PROXIES_TO, and MAPS_TO. Every edge includes evidence, confidence, extractor version, and provenance.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        repo: {
+          type: 'string',
+          description: 'Repository name or path. Omit if only one repo is indexed.',
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum relationships to return.',
+          default: 1000,
+          minimum: 1,
+          maximum: 10000,
+        },
+        llm: {
+          type: 'boolean',
+          description: 'Allow optional LLM-inferred edges when provider support is configured.',
+          default: false,
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: 'harness_swarm_run',
     description: `Phase 3 swarm: Explorer + Exploiter (subprocess) + Critic (in-process), with hybrid termination.
 
@@ -767,6 +860,11 @@ Returns the Pareto frontier plus per-role attribution stats (which role contribu
           description:
             'Phase 4 moat: codragraph-graphstore snapshot id (sha256:...). Required to enable recipe caching.',
         },
+        required_subgraph_signature: {
+          type: 'string',
+          description:
+            'Phase 4 moat: stable signature of the task-required subgraph. Exact cache reuse keys on (snapshot_id, task_family, required_subgraph_signature).',
+        },
         use_cache: {
           type: 'boolean',
           description:
@@ -798,6 +896,10 @@ This is the Phase 4 × Phase 3 moat — versioned recipe memory. Recipes auto-in
       properties: {
         task_family: { type: 'string', description: 'Filter by task family.' },
         snapshot_id: { type: 'string', description: 'Filter by snapshot id (sha256:...).' },
+        required_subgraph_signature: {
+          type: 'string',
+          description: 'Filter by required subgraph signature.',
+        },
         recipe_store: {
           type: 'string',
           description: 'Recipe store root. Defaults to <cwd>/.codragraph/recipes.',
@@ -821,6 +923,11 @@ WHEN TO USE: before kicking off a swarm. If exact matches exist, you can skip th
       properties: {
         task_family: { type: 'string', description: 'Task family identifier.' },
         snapshot_id: { type: 'string', description: 'Current codragraph-graphstore snapshot id.' },
+        required_subgraph_signature: {
+          type: 'string',
+          description:
+            'Stable signature of the subgraph this task needs. Exact reuse requires matching snapshot, family, and signature.',
+        },
         recipe_store: {
           type: 'string',
           description: 'Recipe store root. Defaults to <cwd>/.codragraph/recipes.',

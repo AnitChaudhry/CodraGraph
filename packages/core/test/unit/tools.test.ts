@@ -2,7 +2,7 @@
  * Unit Tests: MCP Tool Definitions
  *
  * Tests: CODRAGRAPH_TOOLS from tools.ts
- * - Full tool surface is exposed (30 tools as of cluster-first aliases)
+ * - Full tool surface is exposed (34 tools as of graphpack + semantic tools)
  * - Each tool has valid name, description, inputSchema
  * - Required fields are correct
  * - Optional repo parameter is present on tools that need it
@@ -24,9 +24,9 @@ const NON_REPO_TOOLS = new Set([
 
 describe('CODRAGRAPH_TOOLS', () => {
   it('exports the full tool surface', () => {
-    // Bumped from 26 -> 30 after cluster_query/context/impact/context_pack aliases landed.
+    // Bumped from 30 -> 34 after graphpack + semantic tools landed.
     // Update if more tools are added.
-    expect(CODRAGRAPH_TOOLS).toHaveLength(30);
+    expect(CODRAGRAPH_TOOLS).toHaveLength(34);
   });
 
   it('contains all expected tool names', () => {
@@ -47,6 +47,10 @@ describe('CODRAGRAPH_TOOLS', () => {
         'cluster_context',
         'context_pack',
         'cluster_impact',
+        'graphpack_status',
+        'graphpack_publish',
+        'graphpack_pull',
+        'semantic_relationships',
       ]),
     );
   });

@@ -911,6 +911,51 @@ export class LocalBackend {
             'upstream',
           clampNumber((params as { limit?: unknown } | undefined)?.limit, 1, 500, 100),
         );
+      case 'graphpack_status': {
+        const { getGraphpackStatus } = await import('../../core/graphpack/index.js');
+        return getGraphpackStatus({
+          repoPath: repo.repoPath,
+          storagePath: repo.storagePath,
+          strict: (params as { strict?: boolean } | undefined)?.strict === true,
+        });
+      }
+      case 'graphpack_publish': {
+        const { publishGraphpack } = await import('../../core/graphpack/index.js');
+        const args = (params as Record<string, unknown> | null | undefined) ?? {};
+        return publishGraphpack({
+          repoPath: repo.repoPath,
+          storagePath: repo.storagePath,
+          repoName: typeof args['repo'] === 'string' ? args['repo'] : repo.name,
+          analyzerVersion: 'mcp',
+          target: args['target'] === 'pr' ? 'pr' : 'main',
+          artifactDir: typeof args['artifact_dir'] === 'string' ? args['artifact_dir'] : undefined,
+          artifactUrl: typeof args['artifact_url'] === 'string' ? args['artifact_url'] : undefined,
+          baseSnapshotId:
+            typeof args['base_snapshot_id'] === 'string' ? args['base_snapshot_id'] : undefined,
+          headSnapshotId:
+            typeof args['head_snapshot_id'] === 'string' ? args['head_snapshot_id'] : undefined,
+          pullRequest: typeof args['pull_request'] === 'string' ? args['pull_request'] : undefined,
+        });
+      }
+      case 'graphpack_pull': {
+        const { pullGraphpack } = await import('../../core/graphpack/index.js');
+        const args = (params as Record<string, unknown> | null | undefined) ?? {};
+        return pullGraphpack({
+          repoPath: repo.repoPath,
+          storagePath: repo.storagePath,
+          artifactDir: typeof args['artifact_dir'] === 'string' ? args['artifact_dir'] : undefined,
+        });
+      }
+      case 'semantic_relationships': {
+        const { analyzeSemanticRelationships } =
+          await import('../../core/semantic/relationships.js');
+        return analyzeSemanticRelationships({
+          storagePath: repo.storagePath,
+          llm: (params as { llm?: boolean } | undefined)?.llm === true,
+          limit: clampNumber((params as { limit?: unknown } | undefined)?.limit, 1, 10000, 1000),
+          write: false,
+        });
+      }
       case 'harness_swarm_run': {
         // Same lazy-import dance as harness_run (see comments below) — keeps
         // codragraph-harness optional and avoids a circular build-time dep.

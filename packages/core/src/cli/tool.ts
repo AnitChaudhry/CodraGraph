@@ -15,6 +15,7 @@
  * See the output() function for details (#324).
  */
 
+import crypto from 'node:crypto';
 import { writeSync } from 'node:fs';
 import { LocalBackend } from '../mcp/local/local-backend.js';
 import { emitTokenStats } from './compress-stats.js';
@@ -302,6 +303,7 @@ export async function contextPackCommand(
   options?: {
     repo?: string;
     limit?: string;
+    compress?: string;
   },
 ): Promise<void> {
   if (!name?.trim()) {
@@ -316,8 +318,121 @@ export async function contextPackCommand(
     repo,
     limit: options?.limit ? parseInt(options.limit, 10) : undefined,
   });
-  output(result);
-  emitTokenStats(result);
+  const maybeCompressed = options?.compress
+    ? compressContextPackForCli(result, name, options.compress)
+    : result;
+  output(maybeCompressed);
+  emitTokenStats(maybeCompressed);
+}
+
+type CliCompressionLevel = 'balanced' | 'lean' | 'max';
+
+function compressContextPackForCli(result: any, featureName: string, rawLevel: string): any {
+  const level = normalizeCliCompressionLevel(rawLevel);
+  const originalText = JSON.stringify(result);
+  const compressed = pruneContextPack(result, level);
+  const compressedText = JSON.stringify(compressed);
+  const originalTokens = estimateJsonTokens(originalText);
+  const compressedTokens = estimateJsonTokens(compressedText);
+  const snapshotId =
+    result?.snapshotId ??
+    result?.snapshot_id ??
+    result?.cluster?.lastIndexedCommit ??
+    result?.cluster?.snapshotId ??
+    'unknown';
+  const clusterId = result?.cluster?.id ?? result?.cluster?.slug ?? featureName;
+  const cacheKey = crypto
+    .createHash('sha256')
+    .update(`${snapshotId}\n${clusterId}\n${level}\ncli-context-pack-compressor-v1`)
+    .digest('hex');
+  return {
+    ...compressed,
+    compression: {
+      level,
+      compressorVersion: 'cli-context-pack-compressor-v1',
+      cacheKey: `ctxpack:${cacheKey.slice(0, 32)}`,
+      originalTokens,
+      compressedTokens,
+      tokenSavingsPct:
+        originalTokens > 0
+          ? Number((((originalTokens - compressedTokens) / originalTokens) * 100).toFixed(1))
+          : 0,
+      preserved: [
+        'feature cluster',
+        'files',
+        'line ranges',
+        'symbols',
+        'tests',
+        'routes',
+        'tools',
+        'dependencies',
+        'warnings',
+      ],
+    },
+  };
+}
+
+function normalizeCliCompressionLevel(raw: string): CliCompressionLevel {
+  if (raw === 'balanced' || raw === 'lean' || raw === 'max') return raw;
+  throw new Error('context-pack --compress must be one of: balanced, lean, max');
+}
+
+function pruneContextPack(value: any, level: CliCompressionLevel): any {
+  if (!value || typeof value !== 'object') return value;
+  const memberLimit = level === 'max' ? 20 : level === 'lean' ? 40 : 80;
+  const processLimit = level === 'max' ? 5 : level === 'lean' ? 8 : 15;
+  const supportLimit = level === 'max' ? 5 : level === 'lean' ? 10 : 20;
+  return {
+    cluster: value.cluster,
+    members: Array.isArray(value.members)
+      ? value.members.slice(0, memberLimit).map(compactContextPackItem)
+      : value.members,
+    entryPoints: Array.isArray(value.entryPoints)
+      ? value.entryPoints.slice(0, supportLimit).map(compactContextPackItem)
+      : value.entryPoints,
+    routes: value.routes,
+    tools: value.tools,
+    dependencies: value.dependencies,
+    processes: Array.isArray(value.processes)
+      ? value.processes.slice(0, processLimit).map(compactContextPackItem)
+      : value.processes,
+    tests: Array.isArray(value.tests)
+      ? value.tests.slice(0, supportLimit).map(compactContextPackItem)
+      : value.tests,
+    docs: Array.isArray(value.docs)
+      ? value.docs.slice(0, supportLimit).map(compactContextPackItem)
+      : value.docs,
+    warnings: value.warnings ?? value.safeEditSurface?.warnings,
+    safeEditSurface: value.safeEditSurface,
+  };
+}
+
+function compactContextPackItem(item: any): any {
+  if (!item || typeof item !== 'object') return item;
+  const keys = [
+    'id',
+    'uid',
+    'name',
+    'type',
+    'kind',
+    'filePath',
+    'file',
+    'startLine',
+    'endLine',
+    'route',
+    'method',
+    'summary',
+    'confidence',
+  ];
+  const compact: Record<string, unknown> = {};
+  for (const key of keys) {
+    if (item[key] !== undefined) compact[key] = item[key];
+  }
+  return compact;
+}
+
+function estimateJsonTokens(text: string): number {
+  return Math.ceil(text.length / 4);
 }
 
 export async function clusterImpactCommand(

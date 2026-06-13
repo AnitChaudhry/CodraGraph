@@ -25,7 +25,11 @@ export interface RecipeStore {
   list(filter?: RecipeListFilter): Promise<Recipe[]>;
 
   /** Find recipes that exactly match a (snapshotId, taskFamily) pair. */
-  findExact(snapshotId: string, taskFamily: string): Promise<Recipe[]>;
+  findExact(
+    snapshotId: string,
+    taskFamily: string,
+    requiredSubgraphSignature?: string,
+  ): Promise<Recipe[]>;
 
   /** Find every recipe for a task family across snapshots. */
   findByFamily(taskFamily: string): Promise<Recipe[]>;
@@ -42,6 +46,7 @@ export interface RecipeInput extends Omit<Recipe, 'id'> {
 export interface RecipeListFilter {
   readonly snapshotId?: string;
   readonly taskFamily?: string;
+  readonly requiredSubgraphSignature?: string;
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -76,6 +81,9 @@ export class FsRecipeStore implements RecipeStore {
       id,
       taskFamily: input.taskFamily,
       snapshotId: input.snapshotId,
+      ...(input.requiredSubgraphSignature !== undefined
+        ? { requiredSubgraphSignature: input.requiredSubgraphSignature }
+        : {}),
       searchedAt: input.searchedAt,
       searchSource: input.searchSource,
       harness: input.harness,
@@ -128,12 +136,21 @@ export class FsRecipeStore implements RecipeStore {
     if (filter?.taskFamily !== undefined) {
       filtered = filtered.filter((r) => r.taskFamily === filter.taskFamily);
     }
+    if (filter?.requiredSubgraphSignature !== undefined) {
+      filtered = filtered.filter(
+        (r) => r.requiredSubgraphSignature === filter.requiredSubgraphSignature,
+      );
+    }
     // Newest first.
     return filtered.sort((a, b) => b.searchedAt.localeCompare(a.searchedAt));
   }
 
-  async findExact(snapshotId: string, taskFamily: string): Promise<Recipe[]> {
-    return this.list({ snapshotId, taskFamily });
+  async findExact(
+    snapshotId: string,
+    taskFamily: string,
+    requiredSubgraphSignature?: string,
+  ): Promise<Recipe[]> {
+    return this.list({ snapshotId, taskFamily, requiredSubgraphSignature });
   }
 
   async findByFamily(taskFamily: string): Promise<Recipe[]> {
@@ -169,6 +186,7 @@ export class FsRecipeStore implements RecipeStore {
         id: r.id,
         taskFamily: r.taskFamily,
         snapshotId: r.snapshotId,
+        requiredSubgraphSignature: r.requiredSubgraphSignature,
         searchedAt: r.searchedAt,
         accuracy: r.paretoCoords.accuracy,
         tokens: r.paretoCoords.tokens,
@@ -225,6 +243,7 @@ export const deriveRecipeId = (input: Omit<Recipe, 'id'>): string => {
   const canonical = canonicalJson({
     taskFamily: input.taskFamily,
     snapshotId: input.snapshotId,
+    requiredSubgraphSignature: input.requiredSubgraphSignature,
     searchedAt: input.searchedAt,
     searchSource: input.searchSource,
     harness: input.harness,

@@ -21,6 +21,7 @@ export interface FindReusableOptions {
   readonly store: RecipeStore;
   readonly snapshotId: string;
   readonly taskFamily: string;
+  readonly requiredSubgraphSignature?: string;
   /**
    * When provided AND the recipe's snapshotId differs from `snapshotId`,
    * the lookup runs a structural diff to populate
@@ -55,10 +56,16 @@ export const findReusableRecipes = async (
   opts: FindReusableOptions,
 ): Promise<FindReusableResult> => {
   const limit = opts.limit ?? 10;
-  const exact = await opts.store.findExact(opts.snapshotId, opts.taskFamily);
-  const familyOthers = (await opts.store.findByFamily(opts.taskFamily)).filter(
-    (r) => r.snapshotId !== opts.snapshotId,
+  const exact = await opts.store.findExact(
+    opts.snapshotId,
+    opts.taskFamily,
+    opts.requiredSubgraphSignature,
   );
+  const familyOthers = (await opts.store.findByFamily(opts.taskFamily)).filter((r) => {
+    if (r.snapshotId === opts.snapshotId) return false;
+    if (opts.requiredSubgraphSignature === undefined) return true;
+    return r.requiredSubgraphSignature === opts.requiredSubgraphSignature;
+  });
 
   // Score by accuracy desc → tokens asc; take the top `limit` for staleness.
   const ranked = familyOthers
@@ -76,6 +83,7 @@ export const findReusableRecipes = async (
       currentSnapshotId: opts.snapshotId,
       recipe: r,
       differ: opts.differ,
+      requiredSubgraphSignature: opts.requiredSubgraphSignature,
     });
     candidates.push({ kind: 'candidate', recipe: r, staleness });
   }
@@ -93,10 +101,18 @@ export const assessStaleness = async (input: {
   currentSnapshotId: string;
   recipe: Recipe;
   differ?: GraphstoreDiffer;
+  requiredSubgraphSignature?: string;
 }): Promise<RecipeStaleness> => {
+  const signatureMatched =
+    input.requiredSubgraphSignature === undefined
+      ? undefined
+      : input.recipe.requiredSubgraphSignature === input.requiredSubgraphSignature;
   if (!input.differ) {
     return {
       currentSnapshotId: input.currentSnapshotId,
+      ...(input.requiredSubgraphSignature !== undefined
+        ? { requiredSubgraphSignature: input.requiredSubgraphSignature, signatureMatched }
+        : {}),
       diffComputed: false,
       riskLevel: 'unknown',
     };
@@ -111,6 +127,9 @@ export const assessStaleness = async (input: {
     // Recipe's snapshot may have been gc'd. Treat as high-risk.
     return {
       currentSnapshotId: input.currentSnapshotId,
+      ...(input.requiredSubgraphSignature !== undefined
+        ? { requiredSubgraphSignature: input.requiredSubgraphSignature, signatureMatched }
+        : {}),
       diffComputed: false,
       riskLevel: 'high',
     };
@@ -138,6 +157,9 @@ export const assessStaleness = async (input: {
 
   return {
     currentSnapshotId: input.currentSnapshotId,
+    ...(input.requiredSubgraphSignature !== undefined
+      ? { requiredSubgraphSignature: input.requiredSubgraphSignature, signatureMatched }
+      : {}),
     diffComputed: true,
     summary,
     riskLevel,

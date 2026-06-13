@@ -119,6 +119,27 @@ export function getResourceTemplates(): ResourceTemplate[] {
       mimeType: 'text/yaml',
     },
     {
+      uriTemplate: 'codragraph://repo/{name}/graphpack/status',
+      name: 'Team Graphpack Status',
+      description:
+        'Team graphpack provenance: canonical main graph, PR overlay, local graph, chunk health, and compatibility.',
+      mimeType: 'text/yaml',
+    },
+    {
+      uriTemplate: 'codragraph://repo/{name}/graphpack/lock',
+      name: 'Team Graphpack Lock',
+      description:
+        'Committed .codragraph/index.lock.json content for shared team graph bootstrapping.',
+      mimeType: 'application/json',
+    },
+    {
+      uriTemplate: 'codragraph://repo/{name}/semantic-relationships',
+      name: 'Semantic Relationships',
+      description:
+        'Developer-intent relationship families with confidence, evidence, provenance, and extractor version.',
+      mimeType: 'text/yaml',
+    },
+    {
       uriTemplate: 'codragraph://repo/{name}/recipes',
       name: 'Harness Recipes',
       description:
@@ -325,6 +346,12 @@ export async function readResource(uri: string, backend: LocalBackend): Promise<
       return getGraphstoreBranchesResource(backend, repoName);
     case 'graphstore/head':
       return getGraphstoreHeadResource(backend, repoName);
+    case 'graphpack/status':
+      return getGraphpackStatusResource(backend, repoName);
+    case 'graphpack/lock':
+      return getGraphpackLockResource(backend, repoName);
+    case 'semantic-relationships':
+      return getSemanticRelationshipsResource(backend, repoName);
     case 'recipes':
       return getRecipesResource(backend, repoName);
     default:
@@ -410,6 +437,8 @@ async function getContextResource(backend: LocalBackend, repoName?: string): Pro
   lines.push('  - impact: Blast radius analysis (what breaks if you change a symbol)');
   lines.push('  - detect_changes: Git-diff impact analysis (what do your changes affect)');
   lines.push('  - rename: Multi-file coordinated rename with confidence tags');
+  lines.push('  - graphpack_status: Team graph provenance and artifact health');
+  lines.push('  - semantic_relationships: Developer-intent semantic edge families');
   lines.push('  - cypher: Raw graph queries');
   lines.push('  - list_repos: Discover all indexed repositories');
   lines.push('');
@@ -422,6 +451,12 @@ async function getContextResource(backend: LocalBackend, repoName?: string): Pro
     `  - codragraph://repo/${context.projectName}/feature-clusters: Human-facing feature areas`,
   );
   lines.push(`  - codragraph://repo/${context.projectName}/processes: All execution flows`);
+  lines.push(
+    `  - codragraph://repo/${context.projectName}/graphpack/status: Team graphpack status`,
+  );
+  lines.push(
+    `  - codragraph://repo/${context.projectName}/semantic-relationships: Developer-intent relationships`,
+  );
   lines.push(`  - codragraph://repo/${context.projectName}/cluster/{name}: Module details`);
   lines.push(`  - codragraph://repo/${context.projectName}/feature/{name}: Feature context pack`);
   lines.push(`  - codragraph://repo/${context.projectName}/process/{name}: Process trace`);
@@ -893,6 +928,102 @@ async function getGraphstoreBranchesResource(
   return lines.join('\n');
 }
 
+async function getGraphpackStatusResource(
+  backend: LocalBackend,
+  repoName?: string,
+): Promise<string> {
+  const repo = await backend.resolveRepo(repoName);
+  const { getGraphpackStatus } = await import('../core/graphpack/index.js');
+  try {
+    const status = await getGraphpackStatus({
+      repoPath: repo.repoPath,
+      storagePath: repo.storagePath,
+    });
+    const lines: string[] = [
+      `repo: "${repo.name}"`,
+      `source: "${status.source}"`,
+      `lockPresent: ${status.lockPresent}`,
+      `compatible: ${status.compatibility.ok}`,
+      `localGraphstore: ${status.local.graphstorePresent}`,
+      `verifiedChunks: ${status.chunks.verified}`,
+      `expectedChunks: ${status.chunks.expected}`,
+    ];
+    if (status.lock?.graphpack.id) lines.push(`graphpack: "${status.lock.graphpack.id}"`);
+    if (status.lock?.graphpack.graphstoreSnapshot) {
+      lines.push(`snapshot: "${status.lock.graphpack.graphstoreSnapshot}"`);
+    }
+    if (status.local.headCommit) lines.push(`localHead: "${status.local.headCommit}"`);
+    if (status.compatibility.reasons.length > 0) {
+      lines.push('reasons:');
+      for (const reason of status.compatibility.reasons)
+        lines.push(`  - ${JSON.stringify(reason)}`);
+    }
+    if (status.chunks.missing.length > 0) {
+      lines.push('missingChunks:');
+      for (const chunk of status.chunks.missing) lines.push(`  - "${chunk}"`);
+    }
+    if (status.chunks.mismatched.length > 0) {
+      lines.push('mismatchedChunks:');
+      for (const chunk of status.chunks.mismatched) lines.push(`  - "${chunk}"`);
+    }
+    return lines.join('\n');
+  } catch (err) {
+    return `error: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
+async function getGraphpackLockResource(backend: LocalBackend, repoName?: string): Promise<string> {
+  const repo = await backend.resolveRepo(repoName);
+  const { defaultLockPath, readGraphpackLock } = await import('../core/graphpack/index.js');
+  const lock = await readGraphpackLock(defaultLockPath(repo.repoPath));
+  if (!lock) {
+    return JSON.stringify({ error: 'No .codragraph/index.lock.json found', repo: repo.name });
+  }
+  return JSON.stringify(lock, null, 2);
+}
+
+async function getSemanticRelationshipsResource(
+  backend: LocalBackend,
+  repoName?: string,
+): Promise<string> {
+  const repo = await backend.resolveRepo(repoName);
+  const { analyzeSemanticRelationships } = await import('../core/semantic/relationships.js');
+  try {
+    const report = await analyzeSemanticRelationships({
+      storagePath: repo.storagePath,
+      limit: 200,
+      write: false,
+    });
+    const lines: string[] = [
+      `repo: "${repo.name}"`,
+      `snapshot: "${report.snapshotId ?? 'unknown'}"`,
+      `extractor: "${report.extractorVersion}"`,
+      `relationships: ${report.relationships.length}`,
+      'summary:',
+    ];
+    for (const [family, count] of Object.entries(report.summary)) {
+      lines.push(`  ${family}: ${count}`);
+    }
+    lines.push('edges:');
+    for (const rel of report.relationships.slice(0, 50)) {
+      lines.push(`  - family: "${rel.family}"`);
+      lines.push(`    source: ${JSON.stringify(rel.sourceName ?? rel.sourceId)}`);
+      lines.push(`    target: ${JSON.stringify(rel.targetName ?? rel.targetId)}`);
+      lines.push(`    confidence: ${rel.confidence}`);
+      lines.push(`    provenance: "${rel.provenance}"`);
+      lines.push(`    extractor: "${rel.extractorVersion}"`);
+      if (rel.evidence.filePath) lines.push(`    file: "${rel.evidence.filePath}"`);
+      if (rel.evidence.startLine !== undefined)
+        lines.push(`    startLine: ${rel.evidence.startLine}`);
+      lines.push(`    reason: ${JSON.stringify(rel.evidence.reason)}`);
+      lines.push(`    rawEdgeType: "${rel.evidence.rawEdgeType}"`);
+    }
+    return lines.join('\n');
+  } catch (err) {
+    return `error: ${err instanceof Error ? err.message : String(err)}`;
+  }
+}
+
 async function getRecipesResource(
   backend: LocalBackend,
   repoName?: string,
@@ -930,6 +1061,9 @@ async function getRecipesResource(
     lines.push(`  - id: "${r.id}"`);
     lines.push(`    taskFamily: "${r.taskFamily}"`);
     lines.push(`    snapshotId: "${r.snapshotId}"`);
+    if (r.requiredSubgraphSignature) {
+      lines.push(`    requiredSubgraphSignature: "${r.requiredSubgraphSignature}"`);
+    }
     lines.push(`    accuracy: ${r.accuracy}`);
     lines.push(`    tokens: ${r.tokens}`);
     lines.push(`    latencyMs: ${r.latencyMs}`);

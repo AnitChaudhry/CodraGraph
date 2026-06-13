@@ -46,7 +46,9 @@ export const DEFAULT_POLICY: PermissionPolicy = {
 
     // Recipes
     ['recipe.read', 'viewer'],
+    ['recipe.reuse', 'viewer'],
     ['recipe.create', 'member'],
+    ['recipe.publish', 'member'],
     ['recipe.delete', 'admin'],
 
     // Graphstore
@@ -54,6 +56,15 @@ export const DEFAULT_POLICY: PermissionPolicy = {
     ['graphstore.commit', 'member'],
     ['graphstore.merge', 'admin'],
     ['graphstore.gc', 'admin'],
+
+    // Team graphpack / semantic graph layer
+    ['graphpack.read', 'viewer'],
+    ['graphpack.pull', 'viewer'],
+    ['graphpack.publish', 'admin'],
+    ['semantic.read', 'viewer'],
+    ['semantic.extract', 'member'],
+    ['team_mcp.access', 'viewer'],
+    ['team_mcp.serve', 'member'],
 
     // Org admin
     ['org.invite', 'admin'],

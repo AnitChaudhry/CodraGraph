@@ -47,7 +47,8 @@ HANDOFF*.md
 
 
 .env*.local
-.codragraph
+.codragraph/*
+!.codragraph/index.lock.json
 .claude/settings.local.json
 
 # Claude Code worktrees

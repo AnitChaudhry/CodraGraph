@@ -171,13 +171,17 @@ jobs:
             @codragraph/codex
           do
             version="$(npm pkg get version --workspace "${pkg}" | tr -d '"')"
+            publish_tag="latest"
+            if [[ "${version}" == *-* ]]; then
+              publish_tag="next"
+            fi
             if npm view "${pkg}@${version}" version --registry="${REGISTRY_URL}" >/dev/null 2>&1; then
               echo "${pkg}@${version} already exists on npm; skipping."
             else
               echo "::group::publish ${pkg}@${version}"
               # No --provenance: the source repo is private, and npm rejects
               # provenance bundles from private repositories (E422).
-              npm publish --workspace "${pkg}" --access public
+              npm publish --workspace "${pkg}" --access public --tag "${publish_tag}"
               echo "::endgroup::"
             fi
           done
@@ -198,8 +202,15 @@ jobs:
         run: |
           set -euo pipefail
           tag="${GITHUB_REF_NAME}"
-          if gh release view "${tag}" >/dev/null 2>&1; then
-            gh release edit "${tag}" --latest
+          if [[ "${tag}" == *-* ]]; then
+            edit_flags=(--prerelease --latest=false)
+            create_flags=(--verify-tag --prerelease --latest=false --generate-notes)
           else
-            gh release create "${tag}" --verify-tag --latest --generate-notes
+            edit_flags=(--latest)
+            create_flags=(--verify-tag --latest --generate-notes)
+          fi
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            gh release edit "${tag}" "${edit_flags[@]}"
+          else
+            gh release create "${tag}" "${create_flags[@]}"
           fi

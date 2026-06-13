@@ -38,6 +38,17 @@ export interface AuditResource {
   id: string;
 }
 
+export const TEAM_GRAPH_AUDIT_ACTIONS = {
+  graphpackPublish: 'graphpack.publish',
+  graphpackPull: 'graphpack.pull',
+  graphpackMaterialize: 'graphpack.materialize',
+  mcpToolCall: 'mcp.tool_call',
+  recipeReuse: 'recipe.reuse',
+  recipePublish: 'recipe.publish',
+  semanticExtract: 'semantic.extract',
+  teamMcpServe: 'team_mcp.serve',
+} as const;
+
 export type AuditEventInput = Omit<AuditEvent, 'id' | 'schemaVersion' | 'type'>;
 
 const HEX_RE = /^[0-9a-f]{64}$/;

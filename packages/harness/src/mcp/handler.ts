@@ -74,6 +74,8 @@ export interface HarnessSwarmRunInput {
   task_family?: string;
   /** codragraph-graphstore snapshot id at search time. */
   snapshot_id?: string;
+  /** Stable signature of the task's required subgraph. */
+  required_subgraph_signature?: string;
   /** When true and an exact recipe match exists, skip the search and return cache. */
   use_cache?: boolean;
   /** Recipe store root. Defaults to `<cwd>/.codragraph/recipes`. */
@@ -268,6 +270,7 @@ export async function handleHarnessSwarmRun(
       recipeStore,
       snapshotId: input.snapshot_id!,
       taskFamily: input.task_family!,
+      requiredSubgraphSignature: input.required_subgraph_signature,
       useCache: input.use_cache ?? false,
       persistTopK: input.persist_top_k ?? 5,
     });
@@ -311,6 +314,8 @@ export interface HarnessRecipesListInput {
   task_family?: string;
   /** Snapshot id filter; omit for all snapshots. */
   snapshot_id?: string;
+  /** Required subgraph signature filter; omit for all signatures. */
+  required_subgraph_signature?: string;
   /** Recipe store root. Defaults to `<cwd>/.codragraph/recipes`. */
   recipe_store?: string;
   /** Maximum entries returned. Default 50. */
@@ -323,6 +328,7 @@ export interface HarnessRecipesListOutput {
     id: string;
     taskFamily: string;
     snapshotId: string;
+    requiredSubgraphSignature?: string;
     searchedAt: string;
     accuracy: number;
     tokens: number;
@@ -339,9 +345,16 @@ export async function handleHarnessRecipesList(
   );
   const store = new FsRecipeStore({ root: recipeStoreRoot });
   const limit = input.limit ?? 50;
-  const filter: { taskFamily?: string; snapshotId?: string } = {};
+  const filter: {
+    taskFamily?: string;
+    snapshotId?: string;
+    requiredSubgraphSignature?: string;
+  } = {};
   if (input.task_family !== undefined) filter.taskFamily = input.task_family;
   if (input.snapshot_id !== undefined) filter.snapshotId = input.snapshot_id;
+  if (input.required_subgraph_signature !== undefined) {
+    filter.requiredSubgraphSignature = input.required_subgraph_signature;
+  }
   const recipes: Recipe[] = (await store.list(filter)).slice(0, limit);
   return {
     recipeStoreRoot,
@@ -349,6 +362,7 @@ export async function handleHarnessRecipesList(
       id: r.id,
       taskFamily: r.taskFamily,
       snapshotId: r.snapshotId,
+      requiredSubgraphSignature: r.requiredSubgraphSignature,
       searchedAt: r.searchedAt,
       accuracy: r.paretoCoords.accuracy,
       tokens: r.paretoCoords.tokens,
@@ -365,6 +379,7 @@ export async function handleHarnessRecipesList(
 export interface HarnessRecipesLookupInput {
   task_family: string;
   snapshot_id: string;
+  required_subgraph_signature?: string;
   recipe_store?: string;
   limit?: number;
 }
@@ -377,6 +392,8 @@ export interface HarnessRecipesLookupOutput {
       staleness: {
         diffComputed: boolean;
         riskLevel: 'low' | 'medium' | 'high' | 'unknown';
+        requiredSubgraphSignature?: string;
+        signatureMatched?: boolean;
         summary?: {
           addedNodes: number;
           removedNodes: number;
@@ -400,6 +417,7 @@ export async function handleHarnessRecipesLookup(
     store,
     snapshotId: input.snapshot_id,
     taskFamily: input.task_family,
+    requiredSubgraphSignature: input.required_subgraph_signature,
     limit: input.limit ?? 10,
   });
 
@@ -407,6 +425,7 @@ export async function handleHarnessRecipesLookup(
     id: r.id,
     taskFamily: r.taskFamily,
     snapshotId: r.snapshotId,
+    requiredSubgraphSignature: r.requiredSubgraphSignature,
     searchedAt: r.searchedAt,
     accuracy: r.paretoCoords.accuracy,
     tokens: r.paretoCoords.tokens,
@@ -422,6 +441,12 @@ export async function handleHarnessRecipesLookup(
       diffComputed: c.staleness.diffComputed,
       riskLevel: c.staleness.riskLevel,
     };
+    if (c.staleness.requiredSubgraphSignature !== undefined) {
+      stalenessOut.requiredSubgraphSignature = c.staleness.requiredSubgraphSignature;
+    }
+    if (c.staleness.signatureMatched !== undefined) {
+      stalenessOut.signatureMatched = c.staleness.signatureMatched;
+    }
     if (c.staleness.summary) stalenessOut.summary = c.staleness.summary;
     candidates.push({ ...base, staleness: stalenessOut });
   }
