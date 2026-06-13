@@ -28,6 +28,11 @@
     "tree-sitter-proto",
     "tree-sitter-swift"
   ],
+  "overrides": {
+    "@langchain/anthropic": {
+      "@anthropic-ai/sdk": "0.90.0"
+    }
+  },
   "scripts": {
     "prepare": "husky",
     "codragraph:source": "tsx packages/core/src/cli/index.ts",

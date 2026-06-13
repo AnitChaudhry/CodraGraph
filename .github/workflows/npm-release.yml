@@ -40,7 +40,7 @@ jobs:
           cache: npm
       - name: Install workspace dependencies
         shell: bash
-        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm install --legacy-peer-deps --no-audit --no-fund --include=optional
+        run: rm -f package-lock.json && CODRAGRAPH_SKIP_WEB_BUILD=1 npm install --legacy-peer-deps --no-audit --no-fund --include=optional
       - name: Build publishable packages
         shell: bash
         run: |
@@ -83,7 +83,7 @@ jobs:
           registry-url: ${{ env.REGISTRY_URL }}
       - name: Install workspace dependencies
         shell: bash
-        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm install --legacy-peer-deps --no-audit --no-fund --include=optional
+        run: rm -f package-lock.json && CODRAGRAPH_SKIP_WEB_BUILD=1 npm install --legacy-peer-deps --no-audit --no-fund --include=optional
       - name: Build publishable packages
         shell: bash
         run: |
@@ -133,7 +133,7 @@ jobs:
           registry-url: ${{ env.REGISTRY_URL }}
       - name: Install workspace dependencies
         shell: bash
-        run: CODRAGRAPH_SKIP_WEB_BUILD=1 npm install --legacy-peer-deps --no-audit --no-fund --include=optional
+        run: rm -f package-lock.json && CODRAGRAPH_SKIP_WEB_BUILD=1 npm install --legacy-peer-deps --no-audit --no-fund --include=optional
       - name: Build publishable packages
         shell: bash
         run: |
