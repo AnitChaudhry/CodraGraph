@@ -73,18 +73,7 @@ describe('setupCommand codex execution', () => {
 
     expect(execFileMock).toHaveBeenCalledWith(
       'codex.cmd',
-      [
-        'mcp',
-        'add',
-        'codragraph',
-        '--',
-        'cmd',
-        '/c',
-        'npx',
-        '-y',
-        '@codragraph/cli@2.2.0-rc.6',
-        'mcp',
-      ],
+      ['mcp', 'add', 'codragraph', '--', 'cmd', '/c', 'npx', '-y', '@codragraph/cli@2.2.0', 'mcp'],
       expect.any(Function),
     );
   });
@@ -98,7 +87,7 @@ describe('setupCommand codex execution', () => {
 
     expect(execFileMock).toHaveBeenCalledWith(
       'codex',
-      ['mcp', 'add', 'codragraph', '--', 'npx', '-y', '@codragraph/cli@2.2.0-rc.6', 'mcp'],
+      ['mcp', 'add', 'codragraph', '--', 'npx', '-y', '@codragraph/cli@2.2.0', 'mcp'],
       expect.any(Function),
     );
 
@@ -115,7 +104,7 @@ describe('setupCommand codex execution', () => {
 
     expect(execFileMock).toHaveBeenCalledWith(
       'codex',
-      ['mcp', 'add', 'codragraph', '--', 'bunx', '@codragraph/cli@2.2.0-rc.6', 'mcp'],
+      ['mcp', 'add', 'codragraph', '--', 'bunx', '@codragraph/cli@2.2.0', 'mcp'],
       expect.any(Function),
     );
   });

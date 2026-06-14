@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/org",
-  "version": "2.2.0-rc.6",
+  "version": "2.2.0",
   "description": "Multi-tenant orgs, SSO, RBAC, and tamper-evident audit logging for the CodraGraph platform.",
   "author": {
     "name": "Thinqmesh Technologies",
@@ -63,8 +63,8 @@
     "prepack": "tsc"
   },
   "dependencies": {
-    "@codragraph/graphstore": "^2.2.0-rc.6",
-    "@codragraph/shared": "^2.2.0-rc.6"
+    "@codragraph/graphstore": "^2.2.0",
+    "@codragraph/shared": "^2.2.0"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

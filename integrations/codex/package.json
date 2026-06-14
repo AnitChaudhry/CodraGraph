@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/codex",
-  "version": "2.2.0-rc.6",
+  "version": "2.2.0",
   "description": "OpenAI Codex CLI integration for CodraGraph — graph-aware context for Codex commands via codex.config.json hooks.",
   "author": {
     "name": "Thinqmesh Technologies",
