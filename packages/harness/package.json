@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/harness",
-  "version": "2.2.0-rc.5",
+  "version": "2.2.0-rc.6",
   "description": "Auto-tuned harnesses for AI agents — Meta-Harness algorithm with Pareto search over (accuracy, tokens, latency)",
   "author": {
     "name": "Thinqmesh Technologies",
@@ -55,8 +55,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@codragraph/cli": "^2.2.0-rc.5",
-    "@codragraph/shared": "^2.2.0-rc.5",
+    "@codragraph/cli": "^2.2.0-rc.6",
+    "@codragraph/shared": "^2.2.0-rc.6",
     "commander": "^14.0.3",
     "esbuild": "^0.24.0",
     "openai": "^4.70.0"
