@@ -24,7 +24,7 @@ jobs:
     if: false # ← remove this line to enable
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Required: full history so we can check out base + head shas.
           fetch-depth: 0
