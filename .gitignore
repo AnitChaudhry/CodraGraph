@@ -112,3 +112,6 @@ local_docs/
 .tmp/
 .agents/
 .context/
+
+# Marketing materials (local only)
+marketing/
