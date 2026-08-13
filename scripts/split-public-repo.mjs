@@ -512,7 +512,9 @@ Get-FileHash .\\downloads\\npm\\${cliTarball} -Algorithm SHA256
 
 ## License
 
-CodraGraph packages are distributed under the Apache License 2.0. See \`LICENSE\`.
+CodraGraph packages are distributed under the PolyForm Noncommercial License
+1.0.0, inherited from the upstream GitNexus project. Noncommercial use only.
+See \`LICENSE\` and \`NOTICE\`.
 
 ## Security
 

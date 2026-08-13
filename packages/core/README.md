@@ -4,7 +4,7 @@
 
 Works with **Cursor**, **Claude Code**, **Codex**, **Windsurf**, **Cline**, **OpenCode**, and any MCP-compatible tool.
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](../../LICENSE)
 
 ---
 
@@ -438,8 +438,7 @@ CodraGraph also has a browser-based UI at [codragraph.vercel.app](https://codrag
 
 ## License
 
-[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+[PolyForm Noncommercial License 1.0.0](../../LICENSE).
 
-Permissive open source. You can use, modify, redistribute, bundle, and host
-the CLI commercially, subject to the Apache-2.0 notice and attribution
-requirements.
+Permissive open source. You may use, modify, and redistribute the CLI for noncommercial purposes
+only. Commercial use is not permitted. See the LICENSE and NOTICE files.

@@ -7,7 +7,7 @@
     "email": "hello@thinqmesh.com",
     "url": "https://thinqmesh.com"
   },
-  "license": "Apache-2.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": [
     "codex",
     "openai-codex",
@@ -20,6 +20,8 @@
     "codragraph-codex": "bin/install.mjs"
   },
   "files": [
+    "LICENSE",
+    "NOTICE",
     "bin",
     "codex.config.template.json",
     "hooks",

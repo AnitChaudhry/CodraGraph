@@ -1,0 +1,69 @@
+Required Notice: Copyright Abhigyan Patwari (https://github.com/abhigyanpatwari/GitNexus)
+
+================================================================================
+CodraGraph — attribution and provenance
+================================================================================
+
+CodraGraph is a derivative work of GitNexus.
+
+    Upstream project : GitNexus
+    Upstream author  : Abhigyan Patwari
+    Upstream source  : https://github.com/abhigyanpatwari/GitNexus
+    Upstream license : PolyForm Noncommercial License 1.0.0
+
+CodraGraph is distributed under the same PolyForm Noncommercial License 1.0.0,
+which is reproduced in full in the LICENSE file at the root of this
+distribution. That license permits noncommercial use only. Commercial use of
+CodraGraph — including any use by or on behalf of a company for commercial
+advantage — is NOT permitted under these terms. Anyone needing commercial
+rights must obtain them from the upstream licensor.
+
+--------------------------------------------------------------------------------
+What is derived from GitNexus
+--------------------------------------------------------------------------------
+
+The following are based on GitNexus source and remain the copyright of
+Abhigyan Patwari:
+
+  packages/core        the indexing pipeline, tree-sitter language providers,
+                       graph construction, search, MCP server, HTTP API and CLI
+                       (upstream: gitnexus/)
+  packages/shared      shared graph, schema and contract types
+                       (upstream: gitnexus-shared/)
+  apps/web             the Sigma.js graph dashboard
+                       (upstream: gitnexus-web/)
+  integrations/claude  Claude Code hooks, skills and MCP wiring
+                       (upstream: gitnexus-claude-plugin/)
+  integrations/cursor  Cursor hooks and skills
+                       (upstream: gitnexus-cursor-integration/)
+  integrations/codex   Codex hooks and MCP wiring
+
+Modifications made in CodraGraph include renaming the project and its command
+surface (`gitnexus` -> `codragraph`, `.gitnexus/` -> `.codragraph/`),
+restructuring the tree into an npm workspace layout, and the additions listed
+below.
+
+--------------------------------------------------------------------------------
+What is original to CodraGraph
+--------------------------------------------------------------------------------
+
+The following packages were written for CodraGraph and are
+Copyright (c) 2026 Anit Chaudhry / Thinqmesh Technologies. They are distributed
+here under the same PolyForm Noncommercial License 1.0.0 as the work they are
+combined with:
+
+  packages/graphstore  content-addressed graph versioning: snapshots, diff,
+                       branch, merge, blame
+  packages/harness     Meta-Harness Pareto search, 3-role swarm, recipe memory
+  packages/compress    lossless semantic compression for LLM contexts
+  packages/org         multi-tenant org, RBAC and audit helpers
+  packages/sdk         single-import programmatic surface
+
+--------------------------------------------------------------------------------
+Third-party components
+--------------------------------------------------------------------------------
+
+CodraGraph and its upstream build on third-party open-source software under
+their own licenses, notably @ladybugdb/core, @modelcontextprotocol/sdk, the
+tree-sitter grammar family, graphology, sigma.js, mermaid, @anthropic-ai/sdk
+and react. Their license texts ship in each package's node_modules on install.

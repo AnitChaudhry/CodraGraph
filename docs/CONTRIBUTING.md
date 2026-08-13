@@ -4,7 +4,7 @@ How to propose changes, run checks locally, and open pull requests.
 
 ## License
 
-This project uses the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). By contributing, you agree your contributions are licensed under the same terms unless stated otherwise.
+This project is distributed under the [PolyForm Noncommercial License 1.0.0](../LICENSE), inherited from its upstream project (see [NOTICE](../NOTICE)). By contributing, you agree your contributions are licensed under the same terms unless stated otherwise.
 
 ## Where to discuss
 

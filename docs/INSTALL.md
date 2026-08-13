@@ -59,7 +59,7 @@ the local API you started.
 
 ## The package matrix
 
-All public packages below ship under Apache-2.0. The license permits
+All packages below ship under PolyForm Noncommercial 1.0.0. The license permits
 personal, internal, commercial, hosted, and redistributed use; paid
 CodraGraph offerings are for managed service/support rather than license
 restrictions.
@@ -142,6 +142,6 @@ local server, so changes you make in one surface show up in the others.
 
 ## License
 
-Every public package ships under **Apache-2.0**. You can use, modify,
-host, redistribute, and bundle CodraGraph commercially. Keep the license
-and attribution notices required by Apache-2.0. See [LICENSE](../LICENSE).
+Every package ships under **PolyForm Noncommercial License 1.0.0**. You may
+use, modify, and redistribute them for noncommercial purposes only; commercial
+use is not permitted. See [LICENSE](../LICENSE) and [NOTICE](../NOTICE).

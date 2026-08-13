@@ -7,7 +7,7 @@
     "email": "hello@thinqmesh.com",
     "url": "https://thinqmesh.com"
   },
-  "license": "Apache-2.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": [
     "meta-harness",
     "agentic-ai",
@@ -40,6 +40,8 @@
     "codragraph-harness": "dist/cli/main.js"
   },
   "files": [
+    "LICENSE",
+    "NOTICE",
     "dist",
     "README.md",
     "RFC.md"

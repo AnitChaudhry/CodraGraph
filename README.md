@@ -9,10 +9,17 @@
 </p>
 
 <p align="center">
-  <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" /></a>
+  <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg" /></a>
   <img alt="Node" src="https://img.shields.io/badge/node-%3E%3D20-green.svg" />
   <img alt="Status" src="https://img.shields.io/badge/status-developer%20preview-orange.svg" />
   <a href="https://www.npmjs.com/package/@codragraph/cli"><img alt="npm: @codragraph/cli" src="https://img.shields.io/npm/v/@codragraph/cli?label=%40codragraph%2Fcli" /></a>
+</p>
+
+<p align="center">
+  <sub>
+    Built on <a href="https://github.com/abhigyanpatwari/GitNexus">GitNexus</a> by Abhigyan Patwari ·
+    Distributed under <a href="./LICENSE">PolyForm Noncommercial 1.0.0</a> · Noncommercial use only
+  </sub>
 </p>
 
 ---
@@ -111,11 +118,13 @@ flowchart TD
 | [`integrations/cursor`](./integrations/cursor) | Cursor users | beforeShellExecution hook + 7 skills (drop into `.cursor/` of your repo) | manual copy |
 | `@codragraph/shared` | (internal) | Shared TypeScript types. Not consumed directly. | — |
 
-All public CodraGraph packages are licensed under Apache-2.0. You can use
+All CodraGraph packages are distributed under the **PolyForm Noncommercial
+License 1.0.0**, inherited from the upstream GitNexus project. You can use
 the CLI, SDK, graphstore, harness, compression layer, org helpers, and
-editor integrations for personal, internal, commercial, hosted, or
-redistributed products, subject to the Apache-2.0 notice and attribution
-requirements in the license section below.
+editor integrations for personal projects, study, research, hobby work, and
+by charitable, educational, or government organizations. **Commercial use is
+not permitted under these terms** — see the [license section](#license)
+below.
 
 ### How packages compose with the CLI
 
@@ -837,46 +846,61 @@ Reports go to `conduct@thinqmesh.com`.
 
 ## License
 
-CodraGraph is licensed under the **[Apache License, Version 2.0](./LICENSE)**.
+CodraGraph is distributed under the
+**[PolyForm Noncommercial License 1.0.0](./LICENSE)**.
+
+### Upstream and attribution
+
+CodraGraph is a derivative work of
+**[GitNexus](https://github.com/abhigyanpatwari/GitNexus)** by Abhigyan
+Patwari, which is licensed under the same PolyForm Noncommercial License
+1.0.0. The indexing pipeline, tree-sitter language providers, graph
+construction, search, MCP server, HTTP API, CLI, and web dashboard derive
+from that project. See [NOTICE](./NOTICE) for the full breakdown of what is
+derived and what was added here.
+
+> Required Notice: Copyright Abhigyan Patwari (https://github.com/abhigyanpatwari/GitNexus)
+
+The `graphstore`, `harness`, `compress`, `org`, and `sdk` packages were
+written for CodraGraph and are Copyright (c) 2026 Anit Chaudhry / Thinqmesh
+Technologies, distributed here under the same terms.
 
 ### Permitted uses
 
-- Use the software for any purpose, including production, internal tools,
-  on-prem deployments, hosted SaaS, and other commercial use.
-- Modify the source, fork it, vendor it, patch it, or build a proprietary
-  product on top.
-- Redistribute the software, modified or unmodified, in source or binary
-  form.
-- Rely on the Apache-2.0 patent grant for contributor patents that read on
-  contributed code, subject to the license terms.
+- Personal use for study, research, experimentation, hobby projects, and
+  private entertainment, without anticipated commercial application.
+- Use by charitable organizations, educational institutions, and government
+  bodies.
+- Modify the source and redistribute your modified version, for the same
+  noncommercial purposes.
 
-### Requirements
+### Not permitted
 
-- Include a copy of [LICENSE](./LICENSE), and any `NOTICE` file that ships
-  with the distribution, when redistributing CodraGraph.
-- State significant changes in modified files as required by Apache-2.0
-  section 4(b).
-- Preserve existing copyright, patent, trademark, and attribution notices.
+- **Commercial use of any kind** — production use at a company, internal
+  business tooling, hosted SaaS, consulting deliverables, or any use for
+  commercial advantage. Commercial rights must be obtained from the upstream
+  licensor.
 
-### Not included
+### Requirements when redistributing
 
-- Apache-2.0 does not grant a trademark license. Do not use the
-  "CodraGraph" name or branding to imply endorsement, official status, or
-  competitive parity without permission.
-- The software is provided "AS IS" without warranties. See LICENSE
-  sections 7 and 8.
+- Include a copy of [LICENSE](./LICENSE) and [NOTICE](./NOTICE), or the
+  license URL, with any copy you give to anyone else.
+- Preserve the `Required Notice:` line above. Passing it along is a
+  condition of the distribution license, not a courtesy.
+- The software is provided **as is**, without warranty, and with no
+  liability for the licensor.
 
 ### Per-package licensing
 
-Every published package in the matrix above ships under the same
-Apache-2.0 license. Each tarball includes a `LICENSE` file at its root
-so package consumers can verify terms without leaving npm.
+Every package ships under the same PolyForm Noncommercial License 1.0.0.
+Each tarball includes `LICENSE` and `NOTICE` at its root so consumers can
+verify the terms without leaving npm.
 
 ### Contributor License
 
-By submitting a contribution (PR, issue patch, suggestion, etc.) you
-agree your contribution is licensed under Apache-2.0 — the inbound
-license matches the project's outbound license, no separate CLA.
+By submitting a contribution (PR, issue patch, suggestion, etc.) you agree
+your contribution is licensed under PolyForm Noncommercial 1.0.0 — the
+inbound license matches the project's outbound license, no separate CLA.
 
 ### Third-party notices
 
@@ -886,19 +910,15 @@ tree-sitter family, `graphology`, `mermaid`, `@anthropic-ai/sdk`, and
 `react`). License texts ship in each package's `node_modules` after
 install; aggregated attribution is generated on each release.
 
-### Why Apache-2.0
-
-Apache-2.0 keeps CodraGraph permissive for commercial and hosted use while
-also providing an explicit patent grant. That matters for a platform with
-ML-adjacent surfaces such as harness search, recipe memory, and
-graph-powered agent context, where patent ambiguity can slow adoption.
-
 ---
 
 ## Acknowledgements
 
 CodraGraph stands on a lot of open-source work — particular thanks to:
 
+- **[GitNexus](https://github.com/abhigyanpatwari/GitNexus)** by Abhigyan
+  Patwari, the upstream project this one is built on. The indexer, MCP
+  server, and dashboard are its work. See [NOTICE](./NOTICE).
 - **[tree-sitter](https://tree-sitter.github.io/)** and the
   per-language grammars (TypeScript, Python, Java, Kotlin, Swift, etc.)
   that power the indexer.

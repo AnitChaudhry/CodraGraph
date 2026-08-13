@@ -7,7 +7,7 @@
     "email": "hello@thinqmesh.com",
     "url": "https://thinqmesh.com"
   },
-  "license": "Apache-2.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": [
     "codragraph",
     "multi-tenant",
@@ -51,6 +51,8 @@
     }
   },
   "files": [
+    "LICENSE",
+    "NOTICE",
     "dist",
     "README.md",
     "RFC.md"

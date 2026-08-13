@@ -333,7 +333,7 @@ client.
 | Pareto, not scalarized score | User explicitly wants accuracy/tokens/latency as 3 headlines |
 | Substring + judge scoring | Substring is free and accurate for path/symbol questions; judge handles paraphrases |
 | Out-of-process MCP handler | packages/harness depends on codragraph, not the reverse |
-| All `codragraph-*` packages Apache-2.0 | Inherits monorepo license; permissive OSS unblocks SaaS / org-tier features |
+| All `codragraph-*` packages PolyForm-NC-1.0.0 | Inherits monorepo license; permissive OSS unblocks SaaS / org-tier features |
 
 ## 13. Open follow-ups
 
@@ -357,7 +357,7 @@ Tracked, not blockers for Phase 1 sign-off.
    before publishing benchmark numbers. Mix in cross-package, recursive
    reasoning, and "what breaks if X" questions.
 7. ~~**License gate**~~ — RESOLVED 2026-04-29. Monorepo relicensed to
-   Apache-2.0; Phase 5 (org features) is unblocked.
+   PolyForm-NC-1.0.0; Phase 5 (org features) is unblocked.
 
 ## 14. Phase order
 

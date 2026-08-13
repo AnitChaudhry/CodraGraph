@@ -53,6 +53,7 @@ codragraph config set openai --api-key sk-...
 
 ## License
 
-Apache-2.0. You can use, modify, redistribute, bundle, and host this
-integration commercially, subject to the Apache-2.0 notice and attribution
-requirements.
+PolyForm Noncommercial License 1.0.0. You may use, modify, and redistribute
+this package for noncommercial purposes only — personal projects, study,
+research, and charitable, educational, or government use. Commercial use is
+not permitted. See the LICENSE and NOTICE files shipped with this package.

@@ -66,7 +66,7 @@ Deferred (genuinely out of scope, not the same as "stubbed"):
 
 ```
 packages/graphstore/
-├── package.json                v0.1.0; author Thinqmesh Technologies; Apache-2.0
+├── package.json                v0.1.0; author Thinqmesh Technologies; PolyForm-Noncommercial-1.0.0
 ├── tsconfig.json               ESM, NodeNext, strict + noUncheckedIndexedAccess
 ├── vitest.config.ts            test runner config
 ├── README.md                   user-facing intro

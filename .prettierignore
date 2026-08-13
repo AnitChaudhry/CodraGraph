@@ -8,6 +8,8 @@ codragraph-web/test-results/
 *.snap
 *.wasm
 *.md
+LICENSE
+NOTICE
 .codragraph/
 .vercel/
 .claude-flow/

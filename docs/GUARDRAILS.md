@@ -83,7 +83,7 @@ Format: **Trigger → Instruction → Reason**. Append new Signs when the same m
 
 - **npm:** Do not publish from unreviewed automation. Bump version intentionally; tag releases to match `package.json`.
 - **Dependencies:** Minimal, auditable `package.json` changes; run tests and CI after lockfile updates.
-- **License:** Apache 2.0 — do not relicense without maintainer approval.
+- **License:** PolyForm Noncommercial 1.0.0 (inherited from upstream) — do not relicense. The NOTICE file and its `Required Notice:` line are a condition of the license and must not be removed.
 
 ---
 
