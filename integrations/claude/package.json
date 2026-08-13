@@ -3,9 +3,9 @@
   "version": "2.2.1",
   "description": "Claude Code plugin — graph-aware tool gating + skill packs powered by CodraGraph (impact analysis, blame-aware retrieval, refactor planning).",
   "author": {
-    "name": "Thinqmesh Technologies",
+    "name": "Anit Chaudhry",
     "email": "hello@thinqmesh.com",
-    "url": "https://thinqmesh.com"
+    "url": "https://github.com/AnitChaudhry"
   },
   "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": [

@@ -3,9 +3,9 @@
   "version": "2.2.1",
   "description": "Auto-tuned harnesses for AI agents — Meta-Harness algorithm with Pareto search over (accuracy, tokens, latency)",
   "author": {
-    "name": "Thinqmesh Technologies",
+    "name": "Anit Chaudhry",
     "email": "hello@thinqmesh.com",
-    "url": "https://thinqmesh.com"
+    "url": "https://github.com/AnitChaudhry"
   },
   "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": [

@@ -3,9 +3,9 @@
   "version": "2.2.1",
   "description": "One-import surface for the CodraGraph platform — graph intelligence, dynamic harness, compression. Works with Claude Code, Codex, OpenCode, any inference.",
   "author": {
-    "name": "Thinqmesh Technologies",
+    "name": "Anit Chaudhry",
     "email": "hello@thinqmesh.com",
-    "url": "https://thinqmesh.com"
+    "url": "https://github.com/AnitChaudhry"
   },
   "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": [

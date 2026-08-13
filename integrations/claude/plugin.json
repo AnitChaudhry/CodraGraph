@@ -4,9 +4,9 @@
   "displayName": "CodraGraph",
   "description": "Graph-aware code intelligence for Claude Code. Surfaces blast-radius, blame, and execution-flow context before edits.",
   "author": {
-    "name": "Thinqmesh Technologies",
+    "name": "Anit Chaudhry",
     "email": "hello@thinqmesh.com",
-    "url": "https://thinqmesh.com"
+    "url": "https://github.com/AnitChaudhry"
   },
   "homepage": "https://github.com/AnitChaudhry/CodraGraph",
   "license": "Apache-2.0",

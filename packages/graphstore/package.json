@@ -3,9 +3,9 @@
   "version": "2.2.1",
   "description": "Dolt-like content-addressed versioning for the CodraGraph knowledge graph — snapshots, branches, diffs, three-way merge.",
   "author": {
-    "name": "Thinqmesh Technologies",
+    "name": "Anit Chaudhry",
     "email": "hello@thinqmesh.com",
-    "url": "https://thinqmesh.com"
+    "url": "https://github.com/AnitChaudhry"
   },
   "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": [

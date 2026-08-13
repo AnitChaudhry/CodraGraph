@@ -4,9 +4,9 @@
   "private": true,
   "description": "Benchmark scripts for the CodraGraph platform — runs treatment matrices, captures metrics, generates reports.",
   "author": {
-    "name": "Thinqmesh Technologies",
+    "name": "Anit Chaudhry",
     "email": "hello@thinqmesh.com",
-    "url": "https://thinqmesh.com"
+    "url": "https://github.com/AnitChaudhry"
   },
   "license": "Apache-2.0",
   "type": "module",

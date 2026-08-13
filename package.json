@@ -3,9 +3,9 @@
   "private": true,
   "description": "CodraGraph monorepo - code intelligence platform (CLI/MCP, web UI, shared types, plugins, harness, SDK)",
   "author": {
-    "name": "Thinqmesh Technologies",
+    "name": "Anit Chaudhry",
     "email": "hello@thinqmesh.com",
-    "url": "https://thinqmesh.com"
+    "url": "https://github.com/AnitChaudhry"
   },
   "license": "PolyForm-Noncommercial-1.0.0",
   "workspaces": [

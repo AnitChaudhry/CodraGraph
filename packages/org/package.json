@@ -3,9 +3,9 @@
   "version": "2.2.1",
   "description": "Multi-tenant orgs, SSO, RBAC, and tamper-evident audit logging for the CodraGraph platform.",
   "author": {
-    "name": "Thinqmesh Technologies",
+    "name": "Anit Chaudhry",
     "email": "hello@thinqmesh.com",
-    "url": "https://thinqmesh.com"
+    "url": "https://github.com/AnitChaudhry"
   },
   "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": [
