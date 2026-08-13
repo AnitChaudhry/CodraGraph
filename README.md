@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="./branding/codragraph-logo.png" alt="CodraGraph" width="120" height="120" />
+  <img src="./branding/codragraph-cover.png" alt="CodraGraph — graph-powered code intelligence for AI agents. Index any codebase into a knowledge graph; query it over MCP, CLI, SDK, or HTTP." width="100%" />
 </p>
-
-<h1 align="center">CodraGraph</h1>
 
 <p align="center">
   Graph-powered code intelligence for AI agents by Thinqmesh Technologies — index any codebase,
