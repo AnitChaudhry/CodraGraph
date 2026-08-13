@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
+import { CLI_PACKAGE_SPEC } from '../helpers/cli-package-spec.js';
 
 const execFileMock = vi.fn((...args: any[]) => {
   const callback = args.at(-1);
@@ -85,7 +86,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'cmd',
-      args: ['/c', 'npx', '-y', '@codragraph/cli@2.2.1', 'mcp'],
+      args: ['/c', 'npx', '-y', CLI_PACKAGE_SPEC, 'mcp'],
     });
   });
 
@@ -100,7 +101,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'npx',
-      args: ['-y', '@codragraph/cli@2.2.1', 'mcp'],
+      args: ['-y', CLI_PACKAGE_SPEC, 'mcp'],
     });
   });
 
@@ -198,7 +199,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'npx',
-      args: ['-y', '@codragraph/cli@2.2.1', 'mcp'],
+      args: ['-y', CLI_PACKAGE_SPEC, 'mcp'],
     });
   });
 
@@ -217,7 +218,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'bunx',
-      args: ['@codragraph/cli@2.2.1', 'mcp'],
+      args: [CLI_PACKAGE_SPEC, 'mcp'],
     });
   });
 
@@ -262,7 +263,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'cmd',
-      args: ['/c', 'npx', '-y', '@codragraph/cli@2.2.1', 'mcp'],
+      args: ['/c', 'npx', '-y', CLI_PACKAGE_SPEC, 'mcp'],
     });
   });
 
@@ -279,7 +280,7 @@ describe('setupClaudeCode', () => {
 
     expect(config.mcpServers.codragraph).toEqual({
       command: 'cmd',
-      args: ['/c', 'bunx', '@codragraph/cli@2.2.1', 'mcp'],
+      args: ['/c', 'bunx', CLI_PACKAGE_SPEC, 'mcp'],
     });
   });
 });

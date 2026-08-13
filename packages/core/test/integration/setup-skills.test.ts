@@ -4,6 +4,7 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { setupCommand } from '../../src/cli/setup.js';
+import { CLI_PACKAGE_SPEC } from '../helpers/cli-package-spec.js';
 
 describe('setupCommand skills integration', () => {
   let tempHome: string;
@@ -96,7 +97,7 @@ describe('setupCommand skills integration', () => {
 
     const codexConfig = await fs.readFile(path.join(tempHome, '.codex', 'config.toml'), 'utf-8');
     expect(codexConfig).toContain('[mcp_servers.codragraph]');
-    expect(codexConfig).toContain('@codragraph/cli@2.2.1');
+    expect(codexConfig).toContain(CLI_PACKAGE_SPEC);
 
     const codexSkill = await fs.readFile(
       path.join(tempHome, '.agents', 'skills', 'codragraph-cli', 'SKILL.md'),

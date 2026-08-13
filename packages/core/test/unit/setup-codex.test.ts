@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
+import { CLI_PACKAGE_SPEC } from '../helpers/cli-package-spec.js';
 
 const execFileMock = vi.fn((...args: any[]) => {
   const callback = args.at(-1);
@@ -73,7 +74,7 @@ describe('setupCommand codex execution', () => {
 
     expect(execFileMock).toHaveBeenCalledWith(
       'codex.cmd',
-      ['mcp', 'add', 'codragraph', '--', 'cmd', '/c', 'npx', '-y', '@codragraph/cli@2.2.1', 'mcp'],
+      ['mcp', 'add', 'codragraph', '--', 'cmd', '/c', 'npx', '-y', CLI_PACKAGE_SPEC, 'mcp'],
       expect.any(Function),
     );
   });
@@ -87,7 +88,7 @@ describe('setupCommand codex execution', () => {
 
     expect(execFileMock).toHaveBeenCalledWith(
       'codex',
-      ['mcp', 'add', 'codragraph', '--', 'npx', '-y', '@codragraph/cli@2.2.1', 'mcp'],
+      ['mcp', 'add', 'codragraph', '--', 'npx', '-y', CLI_PACKAGE_SPEC, 'mcp'],
       expect.any(Function),
     );
 
@@ -104,7 +105,7 @@ describe('setupCommand codex execution', () => {
 
     expect(execFileMock).toHaveBeenCalledWith(
       'codex',
-      ['mcp', 'add', 'codragraph', '--', 'bunx', '@codragraph/cli@2.2.1', 'mcp'],
+      ['mcp', 'add', 'codragraph', '--', 'bunx', CLI_PACKAGE_SPEC, 'mcp'],
       expect.any(Function),
     );
   });

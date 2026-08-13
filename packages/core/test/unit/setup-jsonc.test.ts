@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import { parse as parseJsonc } from 'jsonc-parser';
+import { CLI_PACKAGE_SPEC } from '../helpers/cli-package-spec.js';
 
 const execFileMock = vi.fn((...args: any[]) => {
   const callback = args.at(-1);
@@ -242,7 +243,7 @@ describe('setupOpenCode â€” JSONC preservation', () => {
 
     expect(config.mcp.codragraph).toEqual({
       type: 'local',
-      command: ['npx', '-y', '@codragraph/cli@2.2.1', 'mcp'],
+      command: ['npx', '-y', CLI_PACKAGE_SPEC, 'mcp'],
     });
   });
 
@@ -266,7 +267,7 @@ describe('setupOpenCode â€” JSONC preservation', () => {
 
     expect(config.mcp.codragraph).toEqual({
       type: 'local',
-      command: ['bunx', '@codragraph/cli@2.2.1', 'mcp'],
+      command: ['bunx', CLI_PACKAGE_SPEC, 'mcp'],
     });
   });
 
