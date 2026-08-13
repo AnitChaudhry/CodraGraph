@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/sdk",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "One-import surface for the CodraGraph platform — graph intelligence, dynamic harness, compression. Works with Claude Code, Codex, OpenCode, any inference.",
   "author": {
     "name": "Thinqmesh Technologies",

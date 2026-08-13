@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/shared",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Shared type definitions for CodraGraph CLI and web",
   "author": {
     "name": "Thinqmesh Technologies",

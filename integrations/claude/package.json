@@ -1,6 +1,6 @@
 {
   "name": "@codragraph/claude-plugin",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Claude Code plugin — graph-aware tool gating + skill packs powered by CodraGraph (impact analysis, blame-aware retrieval, refactor planning).",
   "author": {
     "name": "Thinqmesh Technologies",

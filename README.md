@@ -743,15 +743,15 @@ Current workspace versions:
 
 | Package | Version | Notes |
 |---|---|---|
-| `@codragraph/cli` | 2.1.6 | CLI, MCP, HTTP, web dashboard, FeatureCluster context packs |
-| `@codragraph/shared` | 2.1.6 | Shared graph, schema, and FeatureCluster contracts |
-| `@codragraph/graphstore` | 2.1.6 | Content-addressed snapshots, diff, branch, merge, blame |
-| `@codragraph/harness` | 2.1.6 | Harness search, swarm, recipe memory, graph clients |
-| `@codragraph/compress` | 2.1.6 | LLM-context compression and FeatureCluster context-pack compression |
-| `@codragraph/sdk` | 2.1.6 | One-import programmatic surface over graph, harness, graphstore, compress |
-| `@codragraph/org` | 2.1.6 | Tenant, RBAC, and audit helpers for hosted/team deployments |
-| `@codragraph/codex` | 2.1.6 | Codex hooks and MCP wiring |
-| `@codragraph/claude-plugin` | 2.1.6 | Claude Code hooks, skills, and MCP wiring |
+| `@codragraph/cli` | 2.2.1 | CLI, MCP, HTTP, web dashboard, FeatureCluster context packs |
+| `@codragraph/shared` | 2.2.1 | Shared graph, schema, and FeatureCluster contracts |
+| `@codragraph/graphstore` | 2.2.1 | Content-addressed snapshots, diff, branch, merge, blame |
+| `@codragraph/harness` | 2.2.1 | Harness search, swarm, recipe memory, graph clients |
+| `@codragraph/compress` | 2.2.1 | LLM-context compression and FeatureCluster context-pack compression |
+| `@codragraph/sdk` | 2.2.1 | One-import programmatic surface over graph, harness, graphstore, compress |
+| `@codragraph/org` | 2.2.1 | Tenant, RBAC, and audit helpers for hosted/team deployments |
+| `@codragraph/codex` | 2.2.1 | Codex hooks and MCP wiring |
+| `@codragraph/claude-plugin` | 2.2.1 | Claude Code hooks, skills, and MCP wiring |
 
 Pre-context-pack indexes (`schemaVersion < 4`) are auto-detected and force
 a full re-analyze on first 2.1+ run so the FeatureCluster table, feature
