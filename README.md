@@ -338,10 +338,9 @@ jobs:
           # anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
-> ⚠️ Requires `@codragraph/cli ≥ 1.7.0` (introduces `analyze --no-setup`,
+> ⚠️ Requires `@codragraph/cli ≥ 1.7.0` for `analyze --no-setup`,
 > `diff --semantic --json`, and the graphstore `headCommit` write the action
-> reads from). If you're consuming this from another repo before 1.7.0 ships,
-> the action will fail on the analyze step.
+> reads from. Current releases (2.2.x) satisfy this.
 
 Mechanically: indexes base + head with `codragraph analyze`, reads each
 graphstore `headCommit`, runs `codragraph diff <base> <head> --semantic
@@ -733,7 +732,7 @@ After `codragraph setup`, your agent can call these tools natively:
 
 ## Status
 
-**Developer preview** (2026-05). Cross-platform CI green on
+**Developer preview** (2026-08). Cross-platform CI green on
 Ubuntu/macOS/Windows × Node 20/22. The MCP / CLI / SDK / HTTP surfaces
 are stable for solo-dev usage; multi-tenant/org features (`@codragraph/org`)
 are scaffolded but not yet wired into the server (gated behind a future
@@ -768,11 +767,12 @@ Help, discussion, and bug reports — pick the right channel:
 | **GitHub Issues** ([open one](https://github.com/AnitChaudhry/CodraGraph/issues/new/choose)) | Bug reports, feature requests, integration questions, anything reproducible |
 | **GitHub Discussions** ([browse](https://github.com/AnitChaudhry/CodraGraph/discussions)) | Show-and-tell, "how do I…", architecture conversations, recipe-sharing |
 | **Security reports** | Email `security@thinqmesh.com` with subject line `[SECURITY] CodraGraph: <title>`. **Do not open public issues for security findings.** Full policy + supported-version matrix + disclosure timeline in [SECURITY.md](./SECURITY.md). |
-| **Commercial / partnership inquiries** | Email `hello@thinqmesh.com` |
+| **Commercial licensing** | CodraGraph is noncommercial-only and derives from [GitNexus](https://github.com/abhigyanpatwari/GitNexus) — commercial rights must be obtained from the upstream licensor, not from Thinqmesh. |
+| **Other inquiries** | Email `hello@thinqmesh.com` |
 
-> CodraGraph is in **developer preview**. APIs are stabilizing but may
-> still shift in minor versions of the 0.x packages. The CLI surface
-> (`@codragraph/cli`) is on a 1.x line and follows semver from there.
+> CodraGraph is in **developer preview**. All packages are on a shared 2.x
+> line and follow semver from there; APIs are stabilizing but may still
+> shift in minor versions.
 
 ---
 
