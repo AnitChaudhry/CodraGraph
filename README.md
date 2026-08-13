@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Graph-powered code intelligence for AI agents by Thinqmesh Technologies — index any codebase,
+  Graph-powered code intelligence for AI agents — index any codebase,
   query via MCP or CLI, version it like git, and auto-tune the harness
   per task family.
 </p>
